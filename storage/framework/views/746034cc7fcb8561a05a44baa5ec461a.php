@@ -8,7 +8,8 @@
 <?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['pageTitle' => ''.e($user->name).'\'s Profile']); ?>
-    <div class="py-4 sm:py-12 bg-gray-100 min-h-screen">
+    <div x-data="{ isMusicShareModalOpen: false }">
+        <div class="py-4 sm:py-12 bg-gray-100 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
 
             <div class="hidden md:block col-span-2">
@@ -32,9 +33,12 @@
 
                         </h2>
 
-                        <div class="flex space-x-4">
+                        <div class="flex items-center space-x-4">
                             <a href="<?php echo e(route('profile.followers', $user)); ?>" class="text-blue-500 hover:underline">Followers (<?php echo e($user->followers()->count()); ?>)</a>
                             <a href="<?php echo e(route('profile.following', $user)); ?>" class="text-blue-500 hover:underline">Following (<?php echo e($user->following()->count()); ?>)</a>
+                            <?php if(auth()->id() === $user->id): ?>
+                                <a href="<?php echo e(route('profile.edit')); ?>" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Edit Profile</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -73,24 +77,38 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Who to Follow</h3>
 
                         <?php $__empty_1 = true; $__currentLoopData = $usersToSuggest; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $suggestedUser): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <div class="flex items-center justify-between mb-4 last:mb-0">
-                                <div class="flex items-center">
-                                    <img class="w-10 h-10 rounded-full mr-3" src="<?php echo e($suggestedUser->profile_picture_url ?: asset('images/default-profile.png')); ?>" alt="<?php echo e($suggestedUser->name); ?>">
-                                    <div>
-                                        <a href="<?php echo e(route('profile.show', $suggestedUser->name)); ?>" class="font-semibold text-gray-800 hover:underline"><?php echo e($suggestedUser->name); ?></a>
-                                        <p class="text-sm text-gray-500"><?php echo e(' @' . $suggestedUser->username); ?></p>
+                                <div class="flex items-center justify-between mb-4 last:mb-0" x-data="{ followed: <?php echo e(auth()->user()->following->contains($suggestedUser) ? 'true' : 'false'); ?>, followersCount: <?php echo e($suggestedUser->followers()->count()); ?> }">
+                                    <div class="flex items-center">
+                                        <img class="w-10 h-10 rounded-full mr-3" src="<?php echo e($suggestedUser->profile_picture_url ?: asset('images/default-profile.png')); ?>" alt="<?php echo e($suggestedUser->name); ?>">
+                                        <div>
+                                            <a href="<?php echo e(route('profile.show', $suggestedUser->name)); ?>" class="font-semibold text-gray-800 hover:underline"><?php echo e($suggestedUser->name); ?></a>
+                                            <p class="text-sm text-gray-500"><?php echo e(' @' . $suggestedUser->username); ?></p>
+                                        </div>
                                     </div>
+                                    <form @submit.prevent="
+                                        fetch('<?php echo e(route('users.follow', $suggestedUser)); ?>', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            followed = data.followed;
+                                            followersCount = data.followersCount;
+                                        })
+                                        .catch(error => console.error('Error:', error));
+                                    ">
+                                        <button type="submit" x-text="followed ? 'Unfollow' : 'Follow'" :class="followed ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'" class="text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
+                                        </button>
+                                    </form>
                                 </div>
-                                <form action="<?php echo e(route('users.follow', $suggestedUser)); ?>" method="POST">
-                                    <?php echo csrf_field(); ?>
-                                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
-                                        Follow
-                                    </button>
-                                </form>
-                            </div>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <p>No new users to suggest right now.</p>
-                        <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                <p>No new users to suggest right now.</p>
+                            <?php endif; ?>
                     </div>
                     <?php if (isset($component)) { $__componentOriginaleb110d187bacbd2efbc61217697b3215 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginaleb110d187bacbd2efbc61217697b3215 = $attributes; } ?>
@@ -121,6 +139,26 @@
                 </div>
             </div>
         </div>
+        <?php if (isset($component)) { $__componentOriginal6e29d87fe5237fabdc8f45f8dc8c27be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal6e29d87fe5237fabdc8f45f8dc8c27be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.music-share-modal','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('music-share-modal'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal6e29d87fe5237fabdc8f45f8dc8c27be)): ?>
+<?php $attributes = $__attributesOriginal6e29d87fe5237fabdc8f45f8dc8c27be; ?>
+<?php unset($__attributesOriginal6e29d87fe5237fabdc8f45f8dc8c27be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal6e29d87fe5237fabdc8f45f8dc8c27be)): ?>
+<?php $component = $__componentOriginal6e29d87fe5237fabdc8f45f8dc8c27be; ?>
+<?php unset($__componentOriginal6e29d87fe5237fabdc8f45f8dc8c27be); ?>
+<?php endif; ?>
     </div>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
@@ -132,4 +170,5 @@
 <?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
 <?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
 <?php endif; ?>
+
 <?php /**PATH C:\laragon\www\musicsocial-main\resources\views/profile/show.blade.php ENDPATH**/ ?>

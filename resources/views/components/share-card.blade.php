@@ -97,6 +97,7 @@
                 </button>
             </form>
 
+            @if ($share->user->isNot(auth()->user()))
             <form @submit.prevent="
                 fetch('{{ route('shares.dislike', $share) }}', {
                     method: 'POST',
@@ -114,14 +115,19 @@
                 @csrf
                 <button type="submit" class="flex items-center text-gray-500 hover:text-red-500">
                     <template x-if="disliked">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500"><path d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.267 12.485A.75.75 0 0 1 19.497 21H4.503a.75.75 0 0 1-.973-.998l1.267-12.485A3.75 3.75 0 0 1 7.5 7.5h9a3.75 3.75 0 0 1 3.606 2.993Z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500">
+                            <path d="M12 21L3 3h18z" />
+                        </svg>
                     </template>
                     <template x-if="!disliked">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.267 12.485A.75.75 0 0 1 19.497 21H4.503a.75.75 0 0 1-.973-.998l1.267-12.485A3.75 3.75 0 0 1 7.5 7.5h9a3.75 3.75 0 0 1 3.606 2.993Z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path d="M12 21L3 3h18z" />
+                        </svg>
                     </template>
                     <span x-text="dislikesCount" class="ml-1 text-sm"></span>
                 </button>
             </form>
+            @endif
 
             <button @click="commentsOpen = !commentsOpen" class="flex items-center text-gray-500 hover:text-custom-mid-blue">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">

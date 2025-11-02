@@ -3,7 +3,6 @@
     searchResults: [],
     selectedTrack: null,
     loading: false,
-    shareAction: 'share', // 'share' or 'dislike'
 
     init() {
         this.$watch('searchQuery', () => this.search());
@@ -37,10 +36,6 @@
     },
     getArtistNames(artists) {
         return artists.map(artist => artist.name).join(', ');
-    },
-    dislikeSong() {
-        this.shareAction = 'dislike';
-        this.$refs.shareForm.submit(); // Assuming the form has a ref="shareForm"
     }
 }">
 
@@ -100,7 +95,6 @@
 
                 <input type="hidden" name="type" value="music">
                 <input type="hidden" name="spotify_track_id" x-bind:value="selectedTrack ? selectedTrack.id : ''">
-                <input type="hidden" name="action" x-model="shareAction">
 
                 <div class="mt-4">
                     <x-input-label for="caption" :value="__('Caption (optional)')" />
@@ -110,10 +104,6 @@
                 <x-primary-button class="mt-4 bg-custom-mid-blue hover:bg-custom-dark-blue" x-bind:disabled="!selectedTrack">
                     {{ __('Share Song') }}
                 </x-primary-button>
-
-                <button type="button" @click="dislikeSong()" x-bind:disabled="!selectedTrack" class="mt-4 ml-2 px-4 py-2 bg-red-500 text-white font-semibold rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                    {{ __('Dislike Song') }}
-                </button>
 
             </form>
 

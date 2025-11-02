@@ -19,7 +19,7 @@ class YouTubeService
      */
     public function searchVideo(string $query)
     {
-        $response = Http::get($this->baseUrl . 'search', [
+        $response = Http::timeout(30)->get($this->baseUrl . 'search', [
             'key' => $this->apiKey,
             'part' => 'snippet',
             'q' => $query,
@@ -36,6 +36,28 @@ class YouTubeService
         return [
             'video_id' => $item['id']['videoId'],
             'url' => 'https://www.youtube.com/watch?v=' . $item['id']['videoId'],
+        ];
+    }
+
+    /**
+     * Get details for a specific video, including tags.
+     */
+    public function getVideo(string $videoId)
+    {
+        $response = Http::timeout(30)->get($this->baseUrl . 'videos', [
+            'key' => $this->apiKey,
+            'part' => 'snippet',
+            'id' => $videoId,
+        ]);
+
+        if ($response->failed() || empty($response->json('items'))) {
+            return null;
+        }
+
+        $item = $response->json('items')[0];
+
+        return [
+            'tags' => $item['snippet']['tags'] ?? [],
         ];
     }
 }

@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     // Spotify search routes
     Route::get('/search/tracks', [SpotifySearchController::class, 'search'])->name('spotify.search');
 
+
     // Settings route
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 

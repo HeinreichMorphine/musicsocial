@@ -91,7 +91,7 @@
                 </template>
             </ul>
 
-            <form method="POST" action="<?php echo e(route('shares.store')); ?>" class="mt-6 border-t pt-4">
+            <form method="POST" action="<?php echo e(route('shares.store')); ?>" class="mt-6 border-t pt-4" x-ref="shareForm">
                 <?php echo csrf_field(); ?>
 
                 <div x-show="selectedTrack" class="mb-4 border border-green-300 bg-green-50/50 rounded-lg p-4 flex items-center space-x-4">

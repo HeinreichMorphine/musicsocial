@@ -15,6 +15,15 @@ class LikeController extends Controller
         // Get the currently authenticated user
         $user = auth()->user();
 
+        // Prevent user from liking their own share
+        if ($user->id === $share->user_id) {
+            return response()->json([
+                'message' => 'You cannot like your own share.',
+                'liked' => $user->likes->contains($share), // Should always be false
+                'likesCount' => $share->likes()->count(),
+            ], 403); // Forbidden
+        }
+
         // If the user has disliked this share, remove the dislike first
         if ($user->dislikes->contains($share)) {
             $user->dislikes()->detach($share);

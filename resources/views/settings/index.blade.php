@@ -68,16 +68,7 @@
                                 <p>No new users to suggest right now.</p>
                             @endforelse
                     </div>
-                        @if($recommendedShares->isEmpty())
-                            <p class="text-center text-gray-500">No recommendations available at the moment.</p>
-                        @else
-                            @foreach ($recommendedShares as $share)
-                                <div class="p-4 border-b border-gray-200">
-                                    <h4 class="font-semibold">{{ $share->track_name }}</h4>
-                                    <p class="text-gray-600">by {{ $share->artist_name }}</p>
-                                </div>
-                            @endforeach
-                        @endif
+                    <x-sidebar-right :recommendedShares="$recommendedShares" />
                     <div class="mt-4">
                         <button @click="isMusicShareModalOpen = true" class="bg-custom-mid-blue hover:bg-custom-dark-blue p-3 rounded-full shadow-lg transition w-full flex items-center justify-center">
                             <img src="{{ asset('icons/share.png') }}" alt="Share Music" class="w-8 h-8 mr-2">

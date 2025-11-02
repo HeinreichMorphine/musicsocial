@@ -10,9 +10,10 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule):
+    protected function schedule(Schedule $schedule): void
     {
         $schedule->command('app:retrain-recommender')->everyThirtyMinutes();
+        $schedule->command('app:backfill-share-metadata')->daily();
     }
 
     /**

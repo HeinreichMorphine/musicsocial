@@ -4,19 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Share;
 use App\Services\SpotifyService;
-use App\Services\YouTubeService; // <-- [NEW] Import YouTubeService
+use App\Services\YouTubeService;
+use App\Services\MusicBrainzService; // <-- [NEW] Import MusicBrainzService
 use Illuminate\Http\Request;
 
 class ShareController extends Controller
 {
     protected $spotifyService;
-    protected $youTubeService; // <-- [NEW] Add YouTubeService property
+    protected $youTubeService;
+    protected $musicBrainzService; // <-- [NEW] Add MusicBrainzService property
 
-    // [UPDATED] Inject both services
-    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService)
+    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService)
     {
         $this->spotifyService = $spotifyService;
         $this->youTubeService = $youTubeService;
+        $this->musicBrainzService = $musicBrainzService;
     }
 
     /**
@@ -28,7 +30,6 @@ class ShareController extends Controller
             'type' => 'required|string|in:music,text',
             'caption' => 'nullable|string|max:1000',
             'spotify_track_id' => 'nullable|string|max:255',
-            'action' => 'required|string|in:share,dislike', // Add action validation
         ]);
 
         $dataToSave = [
@@ -62,7 +63,7 @@ class ShareController extends Controller
                 'artist_name' => implode(', ', array_map(fn($a) => $a['name'], $track['artists'])),
                 'album_art_url' => $track['album']['images'][0]['url'] ?? null,
                 'spotify_url' => $track['external_urls']['spotify'] ?? '#',
-                'genres' => $artist ? json_encode($artist['genres']) : null,
+                'genres' => !empty($trackData['genres']) ? json_encode($trackData['genres']) : null,
             ]);
 
             // Search YouTube and add to data
@@ -73,16 +74,40 @@ class ShareController extends Controller
                 $dataToSave['youtube_video_id'] = $youTubeData['video_id'];
                 $dataToSave['youtube_url'] = $youTubeData['url'];
             }
+
+            // [NEW] MusicBrainz fallback for genres
+            if (empty($dataToSave['genres']) && !empty($dataToSave['artist_name'])) {
+                $mbGenres = $this->musicBrainzService->getArtistGenres($dataToSave['artist_name']);
+                if (!empty($mbGenres)) {
+                    $dataToSave['genres'] = json_encode($mbGenres);
+                }
+            }
+
+            // [NEW] YouTube fallback for genres
+            if (empty($dataToSave['genres']) && !empty($dataToSave['youtube_video_id'])) {
+                $videoData = $this->youTubeService->getVideo($dataToSave['youtube_video_id']);
+                if ($videoData && !empty($videoData['tags'])) {
+                    $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop'];
+                    $foundGenres = [];
+                    foreach ($videoData['tags'] as $tag) {
+                        foreach ($genreKeywords as $keyword) {
+                            if (stripos($tag, $keyword) !== false) {
+                                $foundGenres[] = $keyword;
+                            }
+                        }
+                    }
+                    $foundGenres = array_unique($foundGenres);
+
+                    if (!empty($foundGenres)) {
+                        $dataToSave['genres'] = json_encode($foundGenres);
+                    }
+                }
+            }
         } elseif ($validated['type'] === 'text') {
             // For text shares, caption is required
             if (empty($validated['caption'])) {
                 return back()->withErrors(['caption' => 'Caption is required for text shares.']);
             }
-        }
-
-        // Handle dislike action
-        if ($validated['action'] === 'dislike') {
-            $dataToSave['disliked'] = true;
         }
 
         // Create the share
@@ -181,4 +206,5 @@ public function destroy(Share $share)
             'dislikesCount' => $share->dislikes()->count(),
         ]);
     }
+
 }

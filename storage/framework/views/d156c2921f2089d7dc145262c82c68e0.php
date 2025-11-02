@@ -78,7 +78,7 @@
                             <h3 class="text-lg font-medium text-gray-900 mb-4">Who to Follow</h3>
 
                             <?php $__empty_1 = true; $__currentLoopData = $usersToSuggest; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $suggestedUser): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                <div class="flex items-center justify-between mb-4 last:mb-0">
+                                <div class="flex items-center justify-between mb-4 last:mb-0" x-data="{ followed: <?php echo e(auth()->user()->following->contains($suggestedUser) ? 'true' : 'false'); ?>, followersCount: <?php echo e($suggestedUser->followers()->count()); ?> }">
                                     <div class="flex items-center">
                                         <img class="w-10 h-10 rounded-full mr-3" src="<?php echo e($suggestedUser->profile_picture_url ?: asset('images/default-profile.png')); ?>" alt="<?php echo e($suggestedUser->name); ?>">
                                         <div>
@@ -86,10 +86,24 @@
                                             <p class="text-sm text-gray-500"><?php echo e(' @' . $suggestedUser->username); ?></p>
                                         </div>
                                     </div>
-                                    <form action="<?php echo e(route('users.follow', $suggestedUser)); ?>" method="POST">
-                                        <?php echo csrf_field(); ?>
-                                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
-                                            Follow
+                                    <form @submit.prevent="
+                                        fetch('<?php echo e(route('users.follow', $suggestedUser)); ?>', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            followed = data.followed;
+                                            followersCount = data.followersCount;
+                                        })
+                                        .catch(error => console.error('Error:', error));
+                                    ">
+                                        <button type="submit" x-text="followed ? 'Unfollow' : 'Follow'" :class="followed ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'" class="text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
                                         </button>
                                     </form>
                                 </div>

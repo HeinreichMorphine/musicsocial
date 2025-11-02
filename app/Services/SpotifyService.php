@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SpotifyService
 {
@@ -15,14 +16,20 @@ class SpotifyService
      */
     public function getAccessToken()
     {
-        // Remember the token for 59 minutes (Spotify tokens expire in 60)
         return Cache::remember('spotify_access_token', 3540, function () {
             $response = Http::asForm()
+                ->timeout(30) // Add timeout
                 ->withBasicAuth(config('services.spotify.client_id'), config('services.spotify.client_secret'))
                 ->post($this->tokenUrl, [
                     'grant_type' => 'client_credentials',
                 ]);
 
+            if ($response->failed()) {
+                Log::error('Spotify Token API Error: ' . $response->status() . ' - ' . $response->body());
+                return null;
+            }
+
+            Log::info('Successfully fetched new Spotify access token.');
             return $response->json('access_token');
         });
     }
@@ -33,8 +40,13 @@ class SpotifyService
     public function searchTracks($query, $limit = 10)
     {
         $token = $this->getAccessToken();
+        if (!$token) {
+            Log::error('Cannot search tracks; Spotify access token is missing.');
+            return [];
+        }
 
         $response = Http::withToken($token)
+            ->timeout(30) // Add timeout
             ->get($this->baseUrl . 'search', [
                 'q' => $query,
                 'type' => 'track',
@@ -49,29 +61,53 @@ class SpotifyService
     public function getTrack(string $trackId)
     {
         $token = $this->getAccessToken();
+        if (!$token) {
+            return ['error' => 'Cannot get track; Spotify access token is missing or invalid. Check your .env credentials and clear the cache.'];
+        }
 
         // Get track details
         $trackResponse = Http::withToken($token)
+            ->timeout(30) // Add timeout
             ->get($this->baseUrl . 'tracks/' . $trackId);
 
         if ($trackResponse->failed()) {
-            return null;
+            return ['error' => "Spotify Track API Error ({$trackResponse->status()}): " . $trackResponse->body()];
         }
 
         $track = $trackResponse->json();
 
-        // Get artist details to fetch genres
-        $artistId = $track['artists'][0]['id'];
-        $artistResponse = Http::withToken($token)
-            ->get($this->baseUrl . 'artists/' . $artistId);
+        // Get all artist IDs from the track
+        $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
 
-        if ($artistResponse->failed()) {
-            // Return track data even if artist lookup fails
-            return ['track' => $track, 'artist' => null];
+        // Fetch details for all artists in a single call
+        $artistsResponse = Http::withToken($token)
+            ->timeout(30) // Add timeout
+            ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
+
+        if ($artistsResponse->failed()) {
+            // This is less critical, so we don't return a hard error, just empty genres
+            return ['track' => $track, 'artist' => null, 'genres' => []];
         }
 
-        $artist = $artistResponse->json();
+        $artists = $artistsResponse->json('artists');
 
-        return ['track' => $track, 'artist' => $artist];
+        // Aggregate genres from all artists
+        $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+
+        // Fallback to album genres if artist genres are empty
+        if (empty($genres) && !empty($track['album']['id'])) {
+            $albumResponse = Http::withToken($token)
+                ->timeout(30)
+                ->get($this->baseUrl . 'albums/' . $track['album']['id']);
+
+            if ($albumResponse->successful()) {
+                $album = $albumResponse->json();
+                $genres = $album['genres'] ?? [];
+            }
+        }
+
+        $primaryArtist = $artists[0] ?? null;
+
+        return ['track' => $track, 'artist' => $primaryArtist, 'genres' => $genres];
     }
 }

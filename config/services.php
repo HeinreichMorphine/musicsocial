@@ -40,7 +40,11 @@ return [
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
     ],
 
-    'youtube' => [ // <-- ADD THIS
-    'key' => env('YOUTUBE_API_KEY'),
+    'youtube' => [
+        'key' => env('YOUTUBE_API_KEY'),
+    ],
+
+    'musicbrainz' => [
+        'user_agent' => env('MUSICBRAINZ_USER_AGENT', 'MusicSocialApp/1.0 ( your_email@example.com )'), // Replace with your app name and contact email
     ],
 ];

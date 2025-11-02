@@ -126,6 +126,38 @@ unset($__defined_vars, $__key, $__value); ?>
                 </button>
             </form>
 
+            <?php if($share->user->isNot(auth()->user())): ?>
+            <form @submit.prevent="
+                fetch('<?php echo e(route('shares.dislike', $share)); ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    disliked = data.disliked;
+                    dislikesCount = data.dislikesCount;
+                })
+            " x-data="{ disliked: <?php echo e(auth()->check() && auth()->user()->dislikes->contains($share) ? 'true' : 'false'); ?>, dislikesCount: <?php echo e($share->dislikes->count()); ?> }">
+                <?php echo csrf_field(); ?>
+                <button type="submit" class="flex items-center text-gray-500 hover:text-red-500">
+                    <template x-if="disliked">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500">
+                            <path d="M12 21L3 3h18z" />
+                        </svg>
+                    </template>
+                    <template x-if="!disliked">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path d="M12 21L3 3h18z" />
+                        </svg>
+                    </template>
+                    <span x-text="dislikesCount" class="ml-1 text-sm"></span>
+                </button>
+            </form>
+            <?php endif; ?>
+
             <button @click="commentsOpen = !commentsOpen" class="flex items-center text-gray-500 hover:text-custom-mid-blue">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.056 3 11.625c0 4.291 3.52 7.846 8.25 8.142.026.002.051.002.076.002Z" />
