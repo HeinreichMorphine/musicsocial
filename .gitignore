@@ -29,3 +29,6 @@ recommender_service/surprise_model.pkl
 recommender_service/.env
 recommender_service/__pycache__/
 recommender_service/origin)
+
+surprise_model.pkl
+/storage/framework/views/
