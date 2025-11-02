@@ -28,8 +28,10 @@ class RetrainRecommender extends Command
     {
         $this->info('Sending request to retrain recommender...');
 
+        $url = env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000') . '/retrain';
+
         try {
-            $response = Http::post('http://localhost:5001/retrain');
+            $response = Http::post($url);
 
             if ($response->successful()) {
                 $this->info('Recommender retraining request sent successfully.');

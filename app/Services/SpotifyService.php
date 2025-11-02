@@ -50,13 +50,28 @@ class SpotifyService
     {
         $token = $this->getAccessToken();
 
-        $response = Http::withToken($token)
+        // Get track details
+        $trackResponse = Http::withToken($token)
             ->get($this->baseUrl . 'tracks/' . $trackId);
 
-        if ($response->failed()) {
-            return null; // Or throw an exception
+        if ($trackResponse->failed()) {
+            return null;
         }
 
-        return $response->json();
+        $track = $trackResponse->json();
+
+        // Get artist details to fetch genres
+        $artistId = $track['artists'][0]['id'];
+        $artistResponse = Http::withToken($token)
+            ->get($this->baseUrl . 'artists/' . $artistId);
+
+        if ($artistResponse->failed()) {
+            // Return track data even if artist lookup fails
+            return ['track' => $track, 'artist' => null];
+        }
+
+        $artist = $artistResponse->json();
+
+        return ['track' => $track, 'artist' => $artist];
     }
 }

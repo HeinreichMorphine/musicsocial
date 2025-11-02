@@ -20,6 +20,7 @@ class Share extends Model
     'spotify_url',
     'youtube_video_id',
     'youtube_url',
+    'disliked', // Add 'disliked' to fillable
     ];
 
     /**
@@ -44,5 +45,13 @@ class Share extends Model
     public function likes()
     {
         return $this->belongsToMany(User::class, 'likes', 'share_id', 'user_id');
+    }
+
+    /**
+     * The users that disliked this share (Many-to-Many).
+     */
+    public function dislikes()
+    {
+        return $this->belongsToMany(User::class, 'dislikes', 'share_id', 'user_id');
     }
 }

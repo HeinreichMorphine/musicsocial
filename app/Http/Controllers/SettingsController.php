@@ -25,8 +25,25 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
-        $recommendedShareIds = $this->recommendationService->getRecommendations($user->id);
-        $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+        $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
+
+        $recommendedShares = collect();
+        if (!empty($rawRecommendations)) {
+            $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+
+            $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+
+            // Sort the recommended shares by score
+            $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
+                return $recommendationData[$share->id]['score'] ?? 0;
+            });
+
+            $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
+                $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
+                return $share;
+            });
+        }
 
         $usersToSuggest = User::where('id', '!=', $user->id)
                             ->whereDoesntHave('followers', function ($query) use ($user) {

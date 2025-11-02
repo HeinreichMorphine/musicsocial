@@ -91,6 +91,14 @@ class User extends Authenticatable
     }
 
     /**
+     * The shares a user has disliked (Many-to-Many).
+     */
+    public function dislikes()
+    {
+        return $this->belongsToMany(Share::class, 'dislikes', 'user_id', 'share_id');
+    }
+
+    /**
      * The users that this user follows (Many-to-Many).
      */
     public function following()

@@ -26,21 +26,37 @@ class FeedController extends Controller
         $followingIds = $user->following()->pluck('id');
 
         // Get shares from those users, plus the current user's own shares
-        $shares = Share::whereIn('user_id', $followingIds)
-                       ->orWhere('user_id', $user->id)
-                       ->with(['user', 'likes', 'comments' => function ($query) {
-                           $query->whereNotIn('id', function ($query) {
-                               $query->select('comment_id')->from('comment_threads');
-                           })->orderBy('created_at', 'asc');
-                       }, 'comments.user', 'comments.replies' => function ($query) {
-                           $query->orderBy('created_at', 'asc');
-                       }, 'comments.replies.user'])
+        $shares = Share::where(function ($query) use ($followingIds, $user) {
+                           $query->whereIn('user_id', $followingIds)
+                                 ->orWhere('user_id', $user->id);
+                       })
+                       ->where('disliked', false) // Filter out disliked shares
+                       ->with(['user', 'likes'])
                        ->latest()
                        ->paginate(20);
 
         // Fetch recommended shares
-        $recommendedShareIds = $this->recommendationService->getRecommendations($user->id);
-        $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+        $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
+        $recommendedShares = collect();
+
+        if (!empty($rawRecommendations)) {
+            $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+
+            $recommendedShares = Share::whereIn('id', $recommendedShareIds)
+                                      ->where('disliked', false) // Filter out disliked recommended shares
+                                      ->get();
+
+            // Sort the recommended shares by score
+            $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
+                return $recommendationData[$share->id]['score'] ?? 0;
+            });
+
+            $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
+                $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
+                return $share;
+            });
+        }
 
         // Fetch users to suggest (e.g., users not followed by the current user)
         $usersToSuggest = User::where('id', '!=', $user->id)

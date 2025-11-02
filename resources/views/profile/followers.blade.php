@@ -42,7 +42,7 @@
 
             <div class="hidden md:block col-span-3">
                 <div class="sticky top-0 pt-4">
-                    @include('layouts.sidebar-right')
+                    <x-sidebar-right :recommendedShares="$recommendedShares" :usersToSuggest="$usersToSuggest" />
                 </div>
             </div>
         </div>

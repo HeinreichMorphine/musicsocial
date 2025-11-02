@@ -24,22 +24,53 @@ class DiscoveryController extends Controller
         $usersToSuggest = collect();
 
         if ($user) {
-            // Fetch recommendations from the Python service
-            $recommendations = $this->recommendationService->getRecommendations($user->id);
+            $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
+            $recommendedShares = collect();
 
-            if ($recommendations) {
-                $recommendedShareIds = array_column($recommendations, 'item_id');
+            if (!empty($rawRecommendations)) {
+                $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
+                $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+
                 $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+
+                // Sort the recommended shares by score
+                $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
+                    return $recommendationData[$share->id]['score'] ?? 0;
+                });
+
+                $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
+                    $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
+                    return $share;
+                });
             }
 
-            // Fetch users to suggest (e.g., users not followed by the current user)
-            $usersToSuggest = User::where('id', '!=', $user->id)
-                                ->whereDoesntHave('followers', function ($query) use ($user) {
-                                    $query->where('follower_id', $user->id);
-                                })
-                                ->inRandomOrder()
-                                ->limit(5)
-                                ->get();
+            // --- [NEW] Improved "Who to Follow" Logic ---
+
+            // 1. Find users who liked the same shares as the current user (Taste Neighbors)
+            $likedShareIds = $user->likes->pluck('id');
+            $tasteNeighbors = User::where('id', '!=', $user->id)
+                ->whereHas('likes', function ($query) use ($likedShareIds) {
+                    $query->whereIn('share_id', $likedShareIds);
+                })
+                ->whereDoesntHave('followers', function ($query) use ($user) {
+                    $query->where('follower_id', $user->id);
+                })
+                ->withCount('followers')
+                ->orderByDesc('followers_count') // Prioritize more popular users among taste neighbors
+                ->limit(3)
+                ->get();
+
+            // 2. Find other random users to suggest
+            $otherUsers = User::where('id', '!=', $user->id)
+                ->whereNotIn('id', $tasteNeighbors->pluck('id')) // Exclude taste neighbors
+                ->whereDoesntHave('followers', function ($query) use ($user) {
+                    $query->where('follower_id', $user->id);
+                })
+                ->inRandomOrder()
+                ->limit(5 - $tasteNeighbors->count()) // Fill the rest of the spots
+                ->get();
+
+            $usersToSuggest = $tasteNeighbors->merge($otherUsers);
         }
 
         return view('discovery', compact('recommendedShares', 'usersToSuggest'));

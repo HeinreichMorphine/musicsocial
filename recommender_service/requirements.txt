@@ -1,3 +1,7 @@
 Flask
 scikit-surprise
 pandas
+python-dotenv
+SQLAlchemy
+mysqlclient
+joblib

@@ -28,6 +28,7 @@ class ShareController extends Controller
             'type' => 'required|string|in:music,text',
             'caption' => 'nullable|string|max:1000',
             'spotify_track_id' => 'nullable|string|max:255',
+            'action' => 'required|string|in:share,dislike', // Add action validation
         ]);
 
         $dataToSave = [
@@ -44,20 +45,24 @@ class ShareController extends Controller
             // Fetch track data from Spotify
             $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
 
-            if (!$trackData) {
+            if (!$trackData || !$trackData['track']) {
                 return back()->with('error', 'Could not find track on Spotify.');
             }
 
+            $track = $trackData['track'];
+            $artist = $trackData['artist'];
+
             // Prepare data for our database
-            $artistName = $trackData['artists'][0]['name'] ?? 'Unknown Artist';
-            $trackName = $trackData['name'];
+            $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
+            $trackName = $track['name'];
 
             $dataToSave = array_merge($dataToSave, [
                 'spotify_track_id' => $validated['spotify_track_id'],
                 'track_name' => $trackName,
-                'artist_name' => implode(', ', array_map(fn($artist) => $artist['name'], $trackData['artists'])),
-                'album_art_url' => $trackData['album']['images'][0]['url'] ?? null,
-                'spotify_url' => $trackData['external_urls']['spotify'] ?? '#',
+                'artist_name' => implode(', ', array_map(fn($a) => $a['name'], $track['artists'])),
+                'album_art_url' => $track['album']['images'][0]['url'] ?? null,
+                'spotify_url' => $track['external_urls']['spotify'] ?? '#',
+                'genres' => $artist ? json_encode($artist['genres']) : null,
             ]);
 
             // Search YouTube and add to data
@@ -73,6 +78,11 @@ class ShareController extends Controller
             if (empty($validated['caption'])) {
                 return back()->withErrors(['caption' => 'Caption is required for text shares.']);
             }
+        }
+
+        // Handle dislike action
+        if ($validated['action'] === 'dislike') {
+            $dataToSave['disliked'] = true;
         }
 
         // Create the share
@@ -139,4 +149,36 @@ public function destroy(Share $share)
     // Return a success response
     return response()->json(['message' => 'Share deleted successfully.']);
 }
+    /**
+     * Toggles the "dislike" status for a given share.
+     */
+    public function toggleDislike(Share $share)
+    {
+        // Get the currently authenticated user
+        $user = auth()->user();
+
+        // Prevent user from disliking their own share
+        if ($user->id === $share->user_id) {
+            return response()->json([
+                'message' => 'You cannot dislike your own share.',
+                'disliked' => $user->dislikes->contains($share), // Should always be false
+                'dislikesCount' => $share->dislikes()->count(),
+            ], 403); // Forbidden
+        }
+
+        // If the user has liked this share, remove the like first
+        if ($user->likes->contains($share)) {
+            $user->likes()->detach($share);
+        }
+
+        // Use the toggle method to attach if not attached,
+        // or detach if already attached.
+        $user->dislikes()->toggle($share);
+
+        // Return a JSON response with the new dislike count and disliked status
+        return response()->json([
+            'disliked' => $user->dislikes->contains($share),
+            'dislikesCount' => $share->dislikes()->count(),
+        ]);
+    }
 }

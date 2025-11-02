@@ -15,6 +15,11 @@ class LikeController extends Controller
         // Get the currently authenticated user
         $user = auth()->user();
 
+        // If the user has disliked this share, remove the dislike first
+        if ($user->dislikes->contains($share)) {
+            $user->dislikes()->detach($share);
+        }
+
         // Use the toggle method to attach if not attached,
         // or detach if already attached.
         $user->likes()->toggle($share);

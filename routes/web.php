@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('shares', ShareController::class)->only(['store', 'destroy']);
     Route::resource('shares.comments', CommentController::class)->only(['store', 'destroy', 'update']);
     Route::post('/shares/{share}/like', [LikeController::class, 'toggle'])->name('shares.like');
+    Route::post('/shares/{share}/dislike', [ShareController::class, 'toggleDislike'])->name('shares.dislike');
 
     // User search route
     Route::get('/users/search', [UserSearchController::class, 'index'])->name('user.search');

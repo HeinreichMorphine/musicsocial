@@ -24,13 +24,37 @@
 
                         <ul class="space-y-4">
                             @foreach ($following as $followedUser)
-                                <li class="flex items-center space-x-4">
-                                    <a href="{{ route('profile.show', $followedUser->name) }}">
-                                        <img src="{{ $followedUser->profile_picture ? Storage::url($followedUser->profile_picture) : 'https://via.placeholder.com/40' }}" alt="{{ $followedUser->name }}'s Avatar" class="h-10 w-10 rounded-full object-cover">
-                                    </a>
-                                    <a href="{{ route('profile.show', $followedUser->name) }}" class="font-semibold text-gray-800 hover:underline">
-                                        {{ $followedUser->name }}
-                                    </a>
+                                <li class="flex items-center justify-between space-x-4" x-data="{ isFollowing: true }">
+                                    <div class="flex items-center space-x-4">
+                                        <a href="{{ route('profile.show', $followedUser->name) }}">
+                                            <img src="{{ $followedUser->profile_picture ? Storage::url($followedUser->profile_picture) : 'https://via.placeholder.com/40' }}" alt="{{ $followedUser->name }}'s Avatar" class="h-10 w-10 rounded-full object-cover">
+                                        </a>
+                                        <a href="{{ route('profile.show', $followedUser->name) }}" class="font-semibold text-gray-800 hover:underline">
+                                            {{ $followedUser->name }}
+                                        </a>
+                                    </div>
+                                    <form x-show="isFollowing" @submit.prevent="
+                                        fetch('{{ route('users.follow', $followedUser) }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            },
+                                            body: JSON.stringify({})
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (!data.followed) {
+                                                isFollowing = false;
+                                            }
+                                        })
+                                        .catch(error => console.error('Error:', error));
+                                    ">
+                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
+                                            Unfollow
+                                        </button>
+                                    </form>
                                 </li>
                             @endforeach
                         </ul>
@@ -42,7 +66,7 @@
 
             <div class="hidden md:block col-span-3">
                 <div class="sticky top-0 pt-4">
-                    @include('layouts.sidebar-right')
+                    <x-sidebar-right :recommendedShares="$recommendedShares" :usersToSuggest="$usersToSuggest" />
                 </div>
             </div>
         </div>

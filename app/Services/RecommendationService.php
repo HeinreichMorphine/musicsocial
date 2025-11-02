@@ -21,7 +21,8 @@ class RecommendationService
 
             if ($response->successful()) {
                 $recommendations = $response->json();
-                return array_column($recommendations, 'item_id');
+                // Return the full array of recommendation objects, including share_id, score, and reason.
+                return $recommendations['recommendations'] ?? [];
             } else {
                 Log::error('Python recommender service error: ' . $response->status() . ' - ' . $response->body());
                 return [];

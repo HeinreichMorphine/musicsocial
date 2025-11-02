@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('profile_picture')->nullable()->after('email');
+        Schema::table('shares', function (Blueprint $table) {
+            $table->json('genres')->nullable()->after('spotify_url');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('profile_picture');
+        Schema::table('shares', function (Blueprint $table) {
+            $table->dropColumn('genres');
         });
     }
 };
