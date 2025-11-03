@@ -50,78 +50,62 @@ class BackfillShareMetadata extends Command
 
         foreach ($sharesToUpdate as $share) {
             $this->line("\nProcessing Share ID: {$share->id} (Track: {$share->track_name})");
-            $genresFound = false;
+            $currentGenres = []; // Collect all genres here
 
-            $genresFound = false;
-
-            // 1. Try Spotify First
+            // 1. Try Spotify
             if ($share->spotify_track_id) {
                 try {
                     $trackData = $spotifyService->getTrack($share->spotify_track_id);
-
                     if (isset($trackData['error'])) {
                         $this->error("  - Spotify FAILED: " . $trackData['error']);
                     } elseif (!empty($trackData['genres'])) {
-                        $oldGenres = $share->genres ?? 'NULL';
-                        $newGenres = json_encode($trackData['genres']);
-                        $share->genres = $newGenres;
-                        $share->save();
-                        $this->info("  - SUCCESS (Spotify): Updated genres from {$oldGenres} to {$newGenres}");
-                        $updatedCount++;
-                        $genresFound = true;
+                        $currentGenres = array_merge($currentGenres, $trackData['genres']);
+                        $this->info("  - SUCCESS (Spotify): Found genres.");
                     }
                 } catch (\Exception $e) {
                     $this->error("  - ERROR (Spotify): An exception occurred: " . $e->getMessage());
                 }
             }
 
-            // 2. If Spotify fails, try MusicBrainz as a fallback
-            if (!$genresFound && $share->artist_name) {
-                $this->comment("  - INFO: Spotify failed. Trying MusicBrainz fallback...");
+            // 2. Try MusicBrainz
+            if ($share->artist_name) {
                 try {
                     $mbGenres = $musicBrainzService->getArtistGenres($share->artist_name);
-
                     if (isset($mbGenres['error'])) {
                         $this->error("  - MusicBrainz FAILED: " . $mbGenres['error']);
                     } elseif (!empty($mbGenres)) {
-                        $oldGenres = $share->genres ?? 'NULL';
-                        $newGenres = json_encode($mbGenres);
-                        $share->genres = $newGenres;
-                        $share->save();
-                        $this->info("  - SUCCESS (MusicBrainz): Updated genres from {$oldGenres} to {$newGenres}");
-                        $updatedCount++;
-                        $genresFound = true;
+                        $currentGenres = array_merge($currentGenres, $mbGenres);
+                        $this->info("  - SUCCESS (MusicBrainz): Found genres.");
                     }
                 } catch (\Exception $e) {
                     $this->error("  - ERROR (MusicBrainz): An exception occurred: " . $e->getMessage());
                 }
             }
 
-            // 3. If MusicBrainz also fails, try YouTube as a fallback
-            if (!$genresFound && $share->youtube_video_id) {
-                $this->comment("  - INFO: MusicBrainz failed. Trying YouTube fallback...");
+            // Deduplicate and clean genres
+            $currentGenres = array_unique(array_filter($currentGenres));
+
+            // 3. YouTube Fallback (only if no genres found yet)
+            if (empty($currentGenres) && $share->youtube_video_id) {
+                $this->comment("  - INFO: No genres from Spotify/MusicBrainz. Trying YouTube fallback...");
                 try {
                     $videoData = $youTubeService->getVideo($share->youtube_video_id);
 
                     if ($videoData && !empty($videoData['tags'])) {
                         $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop'];
-                        $foundGenres = [];
+                        $foundYouTubeGenres = [];
                         foreach ($videoData['tags'] as $tag) {
                             foreach ($genreKeywords as $keyword) {
                                 if (stripos($tag, $keyword) !== false) {
-                                    $foundGenres[] = $keyword;
+                                    $foundYouTubeGenres[] = $keyword;
                                 }
                             }
                         }
-                        $foundGenres = array_unique($foundGenres);
+                        $foundYouTubeGenres = array_unique($foundYouTubeGenres);
 
-                        if (!empty($foundGenres)) {
-                            $oldGenres = $share->genres ?? 'NULL';
-                            $newGenres = json_encode($foundGenres);
-                            $share->genres = $newGenres;
-                            $share->save();
-                            $this->info("  - SUCCESS (YouTube): Updated genres from {$oldGenres} to {$newGenres}");
-                            $updatedCount++;
+                        if (!empty($foundYouTubeGenres)) {
+                            $currentGenres = array_merge($currentGenres, $foundYouTubeGenres);
+                            $this->info("  - SUCCESS (YouTube): Found genres.");
                         } else {
                             $this->warn("  - FAILED (YouTube): Found tags, but no relevant genre keywords matched.");
                         }
@@ -131,8 +115,18 @@ class BackfillShareMetadata extends Command
                 } catch (\Exception $e) {
                     $this->error("  - ERROR (YouTube): An exception occurred: " . $e->getMessage());
                 }
-            } elseif (!$genresFound) {
-                $this->warn("  - FAILED: No genres found from any source.");
+            }
+
+            // Save if genres were found
+            if (!empty($currentGenres)) {
+                $oldGenres = $share->genres ?? 'NULL';
+                $newGenres = json_encode(array_values($currentGenres)); // Re-index array for JSON
+                $share->genres = $newGenres;
+                $share->save();
+                $this->info("  - FINAL SUCCESS: Updated genres from {$oldGenres} to {$newGenres}");
+                $updatedCount++;
+            } else {
+                $this->warn("  - FINAL FAILED: No genres found from any source for Share ID: {$share->id}.");
             }
 
             $bar->advance();

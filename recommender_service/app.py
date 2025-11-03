@@ -28,7 +28,7 @@ def init_db_connection():
     if engine is not None:
         return
     try:
-        db_uri = f"mysql+mysqlconnector://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}"
+        db_uri = f"mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}"
         engine = create_engine(db_uri)
         # Test the connection
         with engine.connect() as connection:
@@ -39,29 +39,39 @@ def init_db_connection():
 
 def fetch_data_from_db():
     if engine is None:
+        print("Database engine not initialized. Cannot fetch data.")
         return pd.DataFrame()
 
+    print("\n--- Starting Data Fetch ---")
     try:
         with engine.connect() as connection:
             # Positive interactions from likes with weight 1.0
             likes_query = "SELECT user_id, share_id, 1.0 as interaction FROM likes"
             likes_df = pd.read_sql(likes_query, connection)
-            print(f"- Found {len(likes_df)} likes.")
+            print(f"1. Likes: Found {len(likes_df)} records.")
+            if not likes_df.empty:
+                print(likes_df.head())
 
             # Negative interactions from feedback with weight -1.0
             feedback_query = "SELECT user_id, share_id, -1.0 as interaction FROM user_feedback WHERE feedback_type = 'not_interested'"
             feedback_df = pd.read_sql(feedback_query, connection)
-            print(f"- Found {len(feedback_df)} feedback records.")
+            print(f"2. Not Interested Feedback: Found {len(feedback_df)} records.")
+            if not feedback_df.empty:
+                print(feedback_df.head())
 
             # Negative interactions from dislikes with weight -1.0
             dislikes_query = "SELECT user_id, share_id, -1.0 as interaction FROM dislikes"
             dislikes_df = pd.read_sql(dislikes_query, connection)
-            print(f"- Found {len(dislikes_df)} dislikes.")
+            print(f"3. Dislikes: Found {len(dislikes_df)} records.")
+            if not dislikes_df.empty:
+                print(dislikes_df.head())
 
             # User's own shares with a higher weight of 1.5
             shares_query = "SELECT user_id, id as share_id, 1.5 as interaction FROM shares"
             shares_df = pd.read_sql(shares_query, connection)
-            print(f"- Found {len(shares_df)} shares.")
+            print(f"4. User's Own Shares: Found {len(shares_df)} records.")
+            if not shares_df.empty:
+                print(shares_df.head())
 
             # Likes from followed users with a weight of 1.2
             following_likes_query = """
@@ -70,7 +80,9 @@ def fetch_data_from_db():
                 JOIN likes l ON f.user_id = l.user_id
             """
             following_likes_df = pd.read_sql(following_likes_query, connection)
-            print(f"- Found {len(following_likes_df)} likes from followed users.")
+            print(f"5. Likes from Followed Users: Found {len(following_likes_df)} records.")
+            if not following_likes_df.empty:
+                print(following_likes_df.head())
 
             # Shares from followed users with a weight of 0.8
             following_shares_query = """
@@ -79,19 +91,26 @@ def fetch_data_from_db():
                 JOIN shares s ON f.user_id = s.user_id
             """
             following_shares_df = pd.read_sql(following_shares_query, connection)
-            print(f"- Found {len(following_shares_df)} shares from followed users.")
+            print(f"6. Shares from Followed Users: Found {len(following_shares_df)} records.")
+            if not following_shares_df.empty:
+                print(following_shares_df.head())
 
             # Combine all interactions
             interactions_df = pd.concat([likes_df, feedback_df, dislikes_df, shares_df, following_likes_df, following_shares_df], ignore_index=True)
+            if interactions_df.empty:
+                print("--- No interaction data found in any table. ---")
+                return pd.DataFrame()
+
             interactions_df = interactions_df.rename(columns={'share_id': 'item_id'})
             
             # Remove duplicates, keeping the interaction with the highest weight
             interactions_df = interactions_df.sort_values('interaction', ascending=False).drop_duplicates(subset=['user_id', 'item_id'], keep='first')
 
-            print(f"Fetched {len(interactions_df)} user-item interactions.")
+            print(f"\nTotal unique user-item interactions fetched: {len(interactions_df)}")
+            print("--- Finished Data Fetch ---\n")
             return interactions_df
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"An exception occurred during data fetching: {e}")
         return pd.DataFrame()
 
 MODEL_PATH = 'surprise_model.pkl'
