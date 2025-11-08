@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Song;
 use App\Models\User;
-use App\Services\RecommendationService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -14,24 +11,19 @@ use Illuminate\Support\Facades\Auth;
  */
 class DiscoveryController extends Controller
 {
-    protected $recommendationService;
-
     /**
      * Create a new controller instance.
      *
-     * @param  \App\Services\RecommendationService  $recommendationService The recommendation service, injected by the service container.
      * @return void
      */
-    public function __construct(RecommendationService $recommendationService)
+    public function __construct()
     {
-        $this->recommendationService = $recommendationService;
     }
 
     /**
      * Display the discovery page with recommended songs and users.
      *
-     * This method fetches personalized song recommendations from the `RecommendationService`
-     * and generates a list of suggested users to follow based on shared tastes and popularity.
+     * This method generates a list of suggested users to follow based on shared tastes and popularity.
      * It then passes this data to the `discovery` view.
      *
      * @return \Illuminate\View\View
@@ -43,26 +35,6 @@ class DiscoveryController extends Controller
         $usersToSuggest = collect();
 
         if ($user) {
-            $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
-            $recommendedSongs = collect();
-
-            if (!empty($rawRecommendations)) {
-                $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
-                $recommendationData = collect($rawRecommendations)->keyBy('song_id');
-
-                $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
-
-                // Sort the recommended songs by score
-                $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
-                    return $recommendationData[$song->id]['score'] ?? 0;
-                });
-
-                $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
-                    $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
-                    return $song;
-                });
-            }
-
             // --- [NEW] Improved "Who to Follow" Logic ---
 
             // 1. Find users who liked the same songs as the current user (Taste Neighbors)
