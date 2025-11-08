@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use App\Console\Commands\RetrainRecommender;
+
 use App\Console\Commands\BackfillShareMetadata;
 use App\Console\Commands\ClearSharesData;
 
