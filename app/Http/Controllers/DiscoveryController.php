@@ -67,3 +67,4 @@ class DiscoveryController extends Controller
         return view('discovery', compact('recommendedSongs', 'usersToSuggest'));
     }
 }
+ 
