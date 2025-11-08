@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\Song;
 
 class ProfileController extends Controller
 {
@@ -39,6 +40,7 @@ class ProfileController extends Controller
 
         $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
         $recommendedShares = collect();
+        $recommendedSongs = collect();
 
         if (!empty($rawRecommendations)) {
             $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
@@ -55,6 +57,21 @@ class ProfileController extends Controller
                 $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
                 return $share;
             });
+
+            $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('song_id');
+
+            $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
+
+            // Sort the recommended songs by score
+            $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                return $recommendationData[$song->id]['score'] ?? 0;
+            });
+
+            $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                return $song;
+            });
         }
 
         $usersToSuggest = User::where('id', '!=', $user->id)
@@ -69,6 +86,7 @@ class ProfileController extends Controller
             'user' => $user,
             'recommendedShares' => $recommendedShares,
             'usersToSuggest' => $usersToSuggest,
+            'recommendedSongs' => $recommendedSongs,
         ]);
     }
 

@@ -8,6 +8,7 @@ use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\Song;
 
 class SettingsController extends Controller
 {
@@ -28,6 +29,7 @@ class SettingsController extends Controller
         $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
 
         $recommendedShares = collect();
+        $recommendedSongs = collect();
         if (!empty($rawRecommendations)) {
             $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
             $recommendationData = collect($rawRecommendations)->keyBy('share_id');
@@ -43,6 +45,21 @@ class SettingsController extends Controller
                 $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
                 return $share;
             });
+
+            $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('song_id');
+
+            $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
+
+            // Sort the recommended songs by score
+            $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                return $recommendationData[$song->id]['score'] ?? 0;
+            });
+
+            $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                return $song;
+            });
         }
 
         $usersToSuggest = User::where('id', '!=', $user->id)
@@ -53,6 +70,6 @@ class SettingsController extends Controller
                             ->limit(5)
                             ->get();
 
-        return view('settings.index', compact('recommendedShares', 'usersToSuggest'));
+        return view('settings.index', compact('recommendedShares', 'usersToSuggest', 'recommendedSongs'));
     }
 }
