@@ -9,11 +9,20 @@ class RecommendationService
 {
     protected $pythonServiceUrl;
 
+    /**
+     * Create a new class instance.
+     */
     public function __construct()
     {
         $this->pythonServiceUrl = env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000');
     }
 
+    /**
+     * Get recommendations for a user from the Python recommender service.
+     *
+     * @param int $userId
+     * @return array
+     */
     public function getRecommendations(int $userId): array
     {
         try {

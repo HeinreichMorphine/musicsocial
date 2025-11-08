@@ -8,6 +8,19 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Represents a user in the application.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string|null $profile_picture
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -67,7 +80,9 @@ class User extends Authenticatable
     }
 
     /**
-     * A user can post many shares.
+     * Get the shares posted by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function shares()
     {
@@ -75,7 +90,9 @@ class User extends Authenticatable
     }
 
     /**
-     * A user can post many comments.
+     * Get the comments posted by the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function comments()
     {
@@ -83,7 +100,9 @@ class User extends Authenticatable
     }
 
     /**
-     * The shares a user has liked (Many-to-Many).
+     * Get the shares that the user has liked.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function likes()
     {
@@ -91,7 +110,9 @@ class User extends Authenticatable
     }
 
     /**
-     * The shares a user has disliked (Many-to-Many).
+     * Get the shares that the user has disliked.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function dislikes()
     {
@@ -99,7 +120,9 @@ class User extends Authenticatable
     }
 
     /**
-     * The users that this user follows (Many-to-Many).
+     * Get the users that this user follows.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function following()
     {
@@ -107,7 +130,9 @@ class User extends Authenticatable
     }
 
     /**
-     * The users that follow this user (Many-to-Many).
+     * Get the users that follow this user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function followers()
     {

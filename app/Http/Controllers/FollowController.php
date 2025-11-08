@@ -5,10 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 
+/**
+ * Handles the logic for following and unfollowing users.
+ */
 class FollowController extends Controller
 {
-   /**
-     * Toggles the "follow" status for a given user.
+    /**
+     * Toggles the follow status between the authenticated user and the specified user.
+     *
+     * This method allows the authenticated user to follow or unfollow another user.
+     * It prevents users from following themselves and returns a JSON response with the
+     * updated follow status and the target user's new follower count.
+     *
+     * @param  \App\Models\User  $user The user to follow or unfollow.
+     * @return \Illuminate\Http\JsonResponse
      */
     public function toggle(User $user)
     {

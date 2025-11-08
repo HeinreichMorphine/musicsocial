@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('shares', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('spotify_track_id'); // To link to Spotify API [cite: 57]
+            $table->foreignId('song_id')->constrained()->onDelete('cascade');
             $table->text('caption')->nullable();
+            $table->string('type')->default('music');
             $table->timestamps();
         });
     }
@@ -28,3 +29,5 @@ return new class extends Migration
         Schema::dropIfExists('shares');
     }
 };
+
+

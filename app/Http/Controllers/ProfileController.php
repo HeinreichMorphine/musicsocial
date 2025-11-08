@@ -16,6 +16,12 @@ class ProfileController extends Controller
 {
     protected $recommendationService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \App\Services\RecommendationService  $recommendationService
+     * @return void
+     */
     public function __construct(RecommendationService $recommendationService)
     {
         $this->recommendationService = $recommendationService;
@@ -23,6 +29,9 @@ class ProfileController extends Controller
 
     /**
      * Display the user's profile form.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\View\View
      */
     public function edit(Request $request): View
     {
@@ -65,6 +74,9 @@ class ProfileController extends Controller
 
     /**
      * Update the user's profile information.
+     *
+     * @param  \App\Http\Requests\ProfileUpdateRequest  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -81,6 +93,9 @@ class ProfileController extends Controller
 
     /**
      * Delete the user's account.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -100,6 +115,12 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
+    /**
+     * Update the user's profile picture.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updatePicture(Request $request): RedirectResponse
     {
         $request->validate([

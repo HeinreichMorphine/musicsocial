@@ -50,19 +50,19 @@
 
         <div class="mt-3 border rounded-lg overflow-hidden hover:bg-gray-50 transition">
             <div class="flex items-center space-x-4 p-4">
-                <img src="{{ $share->album_art_url }}" alt="Album Art" class="w-16 h-16 rounded shadow">
+                <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-16 h-16 rounded shadow">
                 <div class="flex-1 min-w-0">
-                    <p class="text-lg font-bold text-gray-900 truncate">{{ $share->track_name }}</p>
-                    <p class="text-sm text-gray-600 truncate">{{ $share->artist_name }}</p>
+                    <p class="text-lg font-bold text-gray-900 truncate">{{ $share->song->track_name }}</p>
+                    <p class="text-sm text-gray-600 truncate">{{ $share->song->artist_name }}</p>
                 </div>
 
                 <div class="flex items-center space-x-2">
-                    <a href="{{ $share->spotify_url }}" target="_blank" title="Listen on Spotify" class="hover:opacity-75">
+                    <a href="{{ $share->song->spotify_url }}" target="_blank" title="Listen on Spotify" class="hover:opacity-75">
                         <img src="{{ asset('icons/spotify_icon.png') }}" alt="Spotify Logo" class="w-8 h-8">
                     </a>
 
-                    @if ($share->youtube_url)
-                        <a href="{{ $share->youtube_url }}" target="_blank" title="Watch on YouTube" class="hover:opacity-75">
+                    @if ($share->song->youtube_url)
+                        <a href="{{ $share->song->youtube_url }}" target="_blank" title="Watch on YouTube" class="hover:opacity-75">
                             <img src="{{ asset('icons/youtube_icon.png') }}" alt="YouTube Logo" class="w-8 h-8">
                         </a>
                     @endif

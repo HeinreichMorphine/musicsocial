@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Song;
 use Illuminate\Support\Facades\Http;
 
 class YouTubeService
@@ -9,6 +10,9 @@ class YouTubeService
     protected $baseUrl = 'https://www.googleapis.com/youtube/v3/';
     protected $apiKey;
 
+    /**
+     * Create a new class instance.
+     */
     public function __construct()
     {
         $this->apiKey = config('services.youtube.key');
@@ -16,6 +20,9 @@ class YouTubeService
 
     /**
      * Search for a single video and return its details.
+     *
+     * @param string $query
+     * @return array|null
      */
     public function searchVideo(string $query)
     {
@@ -41,6 +48,9 @@ class YouTubeService
 
     /**
      * Get details for a specific video, including tags.
+     *
+     * @param string $videoId
+     * @return array|null
      */
     public function getVideo(string $videoId)
     {
@@ -57,6 +67,8 @@ class YouTubeService
         $item = $response->json('items')[0];
 
         return [
+            'title' => $item['snippet']['title'] ?? null,
+            'description' => $item['snippet']['description'] ?? null,
             'tags' => $item['snippet']['tags'] ?? [],
         ];
     }

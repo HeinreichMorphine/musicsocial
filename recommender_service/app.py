@@ -46,54 +46,43 @@ def fetch_data_from_db():
     try:
         with engine.connect() as connection:
             # Positive interactions from likes with weight 1.0
-            likes_query = "SELECT user_id, share_id, 1.0 as interaction FROM likes"
+            likes_query = "SELECT l.user_id, s.song_id, 1.0 as interaction FROM likes l JOIN shares s ON l.share_id = s.id"
             likes_df = pd.read_sql(likes_query, connection)
             print(f"1. Likes: Found {len(likes_df)} records.")
-            if not likes_df.empty:
-                print(likes_df.head())
 
             # Negative interactions from feedback with weight -1.0
-            feedback_query = "SELECT user_id, share_id, -1.0 as interaction FROM user_feedback WHERE feedback_type = 'not_interested'"
+            feedback_query = "SELECT uf.user_id, s.song_id, -1.0 as interaction FROM user_feedback uf JOIN shares s ON uf.share_id = s.id WHERE uf.feedback_type = 'not_interested'"
             feedback_df = pd.read_sql(feedback_query, connection)
             print(f"2. Not Interested Feedback: Found {len(feedback_df)} records.")
-            if not feedback_df.empty:
-                print(feedback_df.head())
 
             # Negative interactions from dislikes with weight -1.0
-            dislikes_query = "SELECT user_id, share_id, -1.0 as interaction FROM dislikes"
+            dislikes_query = "SELECT d.user_id, s.song_id, -1.0 as interaction FROM dislikes d JOIN shares s ON d.share_id = s.id"
             dislikes_df = pd.read_sql(dislikes_query, connection)
             print(f"3. Dislikes: Found {len(dislikes_df)} records.")
-            if not dislikes_df.empty:
-                print(dislikes_df.head())
 
             # User's own shares with a higher weight of 1.5
-            shares_query = "SELECT user_id, id as share_id, 1.5 as interaction FROM shares"
+            shares_query = "SELECT user_id, song_id, 1.5 as interaction FROM shares"
             shares_df = pd.read_sql(shares_query, connection)
             print(f"4. User's Own Shares: Found {len(shares_df)} records.")
-            if not shares_df.empty:
-                print(shares_df.head())
 
             # Likes from followed users with a weight of 1.2
             following_likes_query = """
-                SELECT f.follower_id as user_id, l.share_id, 1.2 as interaction
+                SELECT f.follower_id as user_id, s.song_id, 1.2 as interaction
                 FROM followers f
                 JOIN likes l ON f.user_id = l.user_id
+                JOIN shares s ON l.share_id = s.id
             """
             following_likes_df = pd.read_sql(following_likes_query, connection)
             print(f"5. Likes from Followed Users: Found {len(following_likes_df)} records.")
-            if not following_likes_df.empty:
-                print(following_likes_df.head())
 
             # Shares from followed users with a weight of 0.8
             following_shares_query = """
-                SELECT f.follower_id as user_id, s.id as share_id, 0.8 as interaction
+                SELECT f.follower_id as user_id, s.song_id, 0.8 as interaction
                 FROM followers f
                 JOIN shares s ON f.user_id = s.user_id
             """
             following_shares_df = pd.read_sql(following_shares_query, connection)
             print(f"6. Shares from Followed Users: Found {len(following_shares_df)} records.")
-            if not following_shares_df.empty:
-                print(following_shares_df.head())
 
             # Combine all interactions
             interactions_df = pd.concat([likes_df, feedback_df, dislikes_df, shares_df, following_likes_df, following_shares_df], ignore_index=True)
@@ -101,7 +90,7 @@ def fetch_data_from_db():
                 print("--- No interaction data found in any table. ---")
                 return pd.DataFrame()
 
-            interactions_df = interactions_df.rename(columns={'share_id': 'item_id'})
+            interactions_df = interactions_df.rename(columns={'song_id': 'item_id'})
             
             # Remove duplicates, keeping the interaction with the highest weight
             interactions_df = interactions_df.sort_values('interaction', ascending=False).drop_duplicates(subset=['user_id', 'item_id'], keep='first')
@@ -169,46 +158,40 @@ def retrain_model_endpoint():
         train_and_save_model()
         return jsonify({"status": "success", "message": "Model retraining initiated and completed."}), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}) , 500
 
 @app.route('/test_db_connection')
 def test_db_connection():
     if engine:
         return jsonify({"status": "success", "message": "Database connection successful!"})
     else:
-        return jsonify({"status": "error", "message": "Failed to connect to database."}), 500
+        return jsonify({"status": "error", "message": "Failed to connect to database."}) , 500
 
-def post_process_predictions(predictions, all_shares_df, liked_artists, liked_genres, followed_user_ids, unliked_share_ids, share_creator_map):
+def post_process_predictions(predictions, all_songs_df, liked_artists, liked_genres):
     artist_boost_factor = 0.25 # Boost score by 25%
     genre_boost_factor = 0.20 # Boost score by 20%
     combined_boost_factor = 0.5 # Boost score by 50% for combined artist and genre match
-    negative_boost_factor = 0.30 # Reduce score by 30% for certain conditions
-    shares_map = all_shares_df.set_index('id')
+    songs_map = all_songs_df.set_index('id')
 
     for pred in predictions:
-        share_id = pred['share_id']
-        artist_name = shares_map.loc[share_id, 'artist_name']
-        share_genres_json = shares_map.loc[share_id, 'genres']
-        creator_user_id = share_creator_map.get(share_id) # Get the creator of the share
+        song_id = pred['song_id']
+        artist_name = songs_map.loc[song_id, 'artist_name']
+        song_genres_json = songs_map.loc[song_id, 'genres']
 
         # Start with a generic reason
         pred['reason'] = 'Recommended for you'
 
-        # Determine if there are matching genres for the current share
+        # Determine if there are matching genres for the current song
         has_matching_genres = False
         matching_genres_for_reason = set()
-        if isinstance(share_genres_json, str) and liked_genres:
+        if isinstance(song_genres_json, str) and liked_genres:
             try:
-                current_genres = {g.lower() for g in json.loads(share_genres_json)}
+                current_genres = {g.lower() for g in json.loads(song_genres_json)}
                 matching_genres_for_reason = current_genres.intersection(liked_genres)
                 if matching_genres_for_reason:
                     has_matching_genres = True
             except (json.JSONDecodeError, TypeError):
                 pass
-
-        # --- Pre-calculate interaction flags ---
-        is_from_followed_user = creator_user_id in followed_user_ids
-        is_unliked_by_user = share_id in unliked_share_ids
 
         # --- Positive Boosting Logic ---
         # Combined Artist and Genre Boost
@@ -225,19 +208,6 @@ def post_process_predictions(predictions, all_shares_df, liked_artists, liked_ge
         elif has_matching_genres:
             pred['score'] *= (1 + genre_boost_factor)
             pred['reason'] = f'Because you enjoy {", ".join(list(matching_genres_for_reason)).title()} genres'
-        
-        # --- Boosting Logic for Shares from Followed Users ---
-        if is_from_followed_user and not is_unliked_by_user: # Only boost if not unliked
-            followed_user_boost_factor = 0.10 # Boost score by 10%
-            pred['score'] *= (1 + followed_user_boost_factor)
-            if pred['reason'] == 'Recommended for you': # Don't overwrite a more specific reason
-                pred['reason'] = f'Because someone you follow shared it'
-
-        # --- Negative Boosting Logic ---
-        if pred['reason'] == 'Recommended for you' or pred['reason'] == 'Because someone you follow shared it':
-            if is_from_followed_user and (not has_matching_genres or is_unliked_by_user):
-                pred['score'] *= (1 - negative_boost_factor)
-                pred['reason'] = 'To broaden your horizon, here is a song from a user you follow'
 
         # If no specific reason is found, it's likely due to taste neighbors
         if pred['reason'] == 'Recommended for you' and pred['score'] > 1.0: # A score > 1 suggests a boost from the model itself
@@ -250,32 +220,34 @@ def predict_scores(user_id, items_to_predict):
     predictions = []
     for item_id in items_to_predict:
         prediction = algo.predict(uid=user_id, iid=item_id, r_ui=None)
-        predictions.append({'share_id': int(item_id), 'score': prediction.est})
+        predictions.append({'song_id': int(item_id), 'score': prediction.est})
     return predictions
 
 def get_user_interactions(user_id, connection):
     user_interactions_query = text("""
-        SELECT share_id FROM likes WHERE user_id = :user_id
+        SELECT s.song_id FROM likes l JOIN shares s ON l.share_id = s.id WHERE l.user_id = :user_id
         UNION
-        SELECT id as share_id FROM shares WHERE user_id = :user_id
+        SELECT song_id FROM shares WHERE user_id = :user_id
         UNION
-        SELECT share_id FROM user_feedback WHERE user_id = :user_id
+        SELECT s.song_id FROM user_feedback uf JOIN shares s ON uf.share_id = s.id WHERE uf.user_id = :user_id
         UNION
-        SELECT share_id FROM dislikes WHERE user_id = :user_id
+        SELECT s.song_id FROM dislikes d JOIN shares s ON d.share_id = s.id WHERE d.user_id = :user_id
     """)
-    user_interacted_shares_df = pd.read_sql(user_interactions_query, connection, params={'user_id': user_id})
-    return set(user_interacted_shares_df['share_id'].unique())
+    user_interacted_songs_df = pd.read_sql(user_interactions_query, connection, params={'user_id': user_id})
+    return set(user_interacted_songs_df['song_id'].unique())
 
 def get_liked_genres(user_id, connection):
     liked_genres_query = text("""
-        SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(s.genres, '$[*]')) as genre_item
+        SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(so.genres, '$[*]')) as genre_item
         FROM likes l
         JOIN shares s ON l.share_id = s.id
-        WHERE l.user_id = :user_id AND s.genres IS NOT NULL
+        JOIN songs so ON s.song_id = so.id
+        WHERE l.user_id = :user_id AND so.genres IS NOT NULL
         UNION
-        SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(s.genres, '$[*]')) as genre_item
+        SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(so.genres, '$[*]')) as genre_item
         FROM shares s
-        WHERE s.user_id = :user_id AND s.genres IS NOT NULL
+        JOIN songs so ON s.song_id = so.id
+        WHERE s.user_id = :user_id AND so.genres IS NOT NULL
     """)
     liked_genres_df = pd.read_sql(liked_genres_query, connection, params={'user_id': user_id})
     liked_genres = set()
@@ -291,14 +263,16 @@ def get_liked_genres(user_id, connection):
 
 def get_liked_artists(user_id, connection):
     liked_artists_query = text("""
-        SELECT DISTINCT s.artist_name
+        SELECT DISTINCT so.artist_name
         FROM likes l
         JOIN shares s ON l.share_id = s.id
+        JOIN songs so ON s.song_id = so.id
         WHERE l.user_id = :user_id
         UNION
-        SELECT DISTINCT artist_name
-        FROM shares
-        WHERE user_id = :user_id
+        SELECT DISTINCT so.artist_name
+        FROM shares s
+        JOIN songs so ON s.song_id = so.id
+        WHERE s.user_id = :user_id
     """)
     liked_artists_df = pd.read_sql(liked_artists_query, connection, params={'user_id': user_id})
     return set(liked_artists_df['artist_name'].unique())
@@ -307,67 +281,39 @@ def get_liked_artists(user_id, connection):
 def get_recommendations(user_id):
     global algo
     if algo is None:
-        return jsonify({"status": "error", "message": "Recommendation model not loaded or trained."}), 500
+        return jsonify({"status": "error", "message": "Recommendation model not loaded or trained."}) , 500
 
     if engine is None:
-        return jsonify({"status": "error", "message": "Database connection not initialized."}), 500
+        return jsonify({"status": "error", "message": "Database connection not initialized."}) , 500
 
     try:
-        predictions = [] # Initialize predictions list
         with engine.connect() as connection:
-            # Get all shares with artist info
-            shares_query = "SELECT id, artist_name, genres FROM shares"
-            all_shares_df = pd.read_sql(shares_query, connection)
-            all_share_ids = all_shares_df['id'].unique()
+            # Get all songs with artist info
+            songs_query = "SELECT id, artist_name, genres FROM songs"
+            all_songs_df = pd.read_sql(songs_query, connection)
+            all_song_ids = all_songs_df['id'].unique()
 
-
-
-            user_interacted_share_ids = get_user_interactions(user_id, connection)
-
+            user_interacted_song_ids = get_user_interactions(user_id, connection)
 
             liked_artists = get_liked_artists(user_id, connection)
 
             # Get genres from songs the user has liked or shared
             liked_genres = get_liked_genres(user_id, connection)
 
-
-            # Get users that the current user follows
-            followed_users_query = text("SELECT user_id FROM followers WHERE follower_id = :user_id")
-            followed_users_df = pd.read_sql(followed_users_query, connection, params={'user_id': user_id})
-            followed_user_ids = set(followed_users_df['user_id'].unique())
-
-            # Get shares that the current user has explicitly unliked or disliked
-            unliked_shares_query = text("""
-                SELECT share_id FROM user_feedback WHERE user_id = :user_id AND feedback_type = 'not_interested'
-                UNION
-                SELECT share_id FROM dislikes WHERE user_id = :user_id
-            """)
-            unliked_shares_df = pd.read_sql(unliked_shares_query, connection, params={'user_id': user_id})
-            unliked_share_ids = set(unliked_shares_df['share_id'].unique())
-
-            # Get share creator user IDs for all shares
-            share_creators_query = "SELECT id, user_id FROM shares"
-            share_creators_df = pd.read_sql(share_creators_query, connection)
-            share_creator_map = share_creators_df.set_index('id')['user_id'].to_dict()
-
-            items_to_predict = [item_id for item_id in all_share_ids if item_id not in user_interacted_share_ids]
-
+            items_to_predict = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]
 
             predictions = predict_scores(user_id, items_to_predict)
-            
 
-
-            predictions = post_process_predictions(predictions, all_shares_df, liked_artists, liked_genres, followed_user_ids, unliked_share_ids, share_creator_map)
+            predictions = post_process_predictions(predictions, all_songs_df, liked_artists, liked_genres)
 
             predictions.sort(key=lambda x: x['score'], reverse=True)
 
             top_n_recommendations = predictions[:10]
 
-
             return jsonify({"user_id": user_id, "recommendations": top_n_recommendations})
     except Exception as e:
         print(f"Error in get_recommendations: {e}")
-        return jsonify({"status": "error", "message": f"Error generating recommendations: {e}"}), 500
+        return jsonify({"status": "error", "message": f"Error generating recommendations: {e}"}) , 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

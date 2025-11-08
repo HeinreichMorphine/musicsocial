@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\DB;
 
 class RecommendationDataController extends Controller
 {
+    /**
+     * Get user interactions for the recommendation service.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getInteractions()
     {
         $interactions = [];

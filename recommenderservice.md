@@ -20,7 +20,7 @@ The two systems share the same MySQL database, allowing the Python service to ac
 1.  A user visits the "Discovery" page in the MusicSocial application.
 2.  The `DiscoveryController` in Laravel calls the `RecommendationService`.
 3.  The `RecommendationService` sends a GET request to the `/recommendations/<user_id>` endpoint on the Python service.
-4.  The Python service queries the database for user interaction data, predicts the best recommendations, and returns a list of `share_id`s.
+4.  The Python service queries the database for user interaction data, predicts the best recommendations, and returns a list of `song_id`s.
 5.  The Laravel application then displays these shares to the user.
 
 ## 3. Installation and Setup
@@ -66,38 +66,47 @@ Our system suggests new music by understanding your taste through your interacti
 
 ### 1. Gathering Your Music Footprint
 
-We collect data on how you interact with music, assigning a "weight" to each action:
+We collect data on how you interact with music, assigning a "weight" to each action to understand your preferences:
 
-*   **Strong Positive (`1.5`):** Your own shared songs.
-*   **Positive (`1.0` - `1.2`):** Your likes, and songs liked by or shared by users you follow.
-*   **Negative (`-1.0`):** Your dislikes, and songs you've marked as "not interested."
+*   **Your Own Shares (`1.5`):** Songs you share are the strongest indicator of your taste.
+*   **Likes from Followed Users (`1.2`):** Songs liked by people you follow are highly influential.
+*   **Your Likes (`1.0`):** A standard positive signal.
+*   **Shares from Followed Users (`0.8`):** A weaker positive signal.
+*   **Dislikes / "Not Interested" (`-1.0`):** Explicit negative feedback.
 
-The highest weight for any interaction with a song is prioritized.
+If you interact with the same song in multiple ways, we only consider the action with the highest weight.
 
 ### 2. Learning Your Taste (SVD Model)
 
-All this data trains a smart algorithm called **SVD**. It learns your unique taste patterns and the characteristics of each song, creating a "taste profile" for you and a "feature profile" for every song.
+This data trains a **Singular Value Decomposition (SVD)** algorithm. It's a collaborative filtering method that learns your unique taste profile by analyzing your interactions in the context of all other users' interactions.
 
 ### 3. Predicting New Songs
 
-When you seek recommendations, your "taste profile" is compared to songs you haven't heard. The system generates a "raw score" predicting how much it thinks you'd like each new song.
+The trained model predicts a "raw score" for songs you haven't interacted with, estimating how much you might like them based on the learned patterns.
 
 ### 4. Fine-Tuning and Explaining
 
-Raw scores are adjusted with extra rules, and a reason is provided:
+The raw scores are just the start. We then apply a post-processing layer to boost or reduce scores and provide a clear reason for each recommendation.
 
-*   **Generic:** "Recommended for you."
-*   **Negative:** "Less relevant: From followed user, but not matching your taste" (if from a followed user but not aligned with your taste or disliked).
-*   **Positive:**
-    *   "Because someone you follow shared it."
-    *   "Because you enjoy [Artist Name] and similar genres."
-    *   "Because you enjoy [Artist Name]."
-    *   "Because you enjoy [Genre]."
-*   **Community:** "Popular with users who have similar tastes."
+*   **Score Boosting:**
+    *   **+50%:** If the song's artist and genre match your likes.
+    *   **+25%:** If the artist matches your likes.
+    *   **+20%:** If the genre matches your likes.
+    *   **+10%:** If the song was shared by someone you follow (and you haven't disliked it).
+
+*   **Score Reduction:**
+    *   **-30%:** If a song is from a user you follow but doesn't align with your taste, we may still show it to you with a lower score to help you discover new things.
+
+*   **Recommendation Reasons:**
+    *   **Artist/Genre Match:** "Because you enjoy [Artist Name]" or "Because you enjoy [Genre]".
+    *   **Followed User:** "Because someone you follow shared it."
+    *   **Taste Neighbors:** "Popular with users who have similar tastes to you..."
+    *   **Discovery:** "To broaden your horizon, here is a song from a user you follow."
+    *   **Default:** "Recommended for you."
 
 ### 5. Your Personalized Playlist
 
-Finally, songs are sorted by their refined scores, and the top recommendations are presented to you on the Discovery page, each with a clear explanation of why it was suggested.
+Finally, the fine-tuned and sorted recommendations are presented to you on the Discovery page, each with a reason to explain why it was chosen for you.
 
 ## 5. API Endpoints
 

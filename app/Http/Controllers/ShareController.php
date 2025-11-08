@@ -3,22 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Share;
+use App\Models\Song;
 use App\Services\SpotifyService;
 use App\Services\YouTubeService;
-use App\Services\MusicBrainzService; // <-- [NEW] Import MusicBrainzService
+use App\Services\MusicBrainzService;
+use App\Services\AudioDbService;
 use Illuminate\Http\Request;
 
 class ShareController extends Controller
 {
     protected $spotifyService;
     protected $youTubeService;
-    protected $musicBrainzService; // <-- [NEW] Add MusicBrainzService property
+    protected $musicBrainzService;
+    protected $audioDbService;
 
-    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService)
+    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService)
     {
         $this->spotifyService = $spotifyService;
         $this->youTubeService = $youTubeService;
         $this->musicBrainzService = $musicBrainzService;
+        $this->audioDbService = $audioDbService;
     }
 
     /**
@@ -30,100 +34,103 @@ class ShareController extends Controller
             'type' => 'required|string|in:music,text',
             'caption' => 'nullable|string|max:1000',
             'spotify_track_id' => 'nullable|string|max:255',
+            'youtube_video_id' => 'nullable|string|max:255',
         ]);
 
-        $dataToSave = [
-            'caption' => $validated['caption'],
-            'type' => $validated['type'],
-        ];
-
         if ($validated['type'] === 'music') {
-            // Ensure spotify_track_id is present for music shares
-            if (empty($validated['spotify_track_id'])) {
-                return back()->withErrors(['spotify_track_id' => 'Spotify track ID is required for music shares.']);
+            if (empty($validated['spotify_track_id']) && empty($validated['youtube_video_id'])) {
+                return back()->withErrors(['music_id' => 'Spotify track ID or YouTube video ID is required for music shares.']);
             }
 
-            // Fetch track data from Spotify
-            $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
+            $song = null;
 
-            if (!$trackData || !$trackData['track']) {
-                return back()->with('error', 'Could not find track on Spotify.');
-            }
+            if (!empty($validated['spotify_track_id'])) {
+                $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
 
-            $track = $trackData['track'];
-            $artist = $trackData['artist'];
-
-            // Prepare data for our database
-            $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
-            $trackName = $track['name'];
-
-            $dataToSave = array_merge($dataToSave, [
-                'spotify_track_id' => $validated['spotify_track_id'],
-                'track_name' => $trackName,
-                'artist_name' => implode(', ', array_map(fn($a) => $a['name'], $track['artists'])),
-                'album_art_url' => $track['album']['images'][0]['url'] ?? null,
-                'spotify_url' => $track['external_urls']['spotify'] ?? '#',
-                'genres' => !empty($trackData['genres']) ? json_encode($trackData['genres']) : null,
-            ]);
-
-            // Search YouTube and add to data
-            $searchQuery = $trackName . ' ' . $artistName;
-            $youTubeData = $this->youTubeService->searchVideo($searchQuery);
-
-            if ($youTubeData) {
-                $dataToSave['youtube_video_id'] = $youTubeData['video_id'];
-                $dataToSave['youtube_url'] = $youTubeData['url'];
-            }
-
-            // [NEW] MusicBrainz fallback for genres
-            if (empty($dataToSave['genres']) && !empty($dataToSave['artist_name'])) {
-                $mbGenres = $this->musicBrainzService->getArtistGenres($dataToSave['artist_name']);
-                if (!empty($mbGenres)) {
-                    $dataToSave['genres'] = json_encode($mbGenres);
+                if (isset($trackData['error'])) {
+                    return back()->with('error', $trackData['error']);
                 }
+
+                $song = $trackData['song'];
             }
 
-            // [NEW] YouTube fallback for genres
-            if (empty($dataToSave['genres']) && !empty($dataToSave['youtube_video_id'])) {
-                $videoData = $this->youTubeService->getVideo($dataToSave['youtube_video_id']);
-                if ($videoData && !empty($videoData['tags'])) {
-                    $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop'];
-                    $foundGenres = [];
-                    foreach ($videoData['tags'] as $tag) {
-                        foreach ($genreKeywords as $keyword) {
-                            if (stripos($tag, $keyword) !== false) {
-                                $foundGenres[] = $keyword;
+            if ($song) {
+                $genres = json_decode($song->genres, true) ?? [];
+
+                $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
+                if (!empty($audioDbGenres)) {
+                    $genres = array_unique(array_merge($genres, $audioDbGenres));
+                }
+
+                $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
+                if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
+                    $genres = array_unique(array_merge($genres, $musicBrainzGenres));
+                }
+
+                $spotifyGenres = json_decode($song->genres, true) ?? [];
+                $genres = array_unique(array_merge($genres, $spotifyGenres));
+
+                if (empty($song->youtube_video_id)) {
+                    $youTubeData = $this->youTubeService->searchVideo($song->track_name . ' ' . $song->artist_name);
+                    if ($youTubeData) {
+                        $song->update([
+                            'youtube_video_id' => $youTubeData['video_id'],
+                            'youtube_url' => $youTubeData['url'],
+                        ]);
+
+                        if (empty($genres)) {
+                            $videoData = $this->youTubeService->getVideo($youTubeData['video_id']);
+                            if ($videoData) {
+                                $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []) . ' ' . $videoData['description']);
+                                if (!empty($youtubeGenres)) {
+                                    $genres = array_unique(array_merge($genres, $youtubeGenres));
+                                }
                             }
                         }
                     }
-                    $foundGenres = array_unique($foundGenres);
-
-                    if (!empty($foundGenres)) {
-                        $dataToSave['genres'] = json_encode($foundGenres);
-                    }
                 }
+
+                $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
+
+                $request->user()->shares()->create([
+                    'song_id' => $song->id,
+                    'caption' => $validated['caption'],
+                    'type' => $validated['type'],
+                ]);
+            } else {
+                return back()->with('error', 'Could not create or find song.');
             }
+
         } elseif ($validated['type'] === 'text') {
-            // For text shares, caption is required
             if (empty($validated['caption'])) {
                 return back()->withErrors(['caption' => 'Caption is required for text shares.']);
             }
+            $request->user()->shares()->create($validated);
         }
-
-        // Create the share
-        $request->user()->shares()->create($dataToSave);
 
         return redirect(route('dashboard'));
     }
 
-    // ... (index, create, show, etc. methods remain the same) ...
+    private function extractGenresFromText(string $text): array
+    {
+        $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 'house', 'techno', 'trance', 'trap', 'world'];
+        $foundGenres = [];
+        foreach ($genreKeywords as $keyword) {
+            if (stripos($text, $keyword) !== false) {
+                $foundGenres[] = $keyword;
+            }
+        }
+        return $foundGenres;
+    }
 
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        // Eager load the 'song' relationship
+        $shares = Share::with('song')->get();
+        return view('shares.index', compact('shares')); // Assuming you have an index view for shares
     }
 
     /**
@@ -131,7 +138,7 @@ class ShareController extends Controller
      */
     public function create()
     {
-        //
+        return view('shares.create'); // Assuming you have a create view for shares
     }
 
     /**
@@ -139,7 +146,9 @@ class ShareController extends Controller
      */
     public function show(Share $share)
     {
-        //
+        // Eager load the 'song' relationship
+        $share->load('song');
+        return view('shares.show', compact('share')); // Assuming you have a show view for shares
     }
 
     /**
@@ -147,7 +156,9 @@ class ShareController extends Controller
      */
     public function edit(Share $share)
     {
-        //
+        // Eager load the 'song' relationship
+        $share->load('song');
+        return view('shares.edit', compact('share')); // Assuming you have an edit view for shares
     }
 
     /**
@@ -155,56 +166,54 @@ class ShareController extends Controller
      */
     public function update(Request $request, Share $share)
     {
-        //
+        // For now, assuming only caption can be updated for a share
+        $validated = $request->validate([
+            'caption' => 'nullable|string|max:1000',
+        ]);
+
+        $share->update($validated);
+
+        return redirect(route('dashboard'))->with('success', 'Share updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-public function destroy(Share $share)
-{
-    // Authorize the action
-    if (auth()->id() !== $share->user_id) {
-        return response()->json(['error' => 'Unauthorized action.'], 403);
+    public function destroy(Share $share)
+    {
+        if (auth()->id() !== $share->user_id) {
+            return response()->json(['error' => 'Unauthorized action.'], 403);
+        }
+
+        $share->delete();
+
+        return response()->json(['message' => 'Share deleted successfully.']);
     }
 
-    // Delete the share
-    $share->delete();
-
-    // Return a success response
-    return response()->json(['message' => 'Share deleted successfully.']);
-}
     /**
      * Toggles the "dislike" status for a given share.
      */
     public function toggleDislike(Share $share)
     {
-        // Get the currently authenticated user
         $user = auth()->user();
 
-        // Prevent user from disliking their own share
         if ($user->id === $share->user_id) {
             return response()->json([
                 'message' => 'You cannot dislike your own share.',
-                'disliked' => $user->dislikes->contains($share), // Should always be false
+                'disliked' => $user->dislikes->contains($share),
                 'dislikesCount' => $share->dislikes()->count(),
-            ], 403); // Forbidden
+            ], 403);
         }
 
-        // If the user has liked this share, remove the like first
         if ($user->likes->contains($share)) {
             $user->likes()->detach($share);
         }
 
-        // Use the toggle method to attach if not attached,
-        // or detach if already attached.
         $user->dislikes()->toggle($share);
 
-        // Return a JSON response with the new dislike count and disliked status
         return response()->json([
             'disliked' => $user->dislikes->contains($share),
             'dislikesCount' => $share->dislikes()->count(),
         ]);
     }
-
 }

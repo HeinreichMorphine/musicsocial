@@ -2,55 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Share;
+use App\Models\Song;
 use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Handles the display of the discovery page, which provides personalized content
+ * recommendations to the user, including recommended songs and users to follow.
+ */
 class DiscoveryController extends Controller
 {
     protected $recommendationService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \App\Services\RecommendationService  $recommendationService The recommendation service, injected by the service container.
+     * @return void
+     */
     public function __construct(RecommendationService $recommendationService)
     {
         $this->recommendationService = $recommendationService;
     }
 
+    /**
+     * Display the discovery page with recommended songs and users.
+     *
+     * This method fetches personalized song recommendations from the `RecommendationService`
+     * and generates a list of suggested users to follow based on shared tastes and popularity.
+     * It then passes this data to the `discovery` view.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         $user = Auth::user();
-        $recommendedShares = collect();
+        $recommendedSongs = collect();
         $usersToSuggest = collect();
 
         if ($user) {
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
-            $recommendedShares = collect();
+            $recommendedSongs = collect();
 
             if (!empty($rawRecommendations)) {
-                $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
-                $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+                $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+                $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-                $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+                $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
 
-                // Sort the recommended shares by score
-                $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
-                    return $recommendationData[$share->id]['score'] ?? 0;
+                // Sort the recommended songs by score
+                $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                    return $recommendationData[$song->id]['score'] ?? 0;
                 });
 
-                $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
-                    $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
-                    return $share;
+                $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                    $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                    return $song;
                 });
             }
 
             // --- [NEW] Improved "Who to Follow" Logic ---
 
-            // 1. Find users who liked the same shares as the current user (Taste Neighbors)
-            $likedShareIds = $user->likes->pluck('id');
+            // 1. Find users who liked the same songs as the current user (Taste Neighbors)
+            $likedSongIds = $user->likes->pluck('song.id');
             $tasteNeighbors = User::where('id', '!=', $user->id)
-                ->whereHas('likes', function ($query) use ($likedShareIds) {
-                    $query->whereIn('share_id', $likedShareIds);
+                ->whereHas('likes', function ($query) use ($likedSongIds) {
+                    $query->whereIn('song_id', $likedSongIds);
                 })
                 ->whereDoesntHave('followers', function ($query) use ($user) {
                     $query->where('follower_id', $user->id);
@@ -73,6 +92,6 @@ class DiscoveryController extends Controller
             $usersToSuggest = $tasteNeighbors->merge($otherUsers);
         }
 
-        return view('discovery', compact('recommendedShares', 'usersToSuggest'));
+        return view('discovery', compact('recommendedSongs', 'usersToSuggest'));
     }
 }

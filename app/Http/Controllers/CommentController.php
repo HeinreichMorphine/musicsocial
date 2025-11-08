@@ -7,6 +7,9 @@ use App\Models\CommentThread;
 use App\Models\Share;
 use Illuminate\Http\Request;
 
+/**
+ * Handles the creation, updating, and deletion of comments on music shares.
+ */
 class CommentController extends Controller
 {
     /**
@@ -26,7 +29,11 @@ class CommentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created comment in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Share  $share
+     * @return \Illuminate\Contracts\View\View The rendered comment component.
      */
     public function store(Request $request, Share $share)
     {
@@ -56,6 +63,9 @@ class CommentController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @param  \App\Models\Comment  $comment
+     * @return \Illuminate\Http\Response
      */
     public function show(Comment $comment)
     {
@@ -64,6 +74,9 @@ class CommentController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Comment  $comment
+     * @return \Illuminate\Http\Response
      */
     public function edit(Comment $comment)
     {
@@ -71,7 +84,12 @@ class CommentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified comment in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Share  $share
+     * @param  \App\Models\Comment  $comment
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Share $share, Comment $comment)
     {
@@ -96,7 +114,11 @@ class CommentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified comment from storage.
+     *
+     * @param  \App\Models\Share  $share
+     * @param  \App\Models\Comment  $comment
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Share $share, Comment $comment)
     {

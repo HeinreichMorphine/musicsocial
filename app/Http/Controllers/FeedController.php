@@ -8,15 +8,35 @@ use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Handles the display of the user's main feed, which includes shares from followed users,
+ * recommended content, and suggestions for new users to follow.
+ */
 class FeedController extends Controller
 {
     protected $recommendationService;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \App\Services\RecommendationService  $recommendationService The recommendation service, injected by the service container.
+     * @return void
+     */
     public function __construct(RecommendationService $recommendationService)
     {
         $this->recommendationService = $recommendationService;
     }
 
+    /**
+     * Display the user's main feed.
+     *
+     * This method assembles the main dashboard feed for the authenticated user. It fetches a paginated
+     * list of shares from the user and the people they follow, recommended shares from the
+     * `RecommendationService`, and a list of users to suggest following. This data is then
+     * passed to the `dashboard` view.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         /** @var User $user */
@@ -30,7 +50,9 @@ class FeedController extends Controller
                            $query->whereIn('user_id', $followingIds)
                                  ->orWhere('user_id', $user->id);
                        })
-                       ->where('disliked', false) // Filter out disliked shares
+                       ->whereDoesntHave('dislikes', function ($query) use ($user) {
+                           $query->where('user_id', $user->id);
+                       })
                        ->with(['user', 'likes'])
                        ->latest()
                        ->paginate(20);
@@ -44,7 +66,9 @@ class FeedController extends Controller
             $recommendationData = collect($rawRecommendations)->keyBy('share_id');
 
             $recommendedShares = Share::whereIn('id', $recommendedShareIds)
-                                      ->where('disliked', false) // Filter out disliked recommended shares
+                                      ->whereDoesntHave('dislikes', function ($query) use ($user) {
+                                          $query->where('user_id', $user->id);
+                                      })
                                       ->get();
 
             // Sort the recommended shares by score

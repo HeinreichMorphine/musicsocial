@@ -16,11 +16,11 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Suggested for you</h3>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @if($recommendedShares->isEmpty())
+                        @if($recommendedSongs->isEmpty())
                 <p class="text-center text-gray-500">No recommendations available at the moment.</p>
             @else
-                @foreach ($recommendedShares as $share)
-                    <x-discovery-card :share="$share" />
+                @foreach ($recommendedSongs as $song)
+                    <x-discovery-card :song="$song" />
                 @endforeach
             @endif
                     </div>
@@ -67,7 +67,7 @@
                             <p>No new users to suggest right now.</p>
                         @endforelse
                     </div>
-                    <x-sidebar-right :recommendedShares="$recommendedShares" />
+                    <x-sidebar-right :recommendedSongs="$recommendedSongs" />
                 </div>
             </div>
         </div>

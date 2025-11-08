@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Song;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,7 @@ class SpotifyService
     {
         return Cache::remember('spotify_access_token', 3540, function () {
             $response = Http::asForm()
-                ->timeout(30) // Add timeout
+                ->timeout(30)
                 ->withBasicAuth(config('services.spotify.client_id'), config('services.spotify.client_secret'))
                 ->post($this->tokenUrl, [
                     'grant_type' => 'client_credentials',
@@ -36,6 +37,10 @@ class SpotifyService
 
     /**
      * Search for tracks on Spotify.
+     *
+     * @param string $query
+     * @param int $limit
+     * @return array
      */
     public function searchTracks($query, $limit = 10)
     {
@@ -46,7 +51,7 @@ class SpotifyService
         }
 
         $response = Http::withToken($token)
-            ->timeout(30) // Add timeout
+            ->timeout(30)
             ->get($this->baseUrl . 'search', [
                 'q' => $query,
                 'type' => 'track',
@@ -55,8 +60,12 @@ class SpotifyService
 
         return $response->json('tracks.items');
     }
+
     /**
-     * Get a single track's details from Spotify.
+     * Get a single track's details from Spotify and create/update a Song model.
+     *
+     * @param string $trackId
+     * @return array
      */
     public function getTrack(string $trackId)
     {
@@ -67,7 +76,7 @@ class SpotifyService
 
         // Get track details
         $trackResponse = Http::withToken($token)
-            ->timeout(30) // Add timeout
+            ->timeout(30)
             ->get($this->baseUrl . 'tracks/' . $trackId);
 
         if ($trackResponse->failed()) {
@@ -76,25 +85,64 @@ class SpotifyService
 
         $track = $trackResponse->json();
 
-        // Get all artist IDs from the track
-        $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
+        $genres = $this->getGenresForTrack($trackId);
 
-        // Fetch details for all artists in a single call
-        $artistsResponse = Http::withToken($token)
-            ->timeout(30) // Add timeout
-            ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
+        $primaryArtistName = implode(', ', array_map(fn($a) => $a['name'], $track['artists']));
 
-        if ($artistsResponse->failed()) {
-            // This is less critical, so we don't return a hard error, just empty genres
-            return ['track' => $track, 'artist' => null, 'genres' => []];
+        // Create or update Song model
+        $song = Song::firstOrCreate(
+            ['spotify_track_id' => $trackId],
+            [
+                'track_name' => $track['name'],
+                'artist_name' => $primaryArtistName,
+                'album_art_url' => $track['album']['images'][0]['url'] ?? null,
+                'genres' => !empty($genres) ? json_encode($genres) : null,
+                'release_date' => $track['album']['release_date'] ?? null,
+                'spotify_url' => $track['external_urls']['spotify'] ?? '#',
+            ]
+        );
+
+        return ['song' => $song, 'album_art_url' => $track['album']['images'][0]['url'] ?? null];
+    }
+
+    /**
+     * Get genres for a track from Spotify, with fallbacks to MusicBrainz and TheAudioDB.
+     *
+     * @param string $trackId
+     * @return array
+     */
+    public function getGenresForTrack(string $trackId): array
+    {
+        $token = $this->getAccessToken();
+        if (!$token) {
+            return [];
         }
 
-        $artists = $artistsResponse->json('artists');
+        $trackResponse = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'tracks/' . $trackId);
 
-        // Aggregate genres from all artists
-        $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+        if ($trackResponse->failed()) {
+            return [];
+        }
 
-        // Fallback to album genres if artist genres are empty
+        $track = $trackResponse->json();
+        $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
+        $trackName = $track['name'] ?? 'Unknown Track';
+
+        // Spotify artist genres
+        $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
+        $artistsResponse = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
+
+        $genres = [];
+        if ($artistsResponse->successful()) {
+            $artists = $artistsResponse->json('artists');
+            $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+        }
+
+        // Spotify album genres
         if (empty($genres) && !empty($track['album']['id'])) {
             $albumResponse = Http::withToken($token)
                 ->timeout(30)
@@ -102,12 +150,28 @@ class SpotifyService
 
             if ($albumResponse->successful()) {
                 $album = $albumResponse->json();
-                $genres = $album['genres'] ?? [];
+                $genres = array_merge($genres, $album['genres'] ?? []);
             }
         }
 
-        $primaryArtist = $artists[0] ?? null;
+        // Fallback to MusicBrainz
+        if (empty($genres)) {
+            $musicBrainzService = new MusicBrainzService();
+            $mbGenres = $musicBrainzService->getArtistGenres($artistName);
+            if (is_array($mbGenres) && !isset($mbGenres['error'])) {
+                $genres = array_merge($genres, $mbGenres);
+            }
+        }
 
-        return ['track' => $track, 'artist' => $primaryArtist, 'genres' => $genres];
+        // Fallback to AudioDB
+        if (empty($genres)) {
+            $audioDbService = new AudioDbService();
+            $adbGenres = $audioDbService->getGenres($trackName, $artistName);
+            if (!empty($adbGenres)) {
+                $genres = array_merge($genres, $adbGenres);
+            }
+        }
+
+        return array_values(array_unique($genres));
     }
 }

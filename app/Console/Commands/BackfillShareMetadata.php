@@ -2,11 +2,13 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Share;
+use App\Models\Song;
 use App\Services\SpotifyService;
 use App\Services\YouTubeService;
-use App\Services\MusicBrainzService; // Add this line
+use App\Services\MusicBrainzService;
+use App\Services\AudioDbService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 
 class BackfillShareMetadata extends Command
 {
@@ -22,118 +24,102 @@ class BackfillShareMetadata extends Command
      *
      * @var string
      */
-    protected $description = 'Iterate through all existing shares and fetch any missing Spotify audio features or YouTube tags';
+    protected $description = 'Iterate through all existing songs and fetch any missing metadata.';
 
     /**
      * Execute the console command.
      */
-    public function handle(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService)
+    public function handle(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService)
     {
-        $this->info('Starting to backfill share metadata with detailed status...');
+        $this->info('Starting to backfill song metadata...');
 
-        $sharesToUpdate = Share::where('type', 'music')
-                               ->where(function ($query) {
-                                   $query->whereNull('genres')
-                                         ->orWhere('genres', '[]');
-                               })->get();
+        $songsToUpdate = Song::whereNull('genres')->orWhere('genres', '[]')->get();
 
-        if ($sharesToUpdate->isEmpty()) {
-            $this->info('All music shares already have genre data. No backfill needed.');
+        if ($songsToUpdate->isEmpty()) {
+            $this->info('All songs already have complete metadata. No backfill needed.');
             return;
         }
 
-        $this->info("Found {$sharesToUpdate->count()} music shares that need genre backfilling.");
+        $this->info("Found {$songsToUpdate->count()} songs that need metadata backfilling.");
         $updatedCount = 0;
 
-        $bar = $this->output->createProgressBar($sharesToUpdate->count());
+        $bar = $this->output->createProgressBar($songsToUpdate->count());
         $bar->start();
 
-        foreach ($sharesToUpdate as $share) {
-            $this->line("\nProcessing Share ID: {$share->id} (Track: {$share->track_name})");
-            $currentGenres = []; // Collect all genres here
+        foreach ($songsToUpdate as $song) {
+            $this->line("\nProcessing Song ID: {$song->id} (Title: {$song->track_name})");
 
-            // 1. Try Spotify
-            if ($share->spotify_track_id) {
-                try {
-                    $trackData = $spotifyService->getTrack($share->spotify_track_id);
-                    if (isset($trackData['error'])) {
-                        $this->error("  - Spotify FAILED: " . $trackData['error']);
-                    } elseif (!empty($trackData['genres'])) {
-                        $currentGenres = array_merge($currentGenres, $trackData['genres']);
-                        $this->info("  - SUCCESS (Spotify): Found genres.");
-                    }
-                } catch (\Exception $e) {
-                    $this->error("  - ERROR (Spotify): An exception occurred: " . $e->getMessage());
-                }
+            $genres = json_decode($song->genres, true) ?? [];
+
+            // 1. AudioDB
+            $audioDbGenres = $audioDbService->getGenres($song->track_name, $song->artist_name);
+            if (!empty($audioDbGenres)) {
+                $genres = array_unique(array_merge($genres, $audioDbGenres));
+                $this->info("  - SUCCESS (AudioDB): Found and merged genres.");
             }
 
-            // 2. Try MusicBrainz
-            if ($share->artist_name) {
+            // 2. MusicBrainz
+            if ($song->artist_name) {
                 try {
-                    $mbGenres = $musicBrainzService->getArtistGenres($share->artist_name);
+                    $mbGenres = $musicBrainzService->getArtistGenres($song->artist_name);
                     if (isset($mbGenres['error'])) {
                         $this->error("  - MusicBrainz FAILED: " . $mbGenres['error']);
                     } elseif (!empty($mbGenres)) {
-                        $currentGenres = array_merge($currentGenres, $mbGenres);
-                        $this->info("  - SUCCESS (MusicBrainz): Found genres.");
+                        $genres = array_unique(array_merge($genres, $mbGenres));
+                        $this->info("  - SUCCESS (MusicBrainz): Found and merged genres.");
                     }
                 } catch (\Exception $e) {
                     $this->error("  - ERROR (MusicBrainz): An exception occurred: " . $e->getMessage());
                 }
             }
 
-            // Deduplicate and clean genres
-            $currentGenres = array_unique(array_filter($currentGenres));
+            // 3. Spotify
+            if ($song->spotify_track_id) {
+                $spotifyGenres = $spotifyService->getGenresForTrack($song->spotify_track_id);
+                if (!empty($spotifyGenres)) {
+                    $genres = array_unique(array_merge($genres, $spotifyGenres));
+                    $this->info("  - SUCCESS (Spotify): Found and merged genres.");
+                }
+            }
 
-            // 3. YouTube Fallback (only if no genres found yet)
-            if (empty($currentGenres) && $share->youtube_video_id) {
-                $this->comment("  - INFO: No genres from Spotify/MusicBrainz. Trying YouTube fallback...");
+            // 4. YouTube as fallback
+            if (empty($genres) && $song->youtube_video_id) {
                 try {
-                    $videoData = $youTubeService->getVideo($share->youtube_video_id);
-
-                    if ($videoData && !empty($videoData['tags'])) {
-                        $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop'];
-                        $foundYouTubeGenres = [];
-                        foreach ($videoData['tags'] as $tag) {
-                            foreach ($genreKeywords as $keyword) {
-                                if (stripos($tag, $keyword) !== false) {
-                                    $foundYouTubeGenres[] = $keyword;
-                                }
-                            }
+                    $videoData = $youTubeService->getVideo($song->youtube_video_id);
+                    if ($videoData) {
+                        $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []) . ' ' . $videoData['description']);
+                        if (!empty($youtubeGenres)) {
+                            $genres = array_unique(array_merge($genres, $youtubeGenres));
+                            $this->info("  - SUCCESS (YouTube): Found and merged genres.");
                         }
-                        $foundYouTubeGenres = array_unique($foundYouTubeGenres);
-
-                        if (!empty($foundYouTubeGenres)) {
-                            $currentGenres = array_merge($currentGenres, $foundYouTubeGenres);
-                            $this->info("  - SUCCESS (YouTube): Found genres.");
-                        } else {
-                            $this->warn("  - FAILED (YouTube): Found tags, but no relevant genre keywords matched.");
-                        }
-                    } else {
-                        $this->warn("  - FAILED (YouTube): Could not fetch video tags from YouTube for video ID {$share->youtube_video_id}.");
                     }
                 } catch (\Exception $e) {
                     $this->error("  - ERROR (YouTube): An exception occurred: " . $e->getMessage());
                 }
             }
 
-            // Save if genres were found
-            if (!empty($currentGenres)) {
-                $oldGenres = $share->genres ?? 'NULL';
-                $newGenres = json_encode(array_values($currentGenres)); // Re-index array for JSON
-                $share->genres = $newGenres;
-                $share->save();
-                $this->info("  - FINAL SUCCESS: Updated genres from {$oldGenres} to {$newGenres}");
+            if (!empty($genres)) {
+                $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
                 $updatedCount++;
-            } else {
-                $this->warn("  - FINAL FAILED: No genres found from any source for Share ID: {$share->id}.");
             }
 
             $bar->advance();
         }
 
         $bar->finish();
-        $this->info("\n\nFinished backfilling share metadata.");
-        $this->info("Summary: {$updatedCount} out of {$sharesToUpdate->count()} shares were updated.");
+        $this->info("\n\nFinished backfilling song metadata.");
+        $this->info("Summary: {$updatedCount} out of {$songsToUpdate->count()} songs were updated.");
+    }
+
+    private function extractGenresFromText(string $text): array
+    {
+        $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 'house', 'techno', 'trance', 'trap', 'world'];
+        $foundGenres = [];
+        foreach ($genreKeywords as $keyword) {
+            if (stripos($text, $keyword) !== false) {
+                $foundGenres[] = $keyword;
+            }
+        }
+        return $foundGenres;
     }
 }

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('shares', function (Blueprint $table) {
-            $table->json('genres')->nullable()->after('spotify_url');
+        Schema::table('songs', function (Blueprint $table) {
+            $table->dropColumn('album_name');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('shares', function (Blueprint $table) {
-            $table->dropColumn('genres');
+        Schema::table('songs', function (Blueprint $table) {
+            $table->string('album_name')->nullable();
         });
     }
 };

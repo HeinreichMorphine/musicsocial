@@ -10,6 +10,9 @@ class MusicBrainzService
     protected $baseUrl = 'https://musicbrainz.org/ws/2/';
     protected $userAgent;
 
+    /**
+     * Create a new class instance.
+     */
     public function __construct()
     {
         $this->userAgent = config('services.musicbrainz.user_agent');
@@ -34,7 +37,7 @@ class MusicBrainzService
             // 1. Search for the artist to get their MBID
             $searchResponse = Http::withHeaders([
                 'User-Agent' => $this->userAgent,
-            ])->timeout(10)->get($this->baseUrl . 'artist/', [
+            ])->retry(3, 100)->timeout(10)->get($this->baseUrl . 'artist/', [
                 'query' => 'artist:' . $artistName,
                 'fmt' => 'json',
                 'limit' => 1, // Get the most relevant artist
@@ -52,7 +55,7 @@ class MusicBrainzService
             // 2. Lookup the artist by MBID to get tags
             $lookupResponse = Http::withHeaders([
                 'User-Agent' => $this->userAgent,
-            ])->timeout(10)->get($this->baseUrl . 'artist/' . $artistMbid, [
+            ])->retry(3, 100)->timeout(10)->get($this->baseUrl . 'artist/' . $artistMbid, [
                 'inc' => 'tags', // Include tags
                 'fmt' => 'json',
             ]);
