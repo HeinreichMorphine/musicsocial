@@ -167,61 +167,81 @@ def test_db_connection():
     else:
         return jsonify({"status": "error", "message": "Failed to connect to database."}) , 500
 
-def post_process_predictions(predictions, all_songs_df, liked_artists, liked_genres):
-    artist_boost_factor = 0.25 # Boost score by 25%
-    genre_boost_factor = 0.20 # Boost score by 20%
-    combined_boost_factor = 0.5 # Boost score by 50% for combined artist and genre match
-    songs_map = all_songs_df.set_index('id')
+def get_social_graph(user_id, connection):
+    """
+    Fetches the list of users that the active user follows.
+    """
+    query = text("SELECT user_id FROM followers WHERE follower_id = :user_id")
+    result = connection.execute(query, {'user_id': user_id})
+    return {row[0] for row in result}
 
-    for pred in predictions:
-        song_id = pred['song_id']
-        artist_name = songs_map.loc[song_id, 'artist_name']
-        song_genres_json = songs_map.loc[song_id, 'genres']
+def get_song_sharers_bulk(song_ids, connection):
+    """
+    Fetches users who shared the given songs.
+    Returns a dict: {song_id: [user_id, user_id, ...]}
+    """
+    if not song_ids:
+        return {}
+    
+    # Use IN clause for bulk fetch
+    # Note: formatting the list of IDs directly into the query string is safe here because they are integers,
+    # but using bind parameters is better practice. However, for a variable length list in raw SQL with SQLAlchemy,
+    # we often need to expand it.
+    
+    # Using pandas for easier handling
+    query = f"SELECT song_id, user_id FROM shares WHERE song_id IN ({','.join(map(str, song_ids))})"
+    try:
+        df = pd.read_sql(query, connection)
+        sharers_map = df.groupby('song_id')['user_id'].apply(list).to_dict()
+        return sharers_map
+    except Exception as e:
+        print(f"Error in get_song_sharers_bulk: {e}")
+        return {}
 
-        # Start with a generic reason
-        pred['reason'] = 'Recommended for you'
-
-        # Determine if there are matching genres for the current song
-        has_matching_genres = False
-        matching_genres_for_reason = set()
-        if isinstance(song_genres_json, str) and liked_genres:
-            try:
-                current_genres = {g.lower() for g in json.loads(song_genres_json)}
-                matching_genres_for_reason = current_genres.intersection(liked_genres)
-                if matching_genres_for_reason:
-                    has_matching_genres = True
-            except (json.JSONDecodeError, TypeError):
-                pass
-
-        # --- Positive Boosting Logic ---
-        # Combined Artist and Genre Boost
-        if any(liked_artist.lower().strip() in artist_name.lower().strip() for liked_artist in liked_artists) and has_matching_genres:
-            pred['score'] *= (1 + combined_boost_factor)
-            display_artist_name = artist_name.split(',')[0].strip()
-            pred['reason'] = f'Because you enjoy {display_artist_name}'
-        # Artist-based boost
-        elif any(liked_artist.lower().strip() in artist_name.lower().strip() for liked_artist in liked_artists):
-            pred['score'] *= (1 + artist_boost_factor)
-            display_artist_name = artist_name.split(',')[0].strip()
-            pred['reason'] = f'Because you enjoy {display_artist_name}'
-        # Genre-based boost
-        elif has_matching_genres:
-            pred['score'] *= (1 + genre_boost_factor)
-            pred['reason'] = f'Because you enjoy {", ".join(list(matching_genres_for_reason)).title()} genres'
-
-        # If no specific reason is found, it's likely due to taste neighbors
-        if pred['reason'] == 'Recommended for you' and pred['score'] > 1.0: # A score > 1 suggests a boost from the model itself
-            pred['reason'] = f'Popular with users who have similar tastes to you, and you might like artists such as {artist_name}'
-
-    return predictions
-
-def predict_scores(user_id, items_to_predict):
-    global algo
+def content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists):
+    """
+    Calculates similarity based on Genre and Artist overlap for Cold Start users.
+    """
     predictions = []
-    for item_id in items_to_predict:
-        prediction = algo.predict(uid=user_id, iid=item_id, r_ui=None)
-        predictions.append({'song_id': int(item_id), 'score': prediction.est})
+    
+    # Pre-process all songs genres if not already done (doing it per row is slow, but acceptable for now)
+    # Ideally this should be cached or pre-computed
+    
+    for _, song in all_songs_df.iterrows():
+        score = 0.0
+        reasons = []
+        
+        # Artist Match
+        if song['artist_name'] in liked_artists:
+            score += 0.5
+            reasons.append(f"Same artist: {song['artist_name']}")
+            
+        # Genre Overlap (Jaccard Index-ish)
+        song_genres = set()
+        if song['genres']:
+            try:
+                g_list = json.loads(song['genres'])
+                song_genres = {g.lower() for g in g_list}
+            except:
+                pass
+        
+        if song_genres and liked_genres:
+            intersection = song_genres.intersection(liked_genres)
+            if intersection:
+                overlap_score = len(intersection) / len(song_genres.union(liked_genres)) # Jaccard
+                score += overlap_score * 0.5 # Weight for genre
+                reasons.append(f"Similar genres: {', '.join(list(intersection)[:2])}")
+        
+        if score > 0:
+             predictions.append({
+                'song_id': int(song['id']),
+                'score': float(score), # Normalized 0-1 range roughly
+                'reason': " & ".join(reasons)
+            })
+            
     return predictions
+
+
 
 def get_user_interactions(user_id, connection):
     user_interactions_query = text("""
@@ -288,29 +308,119 @@ def get_recommendations(user_id):
 
     try:
         with engine.connect() as connection:
+            # ==============================================================================
+            # HYBRID RECOMMENDATION ENGINE
+            # ==============================================================================
+            # This function implements a hybrid approach combining:
+            # 1. Collaborative Filtering (SVD) - for users with history
+            # 2. Content-Based Filtering - for cold-start users (using Genre/Artist similarity)
+            # 3. Social Boosting - boosting scores for songs shared by friends
+            # ==============================================================================
+
+            # --- STEP 1: DATA RETRIEVAL (The Bounded Dataset) ---
+            # Fetch necessary data: all songs, user interactions, social graph, and user preferences.
+            
             # Get all songs with artist info
             songs_query = "SELECT id, artist_name, genres FROM songs"
             all_songs_df = pd.read_sql(songs_query, connection)
             all_song_ids = all_songs_df['id'].unique()
 
             user_interacted_song_ids = get_user_interactions(user_id, connection)
-
+            
+            # Identify candidates (songs user hasn't seen)
+            candidates = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]
+            
+            # Fetch User Context
+            social_graph = get_social_graph(user_id, connection)
             liked_artists = get_liked_artists(user_id, connection)
-
-            # Get genres from songs the user has liked or shared
             liked_genres = get_liked_genres(user_id, connection)
 
-            items_to_predict = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]
+            cf_predictions = []
 
-            predictions = predict_scores(user_id, items_to_predict)
+            # --- STEP 2: COLLABORATIVE FILTERING (The Pattern Recognizer) ---
+            # Use Scikit-Surprise library (SVD) to predict ratings based on user history.
+            
+            # Check if user has enough history (Avoid Cold Start)
+            # We consider "enough history" as having interacted with at least 5 songs
+            has_history = len(user_interacted_song_ids) >= 5
+            
+            if has_history and algo:
+                # Predict rating for all songs the user hasn't seen yet
+                for song_id in candidates:
+                    pred = algo.predict(user_id, song_id)
+                    cf_predictions.append({
+                        'song_id': song_id, 
+                        'score': pred.est,
+                        'reason': "Based on your listening history"
+                    })
+            else:
+                # --- STEP 3: CONTENT-BASED FILTERING (The Cold Start Fix) ---
+                # If user is new, find songs similar to their few onboarding selections
+                # using Genre and Artist similarity (Jaccard Index).
+                cf_predictions = content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
+                # If still empty (brand new user with 0 interactions), return popular songs? 
+                # For now, let's assume they have at least 1 interaction or we return empty.
+                if not cf_predictions:
+                     # Fallback to random or popular if absolutely no info (not implemented here for brevity, 
+                     # but in production we'd return global top 10)
+                     pass
 
-            predictions = post_process_predictions(predictions, all_songs_df, liked_artists, liked_genres)
+            # --- STEP 4: SOCIAL BOOSTING (The "Peer-Based" Component) ---
+            # This addresses the "Trust Deficit" gap by boosting songs shared by friends.
+            
+            # Get list of people who shared/liked the candidate songs
+            # Optimization: Bulk fetch sharers for all candidate songs
+            candidate_ids = [p['song_id'] for p in cf_predictions]
+            song_sharers_map = get_song_sharers_bulk(candidate_ids, connection)
+            
+            final_scores = []
+            
+            for pred in cf_predictions:
+                song_id = pred['song_id']
+                base_score = pred['score']
+                reason = pred['reason']
+                
+                social_boost = 0.0
+                sharers = song_sharers_map.get(song_id, [])
+                
+                friend_sharers = []
+                
+                # Check if any sharers are in the active user's "Following" list
+                for sharer in sharers:
+                    if sharer in social_graph:
+                        # Apply weight (Social signals improve prediction)
+                        social_boost += 1.5 # Arbitrary weight for direct friends
+                        friend_sharers.append(sharer) # We would look up name here if we had it loaded
+                    else:
+                        # Smaller boost for general community popularity
+                        social_boost += 0.1 
+                
+                # Calculate Hybrid Score
+                # We value Social Context + Algorithmic Accuracy
+                # Normalize base_score (SVD is 1-5 usually, but our training data was -1 to 1.5. 
+                # Let's assume SVD output is roughly within that range or slightly wider)
+                
+                total_score = (base_score * 0.7) + (social_boost * 0.3)
+                
+                if friend_sharers:
+                    reason = "Liked by your friend" # Simplified for now, ideally "Liked by Alex"
+                
+                final_scores.append({
+                    'song_id': int(song_id),
+                    'score': float(total_score),
+                    'reason': reason,
+                    'social_boost': float(social_boost)
+                })
 
-            predictions.sort(key=lambda x: x['score'], reverse=True)
-
-            top_n_recommendations = predictions[:10]
-
-            return jsonify({"user_id": user_id, "recommendations": top_n_recommendations})
+            # --- STEP 5: RANKING & EXPLANATION ---
+            # Sort by total score to surface the best recommendations.
+            # The 'reason' field provides transparency (e.g., "Liked by your friend").
+            final_scores.sort(key=lambda x: x['score'], reverse=True)
+            
+            # Select Top N
+            recommendations = final_scores[:10]
+            
+            return jsonify({"user_id": user_id, "recommendations": recommendations})
     except Exception as e:
         print(f"Error in get_recommendations: {e}")
         return jsonify({"status": "error", "message": f"Error generating recommendations: {e}"}) , 500

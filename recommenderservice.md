@@ -25,18 +25,27 @@ The two systems share the same MySQL database, allowing the Python service to ac
 
 ## 3. Installation and Setup
 
-To set up and run the recommender service, follow these steps:
+To set up and run the recommender service on Windows, follow these steps:
 
 1.  **Navigate to the service directory:**
     ```bash
-    cd C:\laragon\www\musicsocial\recommender_service
+    cd C:\laragon\www\musicsocial-main\recommender_service
     ```
 
 2.  **Create and activate a Python virtual environment:**
-    ```bash
-    python -m venv venv
-    .\venv\Scripts\activate
-    ```
+    
+    *   **Option A: Using Command Prompt (cmd.exe) or PowerShell:**
+        ```powershell
+        python -m venv venv
+        .\venv\Scripts\activate
+        ```
+        *(If successful, you will see `(venv)` at the start of your command line)*
+
+    *   **Option B: Using Git Bash:**
+        ```bash
+        python -m venv venv
+        source venv/Scripts/activate
+        ```
 
 3.  **Install dependencies:**
     ```bash
@@ -45,7 +54,7 @@ To set up and run the recommender service, follow these steps:
 
 4.  **Set up environment variables:**
     Create a `.env` file in the `recommender_service` directory. It should contain the same database credentials as the main Laravel application's `.env` file.
-    ```
+    ```ini
     DB_CONNECTION=mysql
     DB_HOST=127.0.0.1
     DB_PORT=3306
@@ -59,6 +68,23 @@ To set up and run the recommender service, follow these steps:
     python app.py
     ```
     The service will now be running at `http://127.0.0.1:5000`.
+### Restarting the Service
+
+If you need to stop and restart the service later, you don't need to reinstall everything. Just activate the environment and run the app:
+
+**Command Prompt / PowerShell:**
+```powershell
+cd C:\laragon\www\musicsocial-main\recommender_service
+.\venv\Scripts\activate
+python app.py
+```
+
+**Git Bash:**
+```bash
+cd C:\laragon\www\musicsocial-main/recommender_service
+source venv/Scripts/activate
+python app.py
+```
 
 ## 4. How the Recommendation Algorithm Works (Simplified)
 
