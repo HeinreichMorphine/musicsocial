@@ -36,6 +36,7 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_picture',
+        'is_banned',
     ];
 
     /**

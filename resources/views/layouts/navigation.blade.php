@@ -55,8 +55,8 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
 
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                        <x-dropdown-link :href="route('settings.index')">
+                            {{ __('Settings') }}
                         </x-dropdown-link>
 
                         <form method="POST" action="{{ route('logout') }}">
@@ -101,7 +101,7 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
+                <x-responsive-nav-link :href="route('settings.index')">
                     {{ __('Settings') }}
                 </x-responsive-nav-link>
 

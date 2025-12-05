@@ -13,8 +13,27 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\UserSearchController;
 
+use App\Http\Controllers\AdminController;
+
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('login', [AdminController::class, 'loginForm'])->name('login');
+    Route::post('login', [AdminController::class, 'login']);
+    Route::post('logout', [AdminController::class, 'logout'])->name('logout');
+
+    Route::middleware('auth:admin')->group(function () {
+        Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('users', [AdminController::class, 'users'])->name('users');
+        Route::patch('users/{id}/ban', [AdminController::class, 'banUser'])->name('users.ban');
+        Route::delete('users/{id}', [AdminController::class, 'deleteUser'])->name('users.delete');
+        Route::get('moderation', [AdminController::class, 'moderation'])->name('moderation');
+        Route::delete('shares/{id}', [AdminController::class, 'deleteShare'])->name('shares.delete');
+        Route::delete('comments/{id}', [AdminController::class, 'deleteComment'])->name('comments.delete');
+        Route::get('retrain', [AdminController::class, 'retrainPage'])->name('retrain.page');
+    });
 });
 
 // Breeze's default dashboard, let's rename it to our Feed

@@ -70,6 +70,6 @@ class SettingsController extends Controller
                             ->limit(5)
                             ->get();
 
-        return view('settings.index', compact('recommendedShares', 'usersToSuggest', 'recommendedSongs'));
+        return view('settings.index', compact('recommendedShares', 'usersToSuggest', 'recommendedSongs', 'user'));
     }
 }

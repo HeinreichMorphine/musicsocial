@@ -1,193 +1,138 @@
 # Recommender Service Documentation
 
-## 1. Overview
+## 1. Running the Service
 
-This document outlines the architecture, setup, and operation of the Recommender Service for the MusicSocial application.
+To start the Recommender Service, follow these steps to open and run `app.py`:
 
-The service is a Python-based microservice that uses a collaborative filtering model to generate personalized music recommendations for users. It runs independently from the main Laravel application and communicates via a REST API.
+1.  **Open your terminal** (Command Prompt, PowerShell, or Git Bash).
+2.  **Navigate to the service directory:**
+    ```bash
+    cd C:\laragon\www\musicsocial-main\recommender_service
+    ```
+3.  **Activate the virtual environment:**
+    *   **Command Prompt / PowerShell:**
+        ```powershell
+        .\venv\Scripts\activate
+        ```
+    *   **Git Bash:**
+        ```bash
+        source venv/Scripts/activate
+        ```
+4.  **Run the Flask application:**
+    ```bash
+    python app.py
+    ```
+    *Alternatively, if you have issues with activation, you can run it directly:*
+    ```bash
+    .\venv\Scripts\python.exe app.py
+    ```
 
-## 2. System Architecture
+The service will start running at `http://127.0.0.1:5000`.
 
-The recommendation system is composed of two main parts:
+---
 
--   **Laravel Application (MusicSocial):** The main web application that users interact with. It is responsible for sending requests for recommendations and triggering model retraining.
--   **Python Service (Flask API):** A lightweight Python server that exposes API endpoints to handle recommendation generation and model retraining.
+## 2. API Endpoints
 
-The two systems share the same MySQL database, allowing the Python service to access user interaction data directly.
+The Flask application exposes the following endpoints for interaction:
 
-### Data Flow for Recommendations
+-   `GET /`: **Health Check**. Confirms that the service is running.
+-   `POST /retrain`: **Trigger Retraining**. Initiates the model retraining process manually.
+-   `GET /recommendations/<user_id>`: **Get Recommendations**. Returns a list of recommended songs for a specific user.
+-   `GET /test_db_connection`: **Test Database**. Verifies that the service can connect to the MySQL database.
 
-1.  A user visits the "Discovery" page in the MusicSocial application.
-2.  The `DiscoveryController` in Laravel calls the `RecommendationService`.
-3.  The `RecommendationService` sends a GET request to the `/recommendations/<user_id>` endpoint on the Python service.
-4.  The Python service queries the database for user interaction data, predicts the best recommendations, and returns a list of `song_id`s.
-5.  The Laravel application then displays these shares to the user.
+---
 
-## 3. Installation and Setup
+## 3. How It Works
 
-To set up and run the recommender service on Windows, follow these steps:
+Our hybrid recommender system combines multiple sophisticated algorithms to provide personalized music recommendations.
+
+### 1. Gathering Your Music Footprint
+We collect data on how you interact with music, assigning a "weight" to each action:
+*   **Your Own Shares (`1.5`):** Strongest indicator of preference.
+*   **Likes from Followed Users (`1.2`):** High social influence.
+*   **Your Likes (`1.0`):** Standard positive signal.
+*   **Shares from Followed Users (`0.8`):** Moderate social signal.
+*   **Dislikes (`-1.0`):** Negative feedback.
+*   **"Not Interested" Feedback (`-1.0`):** Explicit negative signal.
+
+### 2. Collaborative Filtering (For Established Users)
+For users with ≥5 interactions, we use **Singular Value Decomposition (SVD)**:
+*   Learns your unique taste profile by analyzing patterns across all users
+*   Predicts ratings for songs you haven't seen
+*   Parameters: 20 epochs, learning rate 0.005, regularization 0.02
+
+### 3. Content-Based Filtering (For New Users)
+For users with <5 interactions (cold-start), we use **TF-IDF + Cosine Similarity**:
+*   **TF-IDF**: Weights rare genres/artists higher than common ones (e.g., "math rock" > "pop")
+*   **Cosine Similarity**: Measures similarity between your taste profile and candidate songs
+*   **Fallback**: Simple Jaccard similarity if metadata is sparse
+
+### 4. Trust-Based Social Boosting
+We amplify recommendations using a dynamic trust formula based on social network influence:
+*   **Formula**: `t(uₐ, uᵢ) = 1/(1 + log(F(uₐ))) · log(F(uᵢ))`
+*   **Friends**: Get 100% of calculated trust score
+*   **Community**: Get 30% of trust score
+*   Considers both your selectivity (how many you follow) and sharer's influence (their followers)
+
+### 5. Hybrid Scoring
+Final recommendations combine:
+*   **70%** Collaborative/Content-based score (algorithmic accuracy)
+*   **30%** Social trust boost (peer influence)
+
+### 6. Ranking & Explanation
+Top 10 songs are returned with explanations:
+*   "Based on your listening history" (SVD)
+*   "Similar to your music taste (TF-IDF)" (Content-based)
+*   "Liked by your friend" (Social boost)
+
+---
+
+## 4. Installation
+
+If you are setting this up for the first time, follow these steps:
 
 1.  **Navigate to the service directory:**
     ```bash
     cd C:\laragon\www\musicsocial-main\recommender_service
     ```
-
-2.  **Create and activate a Python virtual environment:**
-    
-    *   **Option A: Using Command Prompt (cmd.exe) or PowerShell:**
-        ```powershell
-        python -m venv venv
-        .\venv\Scripts\activate
-        ```
-        *(If successful, you will see `(venv)` at the start of your command line)*
-
-    *   **Option B: Using Git Bash:**
-        ```bash
-        python -m venv venv
-        source venv/Scripts/activate
-        ```
-
-3.  **Install dependencies:**
+2.  **Create a virtual environment:**
+    ```bash
+    python -m venv venv
+    ```
+3.  **Activate the environment** (see Section 1).
+4.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
+    pip install scikit-learn  # For TF-IDF and cosine similarity
     ```
-
-4.  **Set up environment variables:**
-    Create a `.env` file in the `recommender_service` directory. It should contain the same database credentials as the main Laravel application's `.env` file.
-    ```ini
-    DB_CONNECTION=mysql
+5.  **Configure Environment:**
+    Ensure a `.env` file exists in `recommender_service/` with your database credentials:
+    ```
     DB_HOST=127.0.0.1
-    DB_PORT=3306
     DB_DATABASE=musicsocial
     DB_USERNAME=root
-    DB_PASSWORD=
+    DB_PASSWORD=your_password
     ```
-
-5.  **Run the Flask application:**
+6.  **Initial Model Training:**
     ```bash
-    python app.py
+    python train.py
     ```
-    The service will now be running at `http://127.0.0.1:5000`.
-### Restarting the Service
+    This creates the initial `surprise_model.pkl` file.
 
-If you need to stop and restart the service later, you don't need to reinstall everything. Just activate the environment and run the app:
+---
 
-**Command Prompt / PowerShell:**
-```powershell
-cd C:\laragon\www\musicsocial-main\recommender_service
-.\venv\Scripts\activate
-python app.py
-```
+## 5. Management and Interaction
 
-**Git Bash:**
-```bash
-cd C:\laragon\www\musicsocial-main/recommender_service
-source venv/Scripts/activate
-python app.py
-```
-
-## 4. How the Recommendation Algorithm Works (Simplified)
-
-Our system suggests new music by understanding your taste through your interactions and those of similar users.
-
-### 1. Gathering Your Music Footprint
-
-We collect data on how you interact with music, assigning a "weight" to each action to understand your preferences:
-
-*   **Your Own Shares (`1.5`):** Songs you share are the strongest indicator of your taste.
-*   **Likes from Followed Users (`1.2`):** Songs liked by people you follow are highly influential.
-*   **Your Likes (`1.0`):** A standard positive signal.
-*   **Shares from Followed Users (`0.8`):** A weaker positive signal.
-*   **Dislikes / "Not Interested" (`-1.0`):** Explicit negative feedback.
-
-If you interact with the same song in multiple ways, we only consider the action with the highest weight.
-
-### 2. Learning Your Taste (SVD Model)
-
-This data trains a **Singular Value Decomposition (SVD)** algorithm. It's a collaborative filtering method that learns your unique taste profile by analyzing your interactions in the context of all other users' interactions.
-
-### 3. Predicting New Songs
-
-The trained model predicts a "raw score" for songs you haven't interacted with, estimating how much you might like them based on the learned patterns.
-
-### 4. Fine-Tuning and Explaining
-
-The raw scores are just the start. We then apply a post-processing layer to boost or reduce scores and provide a clear reason for each recommendation.
-
-*   **Score Boosting:**
-    *   **+50%:** If the song's artist and genre match your likes.
-    *   **+25%:** If the artist matches your likes.
-    *   **+20%:** If the genre matches your likes.
-    *   **+10%:** If the song was shared by someone you follow (and you haven't disliked it).
-
-*   **Score Reduction:**
-    *   **-30%:** If a song is from a user you follow but doesn't align with your taste, we may still show it to you with a lower score to help you discover new things.
-
-*   **Recommendation Reasons:**
-    *   **Artist/Genre Match:** "Because you enjoy [Artist Name]" or "Because you enjoy [Genre]".
-    *   **Followed User:** "Because someone you follow shared it."
-    *   **Taste Neighbors:** "Popular with users who have similar tastes to you..."
-    *   **Discovery:** "To broaden your horizon, here is a song from a user you follow."
-    *   **Default:** "Recommended for you."
-
-### 5. Your Personalized Playlist
-
-Finally, the fine-tuned and sorted recommendations are presented to you on the Discovery page, each with a reason to explain why it was chosen for you.
-
-## 5. API Endpoints
-
-The Flask application exposes the following endpoints:
-
--   `GET /`: Confirms that the service is running.
--   `POST /retrain`: Initiates the model retraining process.
--   `GET /recommendations/<user_id>`: Returns recommendations for a given user.
--   `GET /test_db_connection`: Verifies the database connection.
-
-## 6. Management and Interaction
-
-The recommender service can be managed and interacted with through Laravel's Artisan console commands.
+The recommender service can also be managed through Laravel's Artisan console commands.
 
 ### Automated Model Retraining
-
-The system is configured to automatically retrain the model every hour. This is handled by the Laravel Task Scheduler. To run the scheduler, use the following command:
+The system is configured to automatically retrain the model every hour via the Laravel Task Scheduler.
+To run the scheduler:
 ```bash
 php artisan schedule:work
 ```
 
 ### Manual Artisan Commands
-
--   **Trigger a Manual Retrain:**
-    Immediately retrains the model with the latest data.
-    ```bash
-    php artisan app:retrain-recommender
-    ```
-
--   **Backfill Metadata for Existing Shares:**
-    Fetches any missing Spotify audio features or YouTube tags for existing shares.
-    ```bash
-    php artisan app:backfill-share-metadata
-    ```
-
--   **Clear All Share Data:**
-    Permanently deletes all shares, likes, and comments. **Use with caution.**
-    ```bash
-    php artisan app:clear-shares-data
-    ```
-
-## 7. Tech Stack
-
--   **Python:** Core programming language.
--   **Flask:** Micro web framework for the API.
--   **scikit-surprise:** Library for building recommender systems.
--   **Pandas:** Data manipulation and analysis.
--   **SQLAlchemy:** Database toolkit for connecting to MySQL.
-
-## 8. File Structure
-
-```
-recommender_service/
-├── app.py                # Main Flask application
-├── requirements.txt      # Python dependencies
-├── surprise_model.pkl    # Pre-trained recommendation model
-└── venv/                 # Python virtual environment
-```
+-   **Trigger Retrain:** `php artisan app:retrain-recommender`
+-   **Backfill Metadata:** `php artisan app:backfill-share-metadata`
+-   **Clear Data:** `php artisan app:clear-shares-data`

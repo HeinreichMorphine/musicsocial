@@ -68,6 +68,12 @@
                         @endforelse
                     </div>
                     <x-sidebar-right :recommendedSongs="$recommendedSongs" />
+                    <div class="mt-4">
+                        <button @click="isMusicShareModalOpen = true" class="bg-custom-mid-blue hover:bg-custom-dark-blue p-3 rounded-full shadow-lg transition w-full flex items-center justify-center">
+                            <img src="{{ asset('icons/share.png') }}" alt="Share Music" class="w-8 h-8 mr-2">
+                            <span class="text-white font-semibold">Share Music</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
