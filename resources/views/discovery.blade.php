@@ -6,14 +6,16 @@
             <!-- Left Navigation -->
             <div class="hidden md:block col-span-2">
                 <div class="sticky top-0 pt-4">
-                    @include('layouts.navigation-social')
+                     <div class="bg-white/60 backdrop-blur-lg rounded-3xl p-4 border border-white/40 shadow-xl">
+                        @include('layouts.navigation-social')
+                    </div>
                 </div>
             </div>
 
             <!-- Main Content Area -->
             <div class="col-span-12 md:col-span-7">
                 <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Suggested for you</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Discover New Songs</h3>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         @if($recommendedSongs->isEmpty())
@@ -30,50 +32,8 @@
             <!-- Right Sidebar -->
             <div class="hidden md:block col-span-3">
                 <div class="sticky top-0 pt-4">
-                    <div class="p-6 text-gray-900 mb-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Who to Follow</h3>
-
-                        @forelse ($usersToSuggest as $suggestedUser)
-                            <div class="flex items-center justify-between mb-4 last:mb-0" x-data="{ followed: {{ auth()->user()->following->contains($suggestedUser) ? 'true' : 'false' }}, followersCount: {{ $suggestedUser->followers()->count() }} }">
-                                <div class="flex items-center">
-                                    <img class="w-10 h-10 rounded-full mr-3" src="{{ $suggestedUser->profile_picture_url ?: asset('images/default-profile.png') }}" alt="{{ $suggestedUser->name }}">
-                                    <div>
-                                        <a href="{{ route('profile.show', $suggestedUser->name) }}" class="font-semibold text-gray-800 hover:underline">{{ $suggestedUser->name }}</a>
-                                        <p class="text-sm text-gray-500">{{ ' @' . $suggestedUser->username }}</p>
-                                    </div>
-                                </div>
-                                <form @submit.prevent="
-                                    fetch('{{ route('users.follow', $suggestedUser) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json'
-                                        },
-                                        body: JSON.stringify({})
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        followed = data.followed;
-                                        followersCount = data.followersCount;
-                                    })
-                                    .catch(error => console.error('Error:', error));
-                                ">
-                                    <button type="submit" x-text="followed ? 'Unfollow' : 'Follow'" :class="followed ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'" class="text-white text-sm font-bold py-1 px-3 rounded-full transition duration-150">
-                                    </button>
-                                </form>
-                            </div>
-                        @empty
-                            <p>No new users to suggest right now.</p>
-                        @endforelse
-                    </div>
+                    <x-who-to-follow :usersToSuggest="$usersToSuggest" />
                     <x-sidebar-right :recommendedSongs="$recommendedSongs" />
-                    <div class="mt-4">
-                        <button @click="isMusicShareModalOpen = true" class="bg-custom-mid-blue hover:bg-custom-dark-blue p-3 rounded-full shadow-lg transition w-full flex items-center justify-center">
-                            <img src="{{ asset('icons/share.png') }}" alt="Share Music" class="w-8 h-8 mr-2">
-                            <span class="text-white font-semibold">Share Music</span>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

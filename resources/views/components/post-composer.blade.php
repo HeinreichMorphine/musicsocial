@@ -50,21 +50,70 @@
         this.searchResults = [];
         this.selectedTrack = null;
         this.$refs.captionInput.value = '';
+        this.loading = false;
+    },
+    submitPost() {
+        if (!this.selectedTrack) return;
+        this.loading = true;
+
+        const formData = new FormData();
+        formData.append('type', this.postType);
+        formData.append('spotify_track_id', this.selectedTrack.id);
+        formData.append('caption', this.$refs.captionInput.value);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        fetch('{{ route('shares.store') }}', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (data.html) {
+                const feedContainer = document.getElementById('feed-container');
+                if (feedContainer) {
+                    feedContainer.insertAdjacentHTML('afterbegin', data.html);
+                }
+                this.resetComposer();
+            } else {
+                 console.error('No HTML returned');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to share post. Please try again.');
+        })
+        .finally(() => {
+            this.loading = false;
+        });
     }
 }">
-    <form method="POST" action="{{ route('shares.store') }}" @submit.prevent="$el.submit()">
+    <form @submit.prevent="submitPost" x-ref="form">
         @csrf
         <input type="hidden" name="type" x-model="postType">
 
         <div>
             <h3 class="font-semibold mb-2">Search Spotify</h3>
-            <x-text-input
-                type="text"
-                class="w-full"
-                placeholder="Search for a track or artist..."
-                x-model.debounce.500ms="searchQuery"
-                x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
-            />
+            <div class="flex items-start space-x-3">
+                 <img src="{{ auth()->user()->profile_picture ? Storage::url(auth()->user()->profile_picture) : 'https://via.placeholder.com/150' }}"
+                     alt="{{ auth()->user()->name }}"
+                     class="w-10 h-10 rounded-full object-cover">
+                <div class="w-full">
+                    <x-text-input
+                        type="text"
+                        class="w-full rounded-2xl bg-gray-50 border-gray-200 focus:bg-white transition"
+                        placeholder="What are you listening to right now?"
+                        x-model.debounce.500ms="searchQuery"
+                        x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
+                    />
+                </div>
+            </div>
 
             <div x-show="searchQuery.length >= 3 && searchResults.length === 0 && !loading" class="mt-4 p-3 bg-gray-50 rounded">
                 No tracks found for "<span x-text="searchQuery"></span>".
@@ -84,27 +133,30 @@
                 </template>
             </ul>
 
-            <div x-show="selectedTrack" class="mb-4 border border-green-300 bg-green-50/50 rounded-lg p-4 flex items-center space-x-4 mt-4">
-                <img :src="selectedTrack?.album.images[0].url" alt="Album Art" class="w-16 h-16 rounded">
-                <div>
-                    <div class="font-bold text-lg" x-text="selectedTrack?.name"></div>
-                    <div class="text-gray-600" x-text="getArtistNames(selectedTrack?.artists || [])"></div>
+            <div x-show="selectedTrack" class="mt-4 relative overflow-hidden rounded-xl border border-gray-100 shadow-sm" style="display: none;">
+                 <div class="absolute inset-0 bg-cover bg-center blur-xl opacity-30" :style="`background-image: url('${selectedTrack?.album.images[0].url}');`"></div>
+                 <div class="relative p-4 flex items-center space-x-4 bg-white/60 backdrop-blur-sm">
+                    <img :src="selectedTrack?.album.images[0].url" alt="Album Art" class="w-16 h-16 rounded shadow-sm">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-lg text-gray-900 truncate" x-text="selectedTrack?.name"></div>
+                        <div class="text-gray-600 truncate" x-text="getArtistNames(selectedTrack?.artists || [])"></div>
+                    </div>
+                    <button type="button" @click="selectedTrack = null; searchQuery=''" class="text-gray-400 hover:text-red-500 transition p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-                <button type="button" @click="selectedTrack = null; searchQuery=''" class="text-red-500 hover:text-red-700 ml-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
             </div>
 
             <input type="hidden" name="spotify_track_id" x-model="selectedTrack?.id">
 
-            <div class="mt-4">
-                <x-input-label for="caption" :value="__('Caption (optional)')" />
-                <textarea id="caption" name="caption" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
+            <div class="mt-4" x-show="selectedTrack" x-transition>
+                <x-input-label for="caption" :value="__('Caption')" />
+                <textarea id="caption" name="caption" x-ref="captionInput" placeholder="Write a caption..." class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
             </div>
         </div>
 
         <div class="mt-3 flex justify-end items-center">
-            <x-primary-button class="bg-custom-mid-blue hover:bg-custom-dark-blue" x-bind:disabled="!selectedTrack">
+            <x-primary-button class="bg-custom-mid-blue hover:bg-custom-dark-blue" x-bind:disabled="!selectedTrack" x-bind:class="{ 'opacity-50 cursor-not-allowed': loading }" x-text="loading ? 'Sharing...' : 'Share Song'">
                 Share Song
             </x-primary-button>
         </div>

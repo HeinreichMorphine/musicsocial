@@ -57,18 +57,21 @@ class ShareController extends Controller
             if ($song) {
                 $genres = json_decode($song->genres, true) ?? [];
 
-                $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
-                if (!empty($audioDbGenres)) {
-                    $genres = array_unique(array_merge($genres, $audioDbGenres));
+                // 1. Fallback: MusicBrainz (Artist Genres)
+                if (empty($genres)) {
+                    $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
+                    if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
+                        $genres = array_unique(array_merge($genres, $musicBrainzGenres));
+                    }
                 }
 
-                $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
-                if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
-                    $genres = array_unique(array_merge($genres, $musicBrainzGenres));
+                // 2. Fallback: AudioDB (Track Genres)
+                if (empty($genres)) {
+                    $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
+                    if (!empty($audioDbGenres)) {
+                        $genres = array_unique(array_merge($genres, $audioDbGenres));
+                    }
                 }
-
-                $spotifyGenres = json_decode($song->genres, true) ?? [];
-                $genres = array_unique(array_merge($genres, $spotifyGenres));
 
                 if (empty($song->youtube_video_id)) {
                     $youTubeData = $this->youTubeService->searchVideo($song->track_name . ' ' . $song->artist_name);
@@ -78,6 +81,7 @@ class ShareController extends Controller
                             'youtube_url' => $youTubeData['url'],
                         ]);
 
+                        // 3. Final Fallback: YouTube Tags
                         if (empty($genres)) {
                             $videoData = $this->youTubeService->getVideo($youTubeData['video_id']);
                             if ($videoData) {
@@ -92,7 +96,7 @@ class ShareController extends Controller
 
                 $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
 
-                $request->user()->shares()->create([
+                $share = $request->user()->shares()->create([
                     'song_id' => $song->id,
                     'caption' => $validated['caption'],
                     'type' => $validated['type'],
@@ -105,7 +109,13 @@ class ShareController extends Controller
             if (empty($validated['caption'])) {
                 return back()->withErrors(['caption' => 'Caption is required for text shares.']);
             }
-            $request->user()->shares()->create($validated);
+            $share = $request->user()->shares()->create($validated);
+        }
+
+        if ($request->wantsJson() && isset($share)) {
+            $share->load(['user', 'song', 'likes', 'dislikes', 'comments']); // Load relationships needed for the card
+            $html = view('components.share-card', ['share' => $share])->render();
+            return response()->json(['html' => $html, 'message' => 'Share created successfully.']);
         }
 
         return redirect(route('dashboard'));
@@ -214,6 +224,8 @@ class ShareController extends Controller
         return response()->json([
             'disliked' => $user->dislikes->contains($share),
             'dislikesCount' => $share->dislikes()->count(),
+            'liked' => $user->likes->contains($share),
+            'likesCount' => $share->likes()->count(),
         ]);
     }
 }

@@ -11,6 +11,8 @@ from sklearn.metrics.pairwise import cosine_similarity  # For vector similarity
 from surprise import Dataset, Reader, SVD
 from surprise.model_selection import train_test_split
 import joblib
+import threading
+import time
 
 # Global variable for the trained model
 algo = None
@@ -111,10 +113,14 @@ def fetch_data_from_db():
             print(f"6. Shares from Followed Users: Found {len(following_shares_df)} records.")
 
             # Combine all interactions
-            interactions_df = pd.concat([likes_df, feedback_df, dislikes_df, shares_df, following_likes_df, following_shares_df], ignore_index=True)
-            if interactions_df.empty:
+            # Filter out empty dataframes first to avoid FutureWarning
+            dfs_to_concat = [df for df in [likes_df, feedback_df, dislikes_df, shares_df, following_likes_df, following_shares_df] if not df.empty]
+            
+            if not dfs_to_concat:
                 print("--- No interaction data found in any table. ---")
                 return pd.DataFrame()
+
+            interactions_df = pd.concat(dfs_to_concat, ignore_index=True)
 
             interactions_df = interactions_df.rename(columns={'song_id': 'item_id'})
             
@@ -467,7 +473,8 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
         
         # Calculate average user profile vector
         # This represents the user's overall music taste
-        user_profile = user_features_matrix.mean(axis=0)
+        # FIX: Convert np.matrix (deprecated) to np.array to avoid errors
+        user_profile = np.asarray(user_features_matrix.mean(axis=0))
         
         # Calculate cosine similarity between user profile and all songs (cached matrix)
         # Result is array of similarity scores [0, 1]
@@ -588,7 +595,8 @@ def get_liked_artists(user_id, connection):
         WHERE s.user_id = :user_id
     """)
     liked_artists_df = pd.read_sql(liked_artists_query, connection, params={'user_id': user_id})
-    return set(liked_artists_df['artist_name'].unique())
+    # Return set of lowercased, stripped artist names for robust matching
+    return {name.lower().strip() for name in liked_artists_df['artist_name'].unique() if name}
 
 @app.route('/recommendations/<int:user_id>', methods=['GET'])
 def get_recommendations(user_id):
@@ -630,21 +638,39 @@ def get_recommendations(user_id):
 
             cf_predictions = []
 
-            # --- STEP 2: COLLABORATIVE FILTERING (The Pattern Recognizer) ---
-            # Use Scikit-Surprise library (SVD) to predict ratings based on user history.
+            # --- STEP 2: HYBRID FILTERING (SVD + Content Boost) ---
+            # We now combine Collaborative Filtering (SVD) with Content Signals (Artist Match)
+            # This ensures that even if you have history, your explicit artist favorites (like NewJeans)
+            # get a priority boost alongside the "Crowd Wisdom" of SVD.
+
+            # Create fast lookup for song metadata (Artist/Genre)
+            songs_metadata = all_songs_df.set_index('id').to_dict('index')
             
             # Check if user has enough history (Avoid Cold Start)
-            # We consider "enough history" as having interacted with at least 5 songs
             has_history = len(user_interacted_song_ids) >= 5
             
             if has_history and algo:
                 # Predict rating for all songs the user hasn't seen yet
                 for song_id in candidates:
+                    # 1. Base Score: Collaborative Filtering (SVD)
                     pred = algo.predict(user_id, song_id)
+                    current_score = pred.est
+                    reasons = ["Based on your listening history"]
+                    
+                    # 2. explicit Boost: Artist Match
+                    # If this song is by an artist the user likes, give it a significant boost
+                    if song_id in songs_metadata:
+                        artist = songs_metadata[song_id]['artist_name']
+                        # Check strictly case-insensitive
+                        if artist and artist.lower().strip() in liked_artists:
+                            current_score += 0.4  # Boost score by 0.4 (significant on a 1-5 scale)
+                            # Prepend strict reason so user knows why
+                            reasons.insert(0, f"Matches favorite artist ({artist})")
+                            
                     cf_predictions.append({
                         'song_id': song_id, 
-                        'score': pred.est,
-                        'reason': "Based on your listening history"
+                        'score': current_score,
+                        'reason': " & ".join(reasons)
                     })
             else:
                 # --- STEP 3: CONTENT-BASED FILTERING (The Cold Start Fix) ---
@@ -676,10 +702,25 @@ def get_recommendations(user_id):
                 
                 # If still empty (brand new user with 0 interactions), return empty
                 # In production, you might return globally popular songs here
+                # If still empty (brand new user with 0 interactions), return global popular songs
                 if not cf_predictions:
-                     # Fallback to random or popular if absolutely no info (not implemented here for brevity, 
-                     # but in production we'd return global top 10)
-                     pass
+                     print("Cold start: No user history found. Fetching global top songs.")
+                     top_songs_query = text("""
+                        SELECT s.id as song_id, COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2 as popularity
+                        FROM songs s
+                        LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
+                        GROUP BY s.id
+                        ORDER BY popularity DESC
+                        LIMIT 10
+                     """)
+                     top_songs_df = pd.read_sql(top_songs_query, connection)
+                     
+                     for _, row in top_songs_df.iterrows():
+                         cf_predictions.append({
+                             'song_id': int(row['song_id']),
+                             'score': 0.1, # Low score to indicate it's generic
+                             'reason': 'Popular in the community'
+                         })
 
             # --- STEP 4: TRUST-BASED SOCIAL BOOSTING ---
             # This implements a sophisticated trust calculation based on social network theory.
@@ -739,7 +780,10 @@ def get_recommendations(user_id):
                 total_score = (base_score * 0.7) + (social_boost * 0.3)
                 
                 if friend_sharers:
-                    reason = "Liked by your friend"
+                    # Append to existing reason instead of overwriting it
+                    # Check if 'friend' is already in reason to avoid duplication (though unlikely here)
+                    if "friend" not in reason:
+                         reason = f"{reason} & Liked by your friend"
                 
                 final_scores.append({
                     'song_id': int(song_id),
@@ -761,5 +805,38 @@ def get_recommendations(user_id):
         print(f"Error in get_recommendations: {e}")
         return jsonify({"status": "error", "message": f"Error generating recommendations: {e}"}) , 500
 
+def schedule_training():
+    """
+    Background task to retrain the model periodically.
+    """
+    while True:
+        print("\n[Scheduler] Waiting 60 seconds before next training cycle...")
+        time.sleep(60)
+        print("[Scheduler] Starting scheduled model training...")
+        with app.app_context():
+            try:
+                train_and_save_model()
+            except Exception as e:
+                print(f"[Scheduler] Error during scheduled training: {e}")
+
 if __name__ == '__main__':
+    # Start the training thread as a daemon so it exits when the main program exits
+    # Only start if we are in the main process (not the reloader)
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or os.name == 'nt':
+         # Note: On Windows with Flask debug mode, this might still run twice or behave oddly depending on how it's launched.
+         # Ideally check for a lock or use a dedicated scheduler, but for this simple requirement:
+         pass
+
+    # We start the thread. If using debug=True, Flask spawns a child process.
+    # We want the training to happen in the child process where the app runs.
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        training_thread = threading.Thread(target=schedule_training)
+        training_thread.daemon = True
+        training_thread.start()
+        print("[Scheduler] Background training thread started.")
+    else:
+        # If not using reloader or in the parent process of reloader
+        # We might want to start it here if debug=False
+        pass
+
     app.run(debug=True, host='0.0.0.0', port=5000)

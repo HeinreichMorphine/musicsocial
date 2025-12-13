@@ -32,3 +32,11 @@ recommender_service/origin)
 
 surprise_model.pkl
 /storage/framework/views/
+
+# Documentation
+*.md
+!README.md
+!algorithm_validation.md
+
+# Scripts
+*.bat

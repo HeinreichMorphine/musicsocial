@@ -82,11 +82,14 @@ class ProfileController extends Controller
                             ->limit(5)
                             ->get();
 
+        $shelfItems = $user->shelfItems()->orderBy('position')->get();
+
         return view('profile.edit', [
             'user' => $user,
             'recommendedShares' => $recommendedShares,
             'usersToSuggest' => $usersToSuggest,
             'recommendedSongs' => $recommendedSongs,
+            'shelfItems' => $shelfItems,
         ]);
     }
 
