@@ -1,4 +1,4 @@
-<div class="bg-white p-4 shadow-md rounded-lg mb-6" x-data="{
+<div class="bg-white p-4 shadow-lg rounded-lg mb-6 border border-custom-blue-light" x-data="{
     postType: 'music',
     searchQuery: '',
     searchResults: [],

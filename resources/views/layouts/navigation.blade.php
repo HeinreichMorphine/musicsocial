@@ -59,8 +59,9 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                             @foreach(auth()->user()->unreadNotifications as $notification)
                                 @php
                                     $shareId = $notification->data['share_id'] ?? null;
-                                    $notificationUrl = $shareId 
-                                        ? route('dashboard') . '#share-' . $shareId 
+                                    $commentId = $notification->data['comment_id'] ?? null;
+                                    $notificationUrl = $shareId
+                                        ? route('shares.show', $shareId) . ($commentId ? '#comment-' . $commentId : '')
                                         : route('dashboard');
                                 @endphp
                                 <a 

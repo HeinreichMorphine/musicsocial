@@ -8,7 +8,10 @@ use App\Services\SpotifyService;
 use App\Services\YouTubeService;
 use App\Services\MusicBrainzService;
 use App\Services\AudioDbService;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class ShareController extends Controller
 {
@@ -16,13 +19,15 @@ class ShareController extends Controller
     protected $youTubeService;
     protected $musicBrainzService;
     protected $audioDbService;
+    protected $recommendationService;
 
-    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService)
+    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService, RecommendationService $recommendationService)
     {
         $this->spotifyService = $spotifyService;
         $this->youTubeService = $youTubeService;
         $this->musicBrainzService = $musicBrainzService;
         $this->audioDbService = $audioDbService;
+        $this->recommendationService = $recommendationService;
     }
 
     /**
@@ -153,10 +158,48 @@ class ShareController extends Controller
      */
     public function show(Share $share)
     {
-        // Eager load the 'song' relationship
-        $share->load('song');
-        return view('shares.show', compact('share')); // Assuming you have a show view for shares
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Eager load relationships
+        $share->load(['song', 'comments.user', 'comments.replies']);
+
+        $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
+        $recommendedSongs = collect();
+
+        if (!empty($rawRecommendations)) {
+            $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('song_id');
+
+            $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
+
+            // Sort the recommended songs by score
+            $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                return $recommendationData[$song->id]['score'] ?? 0;
+            });
+
+            $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                return $song;
+            });
+        }
+
+        // Fetch users to suggest (e.g., users not followed by the current user)
+        $usersToSuggest = User::where('id', '!=', $user->id)
+                            ->whereDoesntHave('followers', function ($query) use ($user) {
+                                $query->where('follower_id', $user->id);
+                            })
+                            ->inRandomOrder()
+                            ->limit(5)
+                            ->get();
+
+        return view('shares.show', [
+            'share' => $share,
+            'usersToSuggest' => $usersToSuggest,
+            'recommendedSongs' => $recommendedSongs,
+        ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -208,7 +251,7 @@ class ShareController extends Controller
             return response()->json([
                 'message' => 'You cannot dislike your own share.',
                 'disliked' => $user->dislikes->contains($share),
-                'dislikesCount' => $share->dislikes()->count(),
+                'dislikesCount' => 0,
             ], 403);
         }
 
@@ -220,7 +263,7 @@ class ShareController extends Controller
 
         return response()->json([
             'disliked' => $user->dislikes->contains($share),
-            'dislikesCount' => $share->dislikes()->count(),
+            'dislikesCount' => 0,
             'liked' => $user->likes->contains($share),
             'likesCount' => $share->likes()->count(),
         ]);

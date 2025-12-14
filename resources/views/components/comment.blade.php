@@ -1,4 +1,4 @@
-<div class="flex space-x-3" x-data="{ openReply: false, openEdit: false }">
+<div id="comment-{{ $comment->id }}" class="flex space-x-3 scroll-mt-20" x-data="{ openReply: false, openEdit: false }">
     <img src="{{ $comment->user->profile_picture ? Storage::url($comment->user->profile_picture) : 'https://via.placeholder.com/150' }}"
          alt="avatar"
          class="h-10 w-10 rounded-full object-cover">
