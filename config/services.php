@@ -38,6 +38,13 @@ return [
     'spotify' => [
         'client_id' => env('SPOTIFY_CLIENT_ID'),
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'redirect' => env('SPOTIFY_REDIRECT_URI', env('APP_URL') . '/auth/spotify/callback'), 
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
     ],
 
     'youtube' => [
@@ -45,6 +52,11 @@ return [
     ],
 
     'musicbrainz' => [
-        'user_agent' => env('MUSICBRAINZ_USER_AGENT', 'MusicSocialApp/1.0 ( your_email@example.com )'), // Replace with your app name and contact email
+        'user_agent' => env('MUSICBRAINZ_USER_AGENT', 'MusicSocialApp/1.0 ( your_email@example.com )'),
+    ],
+
+    'audiodb' => [
+        'base_url' => env('AUDIODB_BASE_URL', 'https://www.theaudiodb.com/api/v1/json/'),
+        'api_key' => env('AUDIODB_API_KEY', '2'), // '2' is the test key
     ],
 ];

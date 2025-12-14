@@ -193,4 +193,88 @@ class SpotifyService
 
         return array_values(array_unique($genres));
     }
+    /**
+     * Get a user's recently played tracks from Spotify.
+     *
+     * @param \App\Models\User $user
+     * @return array
+     */
+    public function getUserRecentlyPlayed($user)
+    {
+        if (!$user->spotify_token) {
+            return [];
+        }
+
+        $response = Http::withToken($user->spotify_token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'me/player/recently-played', [
+                'limit' => 10,
+            ]);
+
+        // Attempt to refresh token if 401 (Expired)
+        if ($response->status() === 401 && $user->spotify_refresh_token) {
+             $newToken = $this->refreshUserToken($user);
+             if ($newToken) {
+                 $response = Http::withToken($newToken)
+                    ->timeout(30)
+                    ->get($this->baseUrl . 'me/player/recently-played', [
+                        'limit' => 10,
+                    ]);
+             }
+        }
+
+        if ($response->failed()) {
+            Log::error('Spotify Recently Played Error: ' . $response->status() . ' - ' . $response->body());
+            return [];
+        }
+        
+        $items = $response->json('items') ?? [];
+        
+        // Filter out duplicates based on track ID
+        $uniqueItems = collect($items)->unique('track.id')->values()->all();
+
+        Log::info('Spotify Recently Played fetched: ' . count($uniqueItems) . ' unique items (from ' . count($items) . ' total).');
+        return $uniqueItems;
+    }
+
+    /**
+     * Refresh a user's Spotify access token.
+     * 
+     * @param \App\Models\User $user
+     * @return string|null
+     */
+    public function refreshUserToken($user)
+    {
+        try {
+            $response = Http::asForm()->post($this->tokenUrl, [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $user->spotify_refresh_token,
+                'client_id' => config('services.spotify.client_id'),
+                'client_secret' => config('services.spotify.client_secret'),
+            ]);
+
+            if ($response->successful()) {
+                $check = $response->json();
+                $accessToken = $check['access_token'] ?? null;
+                
+                if (!$accessToken) {
+                    Log::error('Spotify Token Refresh: Access token missing in response', $check);
+                    return null;
+                }
+
+                // Update user
+                $user->spotify_token = $accessToken;
+                if (isset($check['refresh_token'])) {
+                    $user->spotify_refresh_token = $check['refresh_token'];
+                }
+                $user->save();
+                return $accessToken;
+            }
+            
+            Log::error('Spotify Token Refresh Failed: ' . $response->status() . ' - ' . $response->body());
+        } catch (\Exception $e) {
+            Log::error('Spotify Token Refresh Exception: ' . $e->getMessage());
+        }
+        return null;
+    }
 }

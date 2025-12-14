@@ -39,7 +39,7 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="x_content">
-                    <p>Welcome to the MusicSocial Admin Dashboard. Use the sidebar to manage users and moderate content.</p>
+                    <p>Welcome to the Reso Admin Dashboard. Use the sidebar to manage users and moderate content.</p>
                 </div>
             </div>
         </div>

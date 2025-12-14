@@ -25,4 +25,25 @@ class SpotifySearchController extends Controller
 
         return response()->json($tracks);
     }
+    /**
+     * Get user's recently played tracks.
+     */
+    public function recentlyPlayed(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->spotify_token) {
+            return response()->json([]);
+        }
+
+        $items = $this->spotifyService->getUserRecentlyPlayed($user);
+        
+        // Format to match search results structure slightly, or just return as is
+        // Spotify returns { track: {...}, played_at: ... }
+        // We want to extract just the track info mostly, but keeping structure is fine
+        $formatted = array_map(function($item) {
+            return $item['track'];
+        }, $items);
+
+        return response()->json($formatted);
+    }
 }

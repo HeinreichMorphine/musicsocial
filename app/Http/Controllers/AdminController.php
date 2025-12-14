@@ -120,4 +120,31 @@ class AdminController extends Controller
     }
 
 
+    public function profile()
+    {
+        $admin = Auth::guard('admin')->user();
+        return view('admin.profile', compact('admin'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:admins,email,' . $admin->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $admin->name = $request->name;
+        $admin->email = $request->email;
+
+        if ($request->filled('password')) {
+            $admin->password = bcrypt($request->password);
+        }
+
+        $admin->save();
+
+        return redirect()->back()->with('success', 'Profile updated successfully.');
+    }
 }

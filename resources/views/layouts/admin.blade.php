@@ -18,6 +18,92 @@
     <!-- Custom Theme Style -->
     <link href="{{ asset('assets/admin/build/css/custom.min.css') }}" rel="stylesheet">
     @stack('styles')
+    
+    <style>
+        /* Reso Light Theme Overrides */
+        body, .container.body .right_col {
+            background: #f7f9fc !important; /* Very light blue-grey background */
+            font-family: 'Figtree', sans-serif;
+            color: #1a202c !important; /* Black text */
+        }
+        
+        /* Sidebar */
+        .left_col {
+            background: #ffffff !important; /* White sidebar */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .nav_title {
+            background: #ffffff !important; /* White logo area */
+            border-bottom: 1px solid #e2e8f0;
+            color: #1a202c !important;
+            box-shadow: none !important;
+        }
+        
+        .site_title {
+            color: #1a202c !important;
+            font-weight: 700;
+        }
+        
+        /* Sidebar Links */
+        .nav.side-menu > li > a, .nav.child_menu > li > a {
+            color: #4a5568 !important; /* Dark grey text */
+            font-weight: 500;
+        }
+        
+        .nav.side-menu > li > a:hover, .nav.side-menu > li.current-page, .nav.side-menu > li.active > a {
+            background: #ebf8ff !important; /* Light blue hover/active */
+            color: #3182ce !important; /* Reso Blue text */
+            text-shadow: none !important;
+        }
+
+        /* Override the default green right-border on active items */
+        .nav.side-menu > li.current-page, .nav.side-menu > li.active {
+            border-right: 5px solid #3182ce !important; /* Reso Blue border */
+        }
+        
+        /* Icons */
+        .nav.side-menu > li > a > i {
+            color: #718096 !important;
+        }
+        .nav.side-menu > li > a:hover > i, .nav.side-menu > li.active > a > i {
+            color: #3182ce !important; /* Blue icons on active */
+        }
+
+        /* Sidebar Headers (General, System) */
+        .menu_section h3 {
+            color: #1a202c !important; /* Black text for section headers */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 10px;
+            margin-bottom: 0; /* Align with screenshot */
+            padding-left: 23px; /* Align with items */
+            font-size: 13px; /* Slightly larger */
+            font-weight: 700;
+        }
+
+        /* Top Navigation */
+        .top_nav .nav_menu {
+            background: #ebf8ff !important; /* Light blue top bar */
+            border-bottom: 1px solid #bee3f8;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        
+        .toggle a i {
+            color: #1a202c !important;
+        }
+        
+        .user-profile {
+            color: #1a202c !important;
+        }
+
+        /* Footer */
+        footer {
+            background: #f7f9fc !important;
+            color: #718096 !important;
+        }
+    </style>
   </head>
 
   <body class="nav-md">
@@ -26,22 +112,15 @@
         <div class="col-md-3 left_col">
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
-              <a href="{{ route('admin.dashboard') }}" class="site_title"><i class="fa fa-music"></i> <span>MusicSocial Admin</span></a>
+              <a href="{{ route('admin.dashboard') }}" class="site_title">
+                <img src="{{ asset('icons/reso.png') }}" alt="Reso" style="height: 30px; margin-right: 10px;">
+                <span>Reso Admin</span>
+              </a>
             </div>
 
             <div class="clearfix"></div>
 
-            <!-- menu profile quick info -->
-            <div class="profile clearfix">
-              <div class="profile_pic">
-                <!-- Placeholder image -->
-                <img src="{{ asset('assets/admin/production/images/img.jpg') }}" alt="..." class="img-circle profile_img" onerror="this.src='https://via.placeholder.com/150'">
-              </div>
-              <div class="profile_info">
-                <span>Welcome,</span>
-                <h2>{{ Auth::guard('admin')->user()->name ?? 'Admin' }}</h2>
-              </div>
-            </div>
+            <!-- menu profile quick info (Removed as requested) -->
             <!-- /menu profile quick info -->
 
             <br />
@@ -64,9 +143,13 @@
                             <i class="fa fa-eye"></i> Preview Recommendations
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('admin.profile') }}">
+                            <i class="fa fa-user"></i> My Profile
+                        </a>
+                    </li>
                 </ul>
               </div>
-
             </div>
             <!-- /sidebar menu -->
           </div>
@@ -82,11 +165,11 @@
                 <ul class="nav navbar-nav navbar-right">
                   <li class="">
                     <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                      <img src="{{ asset('assets/admin/production/images/img.jpg') }}" alt="">{{ Auth::guard('admin')->user()->name ?? 'Admin' }}
+                      {{ Auth::guard('admin')->user()->name ?? 'Admin' }}
                       <span class=" fa fa-angle-down"></span>
                     </a>
                     <ul class="dropdown-menu dropdown-usermenu pull-right">
-                      <li><a href="javascript:;"> Profile</a></li>
+                      <li><a href="{{ route('admin.profile') }}"> Profile</a></li>
                       <li>
                         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="fa fa-sign-out pull-right"></i> Log Out
@@ -119,7 +202,7 @@
         <!-- footer content -->
         <footer>
           <div class="pull-right">
-            MusicSocial Admin Panel
+            Reso Admin Panel
           </div>
           <div class="clearfix"></div>
         </footer>

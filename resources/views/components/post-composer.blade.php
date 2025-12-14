@@ -2,17 +2,31 @@
     postType: 'music',
     searchQuery: '',
     searchResults: [],
+    recentTracks: [],
     selectedTrack: null,
     loading: false,
 
     init() {
         this.$watch('searchQuery', () => this.search());
         this.$root.addEventListener('switchToMusicShare', () => {
+             // ... existing reset logic
             this.postType = 'music';
             this.searchQuery = '';
             this.searchResults = [];
             this.selectedTrack = null;
         });
+        // Fetch recent tracks immediately so they are ready
+        this.fetchRecent();
+    },
+    fetchRecent() {
+        fetch(`{{ route('spotify.recently-played') }}`, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.recentTracks = data;
+        })
+        .catch(error => console.error('Error fetching recent tracks:', error));
     },
     search() {
         if (this.searchQuery.length < 3) {
@@ -111,8 +125,26 @@
                         placeholder="What are you listening to right now?"
                         x-model.debounce.500ms="searchQuery"
                         x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
+                        @focus="fetchRecent()"
                     />
                 </div>
+            </div>
+
+            <!-- Recently Played Section -->
+            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack" class="mt-4">
+                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recently Played</h4>
+                <ul class="divide-y border rounded-lg">
+                     <template x-for="(track, index) in recentTracks.slice(0, 3)" :key="index">
+                        <li @click="selectTrack(track)" class="p-3 flex items-center space-x-4 hover:bg-gray-100 cursor-pointer rounded-lg transition">
+                             <img :src="track.album.images[0]?.url" alt="Album" class="w-10 h-10 rounded">
+                             <div class="flex-1 min-w-0">
+                                 <div class="font-semibold text-sm truncate" x-text="track.name"></div>
+                                 <div class="text-xs text-gray-600 truncate" x-text="getArtistNames(track.artists)"></div>
+                             </div>
+                             <div class="text-xs text-gray-400">Recent</div>
+                        </li>
+                    </template>
+                </ul>
             </div>
 
             <div x-show="searchQuery.length >= 3 && searchResults.length === 0 && !loading" class="mt-4 p-3 bg-gray-50 rounded">

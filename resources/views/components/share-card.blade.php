@@ -1,6 +1,6 @@
 @props(['share'])
 
-<div class="bg-white/60 backdrop-blur-md rounded-3xl shadow-sm border border-white/50 p-6 mb-6 hover:shadow-md transition-shadow duration-300" x-data="{ commentsOpen: false }">
+<div id="share-{{ $share->id }}" class="bg-white/60 backdrop-blur-md rounded-3xl shadow-sm border border-white/50 p-6 mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20" x-data="{ commentsOpen: false }">
     <div class="flex space-x-4">
         <img src="{{ $share->user->profile_picture ? Storage::url($share->user->profile_picture) : 'https://via.placeholder.com/150' }}"
              alt="avatar"

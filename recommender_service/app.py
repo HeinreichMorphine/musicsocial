@@ -486,10 +486,35 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
         for idx, similarity_score in enumerate(similarities):
             # Only include songs with meaningful similarity (threshold 0.1)
             if similarity_score > 0.1:
+                song_id = int(cached_songs_df.iloc[idx]['id'])
+                song_data = cached_songs_df.iloc[idx]
+                
+                # Build detailed reason based on what matched
+                reason_parts = []
+                if pd.notna(song_data.get('artist_name')):
+                    artist = song_data['artist_name']
+                    # Check if this artist is in user's liked artists
+                    user_artists = {row['artist_name'] for _, row in user_liked_songs_df.iterrows() if pd.notna(row.get('artist_name'))}
+                    if artist in user_artists:
+                        reason_parts.append(f"You enjoy {artist}")
+                    else:
+                        reason_parts.append(f"Similar to artists you like")
+                
+                # Add genre info if available
+                if pd.notna(song_data.get('genres')):
+                    try:
+                        genres = json.loads(song_data['genres'])
+                        if genres:
+                            reason_parts.append(f"Matches your taste in {genres[0]}")
+                    except:
+                        pass
+                
+                reason = " · ".join(reason_parts) if reason_parts else 'Matches your music taste'
+                
                 predictions.append({
-                    'song_id': int(cached_songs_df.iloc[idx]['id']),
+                    'song_id': song_id,
                     'score': float(similarity_score),
-                    'reason': 'Similar to your music taste (TF-IDF)'
+                    'reason': reason
                 })
         
         return predictions
@@ -655,22 +680,40 @@ def get_recommendations(user_id):
                     # 1. Base Score: Collaborative Filtering (SVD)
                     pred = algo.predict(user_id, song_id)
                     current_score = pred.est
-                    reasons = ["Based on your listening history"]
+                    reasons = []
                     
-                    # 2. explicit Boost: Artist Match
+                    # 2. Explicit Boost: Artist Match
                     # If this song is by an artist the user likes, give it a significant boost
+                    artist_matched = False
                     if song_id in songs_metadata:
                         artist = songs_metadata[song_id]['artist_name']
                         # Check strictly case-insensitive
                         if artist and artist.lower().strip() in liked_artists:
-                            current_score += 0.4  # Boost score by 0.4 (significant on a 1-5 scale)
-                            # Prepend strict reason so user knows why
-                            reasons.insert(0, f"Matches favorite artist ({artist})")
-                            
+                            current_score += 0.4
+                            reasons.append(f"You've enjoyed {artist} before")
+                            artist_matched = True
+                    
+                    # Add genre info if available and not artist matched
+                    if not artist_matched and song_id in songs_metadata:
+                        genres_data = songs_metadata[song_id].get('genres')
+                        if genres_data:
+                            try:
+                                song_genres = set(g.lower() for g in json.loads(genres_data))
+                                matching_genres = song_genres.intersection(liked_genres)
+                                if matching_genres:
+                                    genre_list = list(matching_genres)[:2]
+                                    reasons.append(f"Matches your taste in {', '.join(genre_list)}")
+                            except:
+                                pass
+                    
+                    # Default reason if no specific match found
+                    if not reasons:
+                        reasons.append("Recommended based on your listening patterns")
+                    
                     cf_predictions.append({
                         'song_id': song_id, 
                         'score': current_score,
-                        'reason': " & ".join(reasons)
+                        'reason': " · ".join(reasons)
                     })
             else:
                 # --- STEP 3: CONTENT-BASED FILTERING (The Cold Start Fix) ---
@@ -779,11 +822,18 @@ def get_recommendations(user_id):
                 # 30% from social trust signals (peer influence)
                 total_score = (base_score * 0.7) + (social_boost * 0.3)
                 
+                # Build social reasoning
                 if friend_sharers:
-                    # Append to existing reason instead of overwriting it
-                    # Check if 'friend' is already in reason to avoid duplication (though unlikely here)
-                    if "friend" not in reason:
-                         reason = f"{reason} & Liked by your friend"
+                    friend_count = len(friend_sharers)
+                    if friend_count == 1:
+                        reason = f"{reason} · Shared by a friend you follow"
+                    else:
+                        reason = f"{reason} · {friend_count} friends shared this"
+                elif len(sharers) > 0:
+                    # Community signal (not friends but shared by others)
+                    community_count = len(sharers)
+                    if community_count >= 3:
+                        reason = f"{reason} · Popular in your network ({community_count} shares)"
                 
                 final_scores.append({
                     'song_id': int(song_id),

@@ -57,7 +57,25 @@ class CommentController extends Controller
             ]);
         }
 
-        // 4. Return the rendered comment component
+        // 4. Handle Mention Notifications
+        // Regex to find @mentions - matches @username
+        preg_match_all('/@([\w\.\-]+)/', $validated['body'], $matches);
+        
+        if (!empty($matches[1])) {
+            // Get unique usernames found in the comment
+            $usernames = array_unique($matches[1]);
+            
+            // Find users with these hostnames (except the commenter themselves)
+            $usersToNotify = \App\Models\User::whereIn('name', $usernames)
+                ->where('id', '!=', auth()->id())
+                ->get();
+                
+            foreach ($usersToNotify as $user) {
+                $user->notify(new \App\Notifications\UserMentionedNotification($comment));
+            }
+        }
+
+        // 5. Return the rendered comment component
         return view('components.comment', ['comment' => $comment])->render();
     }
 

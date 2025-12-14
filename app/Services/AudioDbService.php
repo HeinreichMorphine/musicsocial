@@ -7,8 +7,14 @@ use Illuminate\Support\Facades\Log;
 
 class AudioDbService
 {
-    protected $baseUrl = 'https://www.theaudiodb.com/api/v1/json/';
-    protected $apiKey = '2'; // TheAudioDB provides a '2' for a free API key
+    protected $baseUrl;
+    protected $apiKey;
+
+    public function __construct()
+    {
+        $this->baseUrl = config('services.audiodb.base_url');
+        $this->apiKey = config('services.audiodb.api_key');
+    }
 
     /**
      * Get genres for a track from TheAudioDB.
@@ -20,7 +26,8 @@ class AudioDbService
     public function getGenres(string $trackName, string $artistName): array
     {
         try {
-            $response = Http::get($this->baseUrl . $this->apiKey . '/search.php', [
+            // Per v1 docs: searchtrack.php?s={Artist}&t={Track}
+            $response = Http::get($this->baseUrl . $this->apiKey . '/searchtrack.php', [
                 's' => $artistName,
                 't' => $trackName,
             ]);

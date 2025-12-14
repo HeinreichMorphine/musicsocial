@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Spotify\SpotifyExtendSocialite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(
+            SocialiteWasCalled::class,
+            SpotifyExtendSocialite::class
+        );
+
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $user = Auth::user();

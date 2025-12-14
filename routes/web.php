@@ -36,6 +36,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('shares/{id}', [AdminController::class, 'deleteShare'])->name('shares.delete');
         Route::delete('comments/{id}', [AdminController::class, 'deleteComment'])->name('comments.delete');
         Route::get('retrain', [AdminController::class, 'retrainPage'])->name('retrain.page');
+        Route::get('profile', [AdminController::class, 'profile'])->name('profile');
+        Route::post('profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     });
 });
 
@@ -59,6 +61,23 @@ Route::middleware('auth')->group(function () {
 
     // User search route
     Route::get('/users/search', [UserSearchController::class, 'index'])->name('user.search');
+    
+    // Notifications
+    Route::post('/notifications/mark-read', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.markRead');
+    
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    })->name('notifications.markAsRead');
+    
+    // Mention autocomplete
+    Route::get('/mentions/suggestions', [App\Http\Controllers\MentionController::class, 'suggestions'])->name('mentions.suggestions');
 
     // Public profiles
     Route::get('/users/{user:name}', [UserProfileController::class, 'show'])->name('profile.show');
@@ -68,6 +87,7 @@ Route::middleware('auth')->group(function () {
 
     // Spotify search routes
     Route::get('/search/tracks', [SpotifySearchController::class, 'search'])->name('spotify.search');
+    Route::get('/spotify/recently-played', [SpotifySearchController::class, 'recentlyPlayed'])->name('spotify.recently-played');
 
 
     // Settings route
@@ -81,6 +101,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/{user}/following', [FollowerController::class, 'following'])->name('profile.following');
 });
 
+// Social Auth Routes
+Route::get('auth/{provider}', [App\Http\Controllers\SocialAuthController::class, 'redirect'])->name('social.redirect');
+Route::get('auth/{provider}/callback', [App\Http\Controllers\SocialAuthController::class, 'callback'])->name('social.callback');
+
+
 Route::get('/discovery', [App\Http\Controllers\DiscoveryController::class, 'index'])->middleware(['auth', 'verified'])->name('discovery');
+
+// Debug Route (Temporary)
+Route::get('/debug-auth', function () {
+    return [
+        'spotify' => config('services.spotify'),
+        'google' => config('services.google'),
+        'audiodb' => config('services.audiodb'),
+    ];
+});
 
 require __DIR__.'/auth.php';

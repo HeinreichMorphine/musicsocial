@@ -68,7 +68,58 @@
             @endif
         </div>
 
-        <div x-show="openReply" x-transition class="mt-2" style="display: none;" x-data="{ newReply: '' }">
+        <div x-show="openReply" x-transition class="mt-2" style="display: none;" x-data="{
+            newReply: '',
+            mentionSuggestions: [],
+            showMentions: false,
+            selectedIndex: 0,
+            async fetchMentions(query) {
+                if (!query) {
+                    this.showMentions = false;
+                    return;
+                }
+                const response = await fetch(`{{ route('mentions.suggestions') }}?query=${encodeURIComponent(query)}&parent_comment_id={{ $comment->id }}`);
+                this.mentionSuggestions = await response.json();
+                this.showMentions = this.mentionSuggestions.length > 0;
+                this.selectedIndex = 0;
+            },
+            handleInput() {
+                const textarea = $refs.replyInput;
+                const cursorPos = textarea.selectionStart;
+                const text = this.newReply.substring(0, cursorPos);
+                const match = text.match(/@(\w*)$/);
+                if (match) {
+                    this.fetchMentions(match[1]);
+                } else {
+                    this.showMentions = false;
+                }
+            },
+            selectMention(username) {
+                const textarea = $refs.replyInput;
+                const cursorPos = textarea.selectionStart;
+                const textBefore = this.newReply.substring(0, cursorPos);
+                const textAfter = this.newReply.substring(cursorPos);
+                const newTextBefore = textBefore.replace(/@\w*$/, '@' + username + ' ');
+                this.newReply = newTextBefore + textAfter;
+                this.showMentions = false;
+                setTimeout(() => textarea.focus(), 10);
+            },
+            handleKeydown(event) {
+                if (!this.showMentions) return;
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    this.selectedIndex = Math.min(this.selectedIndex + 1, this.mentionSuggestions.length - 1);
+                } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+                } else if (event.key === 'Enter' && this.mentionSuggestions[this.selectedIndex]) {
+                    event.preventDefault();
+                    this.selectMention(this.mentionSuggestions[this.selectedIndex].name);
+                } else if (event.key === 'Escape') {
+                    this.showMentions = false;
+                }
+            }
+        }">
             <form @submit.prevent="
                 fetch('{{ route('shares.comments.store', $comment->share) }}', {
                     method: 'POST',
@@ -91,9 +142,38 @@
             ">
                 @csrf
                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 relative">
                     <img src="{{ auth()->user()->profile_picture ? Storage::url(auth()->user()->profile_picture) : 'https://via.placeholder.com/150' }}" alt="your avatar" class="h-8 w-8 rounded-full">
-                    <x-text-input x-model="newReply" name="body" class="block w-full" placeholder="Write a reply..." required />
+                    <div class="flex-1 relative">
+                        <x-text-input 
+                            x-ref="replyInput"
+                            x-model="newReply" 
+                            @input="handleInput()"
+                            @keydown="handleKeydown($event)"
+                            name="body" 
+                            class="block w-full" 
+                            placeholder="Write a reply..." 
+                            required 
+                        />
+                        <!-- Mention Autocomplete Dropdown -->
+                        <div 
+                            x-show="showMentions" 
+                            x-transition
+                            class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                        >
+                            <template x-for="(user, index) in mentionSuggestions" :key="user.id">
+                                <div 
+                                    @click="selectMention(user.name)"
+                                    :class="{ 'bg-blue-100': index === selectedIndex }"
+                                    class="px-4 py-2 cursor-pointer hover:bg-blue-50 flex items-center space-x-2"
+                                >
+                                    <img :src="user.profile_picture ? '{{ asset('storage') }}/' + user.profile_picture : 'https://via.placeholder.com/40'" class="h-6 w-6 rounded-full">
+                                    <span x-text="user.name" class="text-sm font-medium text-gray-800"></span>
+                                    <span x-show="user.is_parent_author" class="text-xs text-gray-500">(OP)</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                     <x-primary-button type="submit" class="bg-custom-mid-blue">Post</x-primary-button>
                 </div>
             </form>

@@ -38,6 +38,12 @@ class User extends Authenticatable
         'profile_picture',
         'cover_photo_path',
         'is_banned',
+        'spotify_id',
+        'spotify_token',
+        'spotify_refresh_token',
+        'google_id',
+        'avatar',
+        'email_verified_at',
     ];
 
     /**
