@@ -131,45 +131,64 @@ class SpotifyService
         $trackName = $track['name'] ?? 'Unknown Track';
 
         // Spotify artist genres
-        $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
-        $artistsResponse = Http::withToken($token)
-            ->timeout(30)
-            ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
+        try {
+            $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
+            $artistsResponse = Http::withToken($token)
+                ->timeout(30)
+                ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
 
-        $genres = [];
-        if ($artistsResponse->successful()) {
-            $artists = $artistsResponse->json('artists');
-            $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+            if ($artistsResponse->successful()) {
+                $artists = $artistsResponse->json('artists');
+                $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+            }
+        } catch (\Exception $e) {
+            Log::error('SpotifyService: Failed to fetch artist genres - ' . $e->getMessage());
         }
 
         // Spotify album genres
         if (empty($genres) && !empty($track['album']['id'])) {
-            $albumResponse = Http::withToken($token)
-                ->timeout(30)
-                ->get($this->baseUrl . 'albums/' . $track['album']['id']);
+            try {
+                $albumResponse = Http::withToken($token)
+                    ->timeout(30)
+                    ->get($this->baseUrl . 'albums/' . $track['album']['id']);
 
-            if ($albumResponse->successful()) {
-                $album = $albumResponse->json();
-                $genres = array_merge($genres, $album['genres'] ?? []);
+                if ($albumResponse->successful()) {
+                    $album = $albumResponse->json();
+                    $genres = array_merge($genres, $album['genres'] ?? []);
+                }
+            } catch (\Exception $e) {
+                Log::error('SpotifyService: Failed to fetch album genres - ' . $e->getMessage());
             }
         }
 
         // Fallback to MusicBrainz
+        // Fallback to External Services (MusicBrainz & AudioDB) if Spotify fails
         if (empty($genres)) {
-            $musicBrainzService = new MusicBrainzService();
-            $mbGenres = $musicBrainzService->getArtistGenres($artistName);
-            if (is_array($mbGenres) && !isset($mbGenres['error'])) {
-                $genres = array_merge($genres, $mbGenres);
-            }
-        }
+            $externalGenres = [];
 
-        // Fallback to AudioDB
-        if (empty($genres)) {
-            $audioDbService = new AudioDbService();
-            $adbGenres = $audioDbService->getGenres($trackName, $artistName);
-            if (!empty($adbGenres)) {
-                $genres = array_merge($genres, $adbGenres);
+            // 1. MusicBrainz
+            try {
+                $musicBrainzService = new MusicBrainzService();
+                $mbGenres = $musicBrainzService->getArtistGenres($artistName);
+                if (is_array($mbGenres) && !isset($mbGenres['error'])) {
+                    $externalGenres = array_merge($externalGenres, $mbGenres);
+                }
+            } catch (\Exception $e) {
+                Log::error('SpotifyService Fallback - MusicBrainz Error: ' . $e->getMessage());
             }
+
+            // 2. AudioDB
+            try {
+                $audioDbService = new AudioDbService();
+                $adbGenres = $audioDbService->getGenres($trackName, $artistName);
+                if (!empty($adbGenres)) {
+                    $externalGenres = array_merge($externalGenres, $adbGenres);
+                }
+            } catch (\Exception $e) {
+                Log::error('SpotifyService Fallback - AudioDB Error: ' . $e->getMessage());
+            }
+
+            $genres = array_unique(array_merge($genres, $externalGenres));
         }
 
         return array_values(array_unique($genres));

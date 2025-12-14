@@ -1,6 +1,6 @@
 <x-app-layout pageTitle="{{ $user->name }}'s Profile">
     <div x-data="{ isMusicShareModalOpen: false }">
-        <div class="py-4 sm:py-12 bg-gray-100 min-h-screen">
+        <div class="py-4 sm:py-12 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
 
             <div class="hidden md:block col-span-2">
@@ -19,18 +19,7 @@
             </div>
 
             <div class="col-span-12 md:col-span-7">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 text-gray-900">
-                        <h2 class="font-semibold text-xl text-gray-800 leading-tight mb-4">
-                            {{ $user->name }}
-                        </h2>
-
-                        <div class="flex items-center space-x-4">
-                            <a href="{{ route('profile.followers', $user) }}" class="text-blue-500 hover:underline">Followers ({{ $user->followers()->count() }})</a>
-                            <a href="{{ route('profile.following', $user) }}" class="text-blue-500 hover:underline">Following ({{ $user->following()->count() }})</a>
-                        </div>
-                    </div>
-                </div>
+                @include('profile.partials.header', ['user' => $user])
 
                 <div class="space-y-6">
                     @forelse ($user->shares as $share)

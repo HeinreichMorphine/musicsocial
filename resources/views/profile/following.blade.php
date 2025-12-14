@@ -1,5 +1,5 @@
 <x-app-layout pageTitle="{{ $user->name }} is Following">
-    <div class="py-4 sm:py-12 bg-gray-100 min-h-screen">
+    <div class="py-4 sm:py-12 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
 
             <div class="hidden md:block col-span-2">

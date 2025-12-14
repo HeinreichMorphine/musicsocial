@@ -17,7 +17,7 @@ class BackfillShareMetadata extends Command
      *
      * @var string
      */
-    protected $signature = 'app:backfill-share-metadata';
+    protected $signature = 'app:backfill-genres {--force}';
 
     /**
      * The console command description.
@@ -33,43 +33,46 @@ class BackfillShareMetadata extends Command
     {
         $this->info('Starting to backfill song metadata...');
 
-        $songsToUpdate = Song::whereNull('genres')->orWhere('genres', '[]')->get();
+        $query = Song::query();
+
+        if (!$this->option('force')) {
+             $query->whereNull('genres')->orWhere('genres', '[]')->orWhere('genres', '');
+        }
+
+        $songsToUpdate = $query->get();
 
         if ($songsToUpdate->isEmpty()) {
-            $this->info('All songs already have complete metadata. No backfill needed.');
+            $this->info('All songs already have complete metadata. Use --force to re-process all.');
             return;
         }
 
-        $this->info("Found {$songsToUpdate->count()} songs that need metadata backfilling.");
+        $this->info("Found {$songsToUpdate->count()} songs to process.");
         $updatedCount = 0;
 
         $bar = $this->output->createProgressBar($songsToUpdate->count());
         $bar->start();
 
         foreach ($songsToUpdate as $song) {
-            $this->line("\nProcessing Song ID: {$song->id} (Title: {$song->track_name})");
+            // $this->line("\nProcessing Song ID: {$song->id} (Title: {$song->track_name})"); // Verbose
 
             $genres = json_decode($song->genres, true) ?? [];
+            if (!is_array($genres)) $genres = [];
 
             // 1. AudioDB
             $audioDbGenres = $audioDbService->getGenres($song->track_name, $song->artist_name);
             if (!empty($audioDbGenres)) {
                 $genres = array_unique(array_merge($genres, $audioDbGenres));
-                $this->info("  - SUCCESS (AudioDB): Found and merged genres.");
             }
 
             // 2. MusicBrainz
             if ($song->artist_name) {
                 try {
                     $mbGenres = $musicBrainzService->getArtistGenres($song->artist_name);
-                    if (isset($mbGenres['error'])) {
-                        $this->error("  - MusicBrainz FAILED: " . $mbGenres['error']);
-                    } elseif (!empty($mbGenres)) {
+                    if (!empty($mbGenres) && !isset($mbGenres['error'])) {
                         $genres = array_unique(array_merge($genres, $mbGenres));
-                        $this->info("  - SUCCESS (MusicBrainz): Found and merged genres.");
                     }
                 } catch (\Exception $e) {
-                    $this->error("  - ERROR (MusicBrainz): An exception occurred: " . $e->getMessage());
+                    // Silent fail
                 }
             }
 
@@ -78,7 +81,6 @@ class BackfillShareMetadata extends Command
                 $spotifyGenres = $spotifyService->getGenresForTrack($song->spotify_track_id);
                 if (!empty($spotifyGenres)) {
                     $genres = array_unique(array_merge($genres, $spotifyGenres));
-                    $this->info("  - SUCCESS (Spotify): Found and merged genres.");
                 }
             }
 
@@ -90,17 +92,16 @@ class BackfillShareMetadata extends Command
                         $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []) . ' ' . $videoData['description']);
                         if (!empty($youtubeGenres)) {
                             $genres = array_unique(array_merge($genres, $youtubeGenres));
-                            $this->info("  - SUCCESS (YouTube): Found and merged genres.");
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->error("  - ERROR (YouTube): An exception occurred: " . $e->getMessage());
+                   // Silent fail
                 }
             }
 
+            $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
             if (!empty($genres)) {
-                $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
-                $updatedCount++;
+                 $updatedCount++;
             }
 
             $bar->advance();
@@ -108,12 +109,18 @@ class BackfillShareMetadata extends Command
 
         $bar->finish();
         $this->info("\n\nFinished backfilling song metadata.");
-        $this->info("Summary: {$updatedCount} out of {$songsToUpdate->count()} songs were updated.");
+        $this->info("Summary: {$updatedCount} songs updated or verified.");
     }
 
     private function extractGenresFromText(string $text): array
     {
-        $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 'house', 'techno', 'trance', 'trap', 'world'];
+        $genreKeywords = [
+            'pop', 'rock', 'hip hop', 'hip-hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 
+            'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 
+            'house', 'techno', 'trance', 'trap', 'world', 'lo-fi', 'lofi', 'chill', 'bedroom pop', 'dream pop', 'shoegaze',
+            'synthwave', 'new wave', 'punk', 'folk', 'ambient', 'acoustic'
+        ];
+        
         $foundGenres = [];
         foreach ($genreKeywords as $keyword) {
             if (stripos($text, $keyword) !== false) {

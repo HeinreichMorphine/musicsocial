@@ -36,6 +36,7 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_picture',
+        'cover_photo_path',
         'is_banned',
     ];
 
@@ -70,6 +71,16 @@ class User extends Authenticatable
         return $this->profile_picture
             ? Storage::url($this->profile_picture)
             : asset('images/default-profile.png'); // Ensure you have a default image at public/images/default-profile.png
+    }
+
+    /**
+     * Get the URL for the user's cover photo.
+     */
+    public function getCoverPhotoUrlAttribute(): string
+    {
+        return $this->cover_photo_path
+            ? Storage::url($this->cover_photo_path)
+            : ''; // Return empty string to fallback to gradient in view, or serve a default image
     }
 
     /**
@@ -121,6 +132,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the shares that the user has bookmarked.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function bookmarks()
+    {
+        return $this->belongsToMany(Share::class, 'bookmarks', 'user_id', 'share_id')->withTimestamps();
+    }
+
+    /**
      * Get the users that this user follows.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -138,5 +159,15 @@ class User extends Authenticatable
     public function followers()
     {
         return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+    }
+
+    // public function shelfItems()
+    // {
+    //     return $this->hasMany(ShelfItem::class);
+    // }
+
+    public function isFollowing(User $user)
+    {
+        return $this->following()->where('user_id', $user->id)->exists();
     }
 }

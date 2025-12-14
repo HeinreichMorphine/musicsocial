@@ -51,7 +51,7 @@
 
             <h3 class="text-xl font-bold mb-4 text-gray-900">Share New Music</h3>
 
-            <h3 class="font-semibold mb-2">Search Spotify</h3>
+            <h3 class="font-semibold mb-2">Share a Song</h3>
             <x-text-input
                 type="text"
                 class="w-full"
@@ -101,7 +101,7 @@
                     <textarea id="caption" name="caption" placeholder="Write a caption..." class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
                 </div>
 
-                <x-primary-button class="mt-4 bg-custom-mid-blue hover:bg-custom-dark-blue" x-bind:disabled="!selectedTrack">
+                <x-primary-button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 border-none" x-bind:disabled="!selectedTrack">
                     {{ __('Share Song') }}
                 </x-primary-button>
 

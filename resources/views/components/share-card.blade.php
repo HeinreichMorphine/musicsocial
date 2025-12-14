@@ -51,7 +51,7 @@
 
             <div class="mt-4 relative overflow-hidden rounded-3xl p-6 group">
                  <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-60 transform scale-110 transition-transform duration-700 group-hover:scale-125" style="background-image: url('{{ $share->song->album_art_url }}');"></div>
-                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
                 <div class="relative flex items-center space-x-6">
                     <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl shadow-2xl transition-transform duration-300 group-hover:scale-105 shrink-0">
                     <div class="flex-1 min-w-0">
@@ -59,12 +59,12 @@
                         <p class="text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
                         
                         <div class="flex items-center space-x-3 mt-3">
-                            <a href="{{ $share->song->spotify_url }}" target="_blank" title="Listen on Spotify" class="hover:scale-110 transition-transform">
+                            <a href="{{ $share->song->spotify_url }}" target="_blank" title="Listen on Spotify" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)]">
                                 <img src="{{ asset('icons/spotify_icon.png') }}" alt="Spotify Logo" class="w-8 h-8 drop-shadow-lg">
                             </a>
 
                             @if ($share->song->youtube_url)
-                                <a href="{{ $share->song->youtube_url }}" target="_blank" title="Watch on YouTube" class="hover:scale-110 transition-transform">
+                                <a href="{{ $share->song->youtube_url }}" target="_blank" title="Watch on YouTube" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(255,0,0,0.6)]">
                                     <img src="{{ asset('icons/youtube_icon.png') }}" alt="YouTube Logo" class="w-8 h-8 drop-shadow-lg">
                                 </a>
                             @endif
@@ -78,10 +78,11 @@
                     liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
                     likesCount: {{ $share->likes->count() }},
                     disliked: {{ auth()->check() && auth()->user()->dislikes->contains($share) ? 'true' : 'false' }},
-                    dislikesCount: {{ $share->dislikes->count() }}
+                    dislikesCount: {{ $share->dislikes->count() }},
+                    bookmarked: {{ auth()->check() && auth()->user()->bookmarks->contains($share) ? 'true' : 'false' }}
                 }">
                 
-                <div class="grid grid-cols-3 gap-2 w-full mt-2">
+                <div class="grid grid-cols-4 gap-2 w-full mt-2">
                     <!-- Like Zone -->
                     <form @submit.prevent="
                         fetch('{{ route('shares.like', $share) }}', {
@@ -166,6 +167,38 @@
                             </svg>
                             <span class="text-sm font-bold text-gray-600 group-hover:text-custom-mid-blue transition-colors">{{ $share->comments->count() }}</span>
                         </button>
+                    </div>
+
+                    <!-- Bookmark Zone -->
+                    <div class="flex justify-center">
+                        <form @submit.prevent="
+                            fetch('{{ route('shares.bookmark', $share) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                bookmarked = data.bookmarked;
+                            })
+                        " class="flex justify-center w-full">
+                            @csrf
+                            <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-yellow-50 transition-colors group w-full justify-center" title="Bookmark">
+                                <template x-if="bookmarked">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-yellow-500">
+                                        <path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" />
+                                    </svg>
+                                </template>
+                                <template x-if="!bookmarked">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-500 group-hover:text-yellow-500 transition-colors">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0111.186 0z" />
+                                    </svg>
+                                </template>
+                                <span x-text="bookmarked ? 'Saved' : 'Save'" class="text-sm font-bold text-gray-600 group-hover:text-yellow-500 transition-colors"></span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

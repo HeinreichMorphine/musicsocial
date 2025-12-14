@@ -99,7 +99,7 @@
         <input type="hidden" name="type" x-model="postType">
 
         <div>
-            <h3 class="font-semibold mb-2">Search Spotify</h3>
+            <h3 class="font-semibold mb-2">Share a Song</h3>
             <div class="flex items-start space-x-3">
                  <img src="{{ auth()->user()->profile_picture ? Storage::url(auth()->user()->profile_picture) : 'https://via.placeholder.com/150' }}"
                      alt="{{ auth()->user()->name }}"

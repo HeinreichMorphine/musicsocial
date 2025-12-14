@@ -48,6 +48,44 @@
 
     <div class="border-t border-gray-200 my-6"></div>
 
+    <form method="post" action="{{ route('profile.banner.update') }}" class="mt-6 space-y-4" enctype="multipart/form-data">
+        @csrf
+        @method('patch')
+
+        <h3 class="font-medium text-gray-700">{{ __('Profile Banner') }}</h3>
+
+        <div>
+            <!-- Current Banner Preview -->
+            @if($user->cover_photo_path)
+                <div class="mb-4">
+                     <p class="text-sm text-gray-500 mb-1">Current Banner:</p>
+                     <img src="{{ $user->cover_photo_url }}" alt="Current Banner" class="w-full h-32 object-cover rounded-lg border border-gray-200">
+                </div>
+            @endif
+
+            <x-input-label for="cover_photo" :value="__('Upload New Banner (Max 4MB)')" />
+            
+            <input id="cover_photo" name="cover_photo" type="file" class="mt-2 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" required />
+            <x-input-error class="mt-2" :messages="$errors->get('cover_photo')" />
+        </div>
+
+        <div class="flex items-center gap-4">
+            <x-primary-button>{{ __('Save Banner') }}</x-primary-button>
+
+            @if (session('status') === 'cover-photo-updated')
+                <p
+                    x-data="{ show: true }"
+                    x-show="show"
+                    x-transition
+                    x-init="setTimeout(() => show = false, 2000)"
+                    class="text-sm text-green-600"
+                >{{ __('Banner saved.') }}</p>
+            @endif
+        </div>
+    </form>
+
+    <div class="border-t border-gray-200 my-6"></div>
+
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
     </form>

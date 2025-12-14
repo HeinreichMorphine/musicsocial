@@ -57,22 +57,19 @@ class ShareController extends Controller
             if ($song) {
                 $genres = json_decode($song->genres, true) ?? [];
 
-                // 1. Fallback: MusicBrainz (Artist Genres)
-                if (empty($genres)) {
-                    $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
-                    if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
-                        $genres = array_unique(array_merge($genres, $musicBrainzGenres));
-                    }
+                // 1. Enhance with MusicBrainz (Artist Genres)
+                $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
+                if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
+                    $genres = array_unique(array_merge($genres, $musicBrainzGenres));
                 }
 
-                // 2. Fallback: AudioDB (Track Genres)
-                if (empty($genres)) {
-                    $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
-                    if (!empty($audioDbGenres)) {
-                        $genres = array_unique(array_merge($genres, $audioDbGenres));
-                    }
+                // 2. Enhance with AudioDB (Track Genres)
+                $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
+                if (!empty($audioDbGenres)) {
+                    $genres = array_unique(array_merge($genres, $audioDbGenres));
                 }
 
+                // Ensure we have a YouTube Video ID
                 if (empty($song->youtube_video_id)) {
                     $youTubeData = $this->youTubeService->searchVideo($song->track_name . ' ' . $song->artist_name);
                     if ($youTubeData) {
@@ -80,16 +77,16 @@ class ShareController extends Controller
                             'youtube_video_id' => $youTubeData['video_id'],
                             'youtube_url' => $youTubeData['url'],
                         ]);
+                    }
+                }
 
-                        // 3. Final Fallback: YouTube Tags
-                        if (empty($genres)) {
-                            $videoData = $this->youTubeService->getVideo($youTubeData['video_id']);
-                            if ($videoData) {
-                                $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []) . ' ' . $videoData['description']);
-                                if (!empty($youtubeGenres)) {
-                                    $genres = array_unique(array_merge($genres, $youtubeGenres));
-                                }
-                            }
+                // 3. Final Fallback: YouTube Tags (Last Resort)
+                if (empty($genres) && !empty($song->youtube_video_id)) {
+                    $videoData = $this->youTubeService->getVideo($song->youtube_video_id);
+                    if ($videoData) {
+                        $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []) . ' ' . $videoData['description']);
+                        if (!empty($youtubeGenres)) {
+                            $genres = array_unique(array_merge($genres, $youtubeGenres));
                         }
                     }
                 }
@@ -226,6 +223,20 @@ class ShareController extends Controller
             'dislikesCount' => $share->dislikes()->count(),
             'liked' => $user->likes->contains($share),
             'likesCount' => $share->likes()->count(),
+        ]);
+    }
+
+    /**
+     * Toggles the "bookmark" status for a given share.
+     */
+    public function toggleBookmark(Share $share)
+    {
+        $user = auth()->user();
+
+        $user->bookmarks()->toggle($share);
+
+        return response()->json([
+            'bookmarked' => $user->bookmarks->contains($share),
         ]);
     }
 }

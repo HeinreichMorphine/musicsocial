@@ -49,17 +49,21 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::patch('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture.update');
+    Route::patch('/profile/banner', [ProfileController::class, 'updateBanner'])->name('profile.banner.update');
     // Our new routes
     Route::resource('shares', ShareController::class)->only(['store', 'destroy']);
     Route::resource('shares.comments', CommentController::class)->only(['store', 'destroy', 'update']);
     Route::post('/shares/{share}/like', [LikeController::class, 'toggle'])->name('shares.like');
     Route::post('/shares/{share}/dislike', [ShareController::class, 'toggleDislike'])->name('shares.dislike');
+    Route::post('/shares/{share}/bookmark', [ShareController::class, 'toggleBookmark'])->name('shares.bookmark');
 
     // User search route
     Route::get('/users/search', [UserSearchController::class, 'index'])->name('user.search');
 
     // Public profiles
     Route::get('/users/{user:name}', [UserProfileController::class, 'show'])->name('profile.show');
+    Route::get('/users/{user:name}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
+    Route::get('/users/{user:name}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
     Route::post('/users/{user}/follow', [FollowController::class, 'toggle'])->name('users.follow');
 
     // Spotify search routes

@@ -82,14 +82,14 @@ class ProfileController extends Controller
                             ->limit(5)
                             ->get();
 
-        $shelfItems = $user->shelfItems()->orderBy('position')->get();
+
 
         return view('profile.edit', [
             'user' => $user,
             'recommendedShares' => $recommendedShares,
             'usersToSuggest' => $usersToSuggest,
             'recommendedSongs' => $recommendedSongs,
-            'shelfItems' => $shelfItems,
+
         ]);
     }
 
@@ -154,5 +154,25 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-picture-updated');
+    }
+
+    /**
+     * Update the user's cover photo.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateBanner(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'cover_photo' => ['required', 'image', 'max:4096'],
+        ]);
+
+        $path = $request->file('cover_photo')->store('cover-photos', 'public');
+
+        $request->user()->cover_photo_path = $path;
+        $request->user()->save();
+
+        return Redirect::route('profile.edit')->with('status', 'cover-photo-updated');
     }
 }
