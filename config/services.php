@@ -55,8 +55,8 @@ return [
         'user_agent' => env('MUSICBRAINZ_USER_AGENT', 'MusicSocialApp/1.0 ( your_email@example.com )'),
     ],
 
-    'audiodb' => [
-        'base_url' => env('AUDIODB_BASE_URL', 'https://www.theaudiodb.com/api/v1/json/'),
-        'api_key' => env('AUDIODB_API_KEY', '2'), // '2' is the test key
+    'discogs' => [
+        'key' => env('DISCOGS_CONSUMER_KEY'),
+        'secret' => env('DISCOGS_CONSUMER_SECRET'),
     ],
 ];

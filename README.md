@@ -93,3 +93,7 @@ Contributions are welcome! Please feel free to submit a pull request.
 ## License
 
 This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Acknowledgments
+
+- **Beets**: Genre normalization data from the [Beets](https://github.com/beetbox/beets) project (specifically `lastgenre` plugin).

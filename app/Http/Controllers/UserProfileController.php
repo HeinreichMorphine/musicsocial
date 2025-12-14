@@ -103,7 +103,7 @@ class UserProfileController extends Controller
 
         $genreCounts = [];
         $artistCounts = [];
-        $totalGenrePoints = 0;
+        $songsWithGenresCount = 0;
 
         foreach ($allSongs as $song) {
             if (!$song) continue;
@@ -123,6 +123,7 @@ class UserProfileController extends Controller
                 $cleanGenres = str_replace(['[', ']', '"', "'"], '', $song->genres);
                 $genres = explode(',', $cleanGenres);
                 
+                $songHasGenre = false;
                 foreach ($genres as $genre) {
                     $genre = trim($genre);
                     if (empty($genre)) continue;
@@ -131,7 +132,10 @@ class UserProfileController extends Controller
                         $genreCounts[$genre] = 0;
                     }
                     $genreCounts[$genre]++;
-                    $totalGenrePoints++;
+                    $songHasGenre = true;
+                }
+                if ($songHasGenre) {
+                     $songsWithGenresCount++;
                 }
             }
         }
@@ -140,11 +144,11 @@ class UserProfileController extends Controller
         $topGenres = array_slice($genreCounts, 0, 5, true);
         $userArtistKeys = array_keys($artistCounts);
         
-        // Normalize to percentages
+        // Normalize to percentages (of Songs)
         $genreDna = [];
         foreach ($topGenres as $genre => $count) {
             $genreDna[$genre] = [
-                'percent' => $totalGenrePoints > 0 ? round(($count / $totalGenrePoints) * 100) : 0,
+                'percent' => $songsWithGenresCount > 0 ? round(($count / $songsWithGenresCount) * 100) : 0,
             ];
         }
 
@@ -204,6 +208,14 @@ class UserProfileController extends Controller
         $primaryGenre = array_key_first($topGenres);
         $badge = $primaryGenre ? "🏆 " . ucfirst($primaryGenre) . " Lover" : "🎧 Music Explorer";
 
+        // Calculate Radar Values (Relative Intensity)
+        // Normalize against the top genre count so the chart is always full
+        $maxCount = !empty($topGenres) ? reset($topGenres) : 0;
+        $radarValues = [];
+        foreach ($topGenres as $genre => $count) {
+             $radarValues[] = $maxCount > 0 ? round(($count / $maxCount) * 100) : 0;
+        }
+
         // Sidebar Data
         $currentUser = Auth::user();
         $usersToSuggest = User::where('id', '!=', $currentUser->id)
@@ -220,7 +232,7 @@ class UserProfileController extends Controller
             'recommendedSongs' => $recommendedSongs,
             'badge' => $badge,
             'genreLabels' => array_keys($genreDna),
-            'genreValues' => array_column($genreDna, 'percent'),
+            'genreValues' => $radarValues, // Use relative intensity for radar
         ]);
     }
     private function getTopGenre($user)
@@ -265,14 +277,38 @@ class UserProfileController extends Controller
 
         $shares = $user->bookmarks()->with(['song', 'user', 'likes', 'dislikes', 'comments.user'])->paginate(10);
 
-         // Badge Calculation (reused)
-         $topGenre = $this->getTopGenre($user);
-         $badge = $topGenre ? "🏆 " . ucfirst($topGenre) . " Lover" : "🎧 Music Explorer";
+        // Badge Calculation (reused)
+        $topGenre = $this->getTopGenre($user);
+        $badge = $topGenre ? "🏆 " . ucfirst($topGenre) . " Lover" : "🎧 Music Explorer";
+
+        // Sidebar Data
+        $currentUser = Auth::user();
+        $usersToSuggest = User::where('id', '!=', $currentUser->id)
+                            ->whereDoesntHave('followers', function ($query) use ($currentUser) {
+                                $query->where('follower_id', $currentUser->id);
+                            })
+                            ->inRandomOrder()
+                            ->limit(5)
+                            ->get();
+        
+        $recommendations = $this->recommendationService->getRecommendations($currentUser->id);
+        $recommendedSongIds = collect($recommendations)->pluck('song_id')->all();
+        $recommendationData = collect($recommendations)->keyBy('song_id');
+        $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
+        $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+            return $recommendationData[$song->id]['score'] ?? 0;
+        });
+        $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+            $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+            return $song;
+        });
 
         return view('profile.saved', [
             'user' => $user,
             'shares' => $shares,
-            'badge' => $badge
+            'badge' => $badge,
+            'usersToSuggest' => $usersToSuggest,
+            'recommendedSongs' => $recommendedSongs,
         ]);
     }
 }

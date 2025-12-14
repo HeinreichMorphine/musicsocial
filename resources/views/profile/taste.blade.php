@@ -139,6 +139,8 @@
                                             maintainAspectRatio: false,
                                             scales: {
                                                 r: {
+                                                    min: 0,
+                                                    max: 100,
                                                     angleLines: {
                                                         display: true,
                                                         color: 'rgba(0, 0, 0, 0.1)'

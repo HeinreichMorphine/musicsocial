@@ -113,85 +113,121 @@ class SpotifyService
      */
     public function getGenresForTrack(string $trackId): array
     {
-        $token = $this->getAccessToken();
-        if (!$token) {
-            return [];
-        }
+        $data = $this->getGenresWithSources($trackId);
+        return $data['genres'] ?? [];
+    }
 
-        $trackResponse = Http::withToken($token)
-            ->timeout(30)
-            ->get($this->baseUrl . 'tracks/' . $trackId);
+    /**
+     * Get genres for a track with detailed source information.
+     *
+     * @param string $trackId
+     * @return array
+     */
+    public function getGenresWithSources(string $trackId): array
+    {
+        // Cache the detailed result (v2 cache key)
+        return Cache::remember("genres_track_v2_{$trackId}", 60 * 60 * 24 * 7, function () use ($trackId) {
+            $token = $this->getAccessToken();
+            if (!$token) {
+                return ['genres' => [], 'sources' => []];
+            }
 
-        if ($trackResponse->failed()) {
-            return [];
-        }
-
-        $track = $trackResponse->json();
-        $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
-        $trackName = $track['name'] ?? 'Unknown Track';
-
-        // Spotify artist genres
-        try {
-            $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
-            $artistsResponse = Http::withToken($token)
+            $trackResponse = Http::withToken($token)
                 ->timeout(30)
-                ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
+                ->get($this->baseUrl . 'tracks/' . $trackId);
 
-            if ($artistsResponse->successful()) {
-                $artists = $artistsResponse->json('artists');
-                $genres = collect($artists)->pluck('genres')->flatten()->unique()->values()->all();
+            if ($trackResponse->failed()) {
+                return ['genres' => [], 'sources' => []];
             }
-        } catch (\Exception $e) {
-            Log::error('SpotifyService: Failed to fetch artist genres - ' . $e->getMessage());
-        }
 
-        // Spotify album genres
-        if (empty($genres) && !empty($track['album']['id'])) {
+            $track = $trackResponse->json();
+            $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
+            $trackName = $track['name'] ?? 'Unknown Track';
+            
+            $debugSources = [
+                'spotify_artist' => [],
+                'spotify_album' => [],
+                'musicbrainz' => [],
+                'audiodb' => [],
+            ];
+            $allGenres = [];
+
+            // 1. Spotify Artist Genres
             try {
-                $albumResponse = Http::withToken($token)
+                $artistIds = array_map(fn($artist) => $artist['id'], $track['artists']);
+                $artistsResponse = Http::withToken($token)
                     ->timeout(30)
-                    ->get($this->baseUrl . 'albums/' . $track['album']['id']);
+                    ->get($this->baseUrl . 'artists', ['ids' => implode(',', $artistIds)]);
 
-                if ($albumResponse->successful()) {
-                    $album = $albumResponse->json();
-                    $genres = array_merge($genres, $album['genres'] ?? []);
+                if ($artistsResponse->successful()) {
+                    $artists = $artistsResponse->json('artists');
+                    $spotifyArtistGenres = collect($artists)->pluck('genres')->flatten()->all();
+                    $debugSources['spotify_artist'] = $spotifyArtistGenres;
+                    $allGenres = array_merge($allGenres, $spotifyArtistGenres);
                 }
             } catch (\Exception $e) {
-                Log::error('SpotifyService: Failed to fetch album genres - ' . $e->getMessage());
+                Log::error('SpotifyService: Failed to fetch artist genres - ' . $e->getMessage());
             }
-        }
 
-        // Fallback to MusicBrainz
-        // Fallback to External Services (MusicBrainz & AudioDB) if Spotify fails
-        if (empty($genres)) {
-            $externalGenres = [];
+            // 2. Spotify Album Genres
+            if (!empty($track['album']['id'])) {
+                try {
+                    $albumResponse = Http::withToken($token)
+                        ->timeout(30)
+                        ->get($this->baseUrl . 'albums/' . $track['album']['id']);
 
-            // 1. MusicBrainz
+                    if ($albumResponse->successful()) {
+                        $album = $albumResponse->json();
+                        $spotifyAlbumGenres = $album['genres'] ?? [];
+                        $debugSources['spotify_album'] = $spotifyAlbumGenres;
+                        $allGenres = array_merge($allGenres, $spotifyAlbumGenres);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: Failed to fetch album genres - ' . $e->getMessage());
+                }
+            }
+
+            // 3. (NEW) Discogs Genres (High Quality)
             try {
-                $musicBrainzService = new MusicBrainzService();
-                $mbGenres = $musicBrainzService->getArtistGenres($artistName);
-                if (is_array($mbGenres) && !isset($mbGenres['error'])) {
-                    $externalGenres = array_merge($externalGenres, $mbGenres);
+                $discogsService = new \App\Services\DiscogsService();
+                $discogsTags = $discogsService->getGenres($artistName, $trackName);
+                if (!empty($discogsTags)) {
+                     $debugSources['discogs'] = $discogsTags;
+                     $allGenres = array_merge($allGenres, $discogsTags);
                 }
             } catch (\Exception $e) {
-                Log::error('SpotifyService Fallback - MusicBrainz Error: ' . $e->getMessage());
+                Log::error('SpotifyService: Discogs Error: ' . $e->getMessage());
             }
 
-            // 2. AudioDB
-            try {
-                $audioDbService = new AudioDbService();
-                $adbGenres = $audioDbService->getGenres($trackName, $artistName);
-                if (!empty($adbGenres)) {
-                    $externalGenres = array_merge($externalGenres, $adbGenres);
+            // 4. Fallback: MusicBrainz & AudioDB (Only if we don't have enough data)
+            // If we have less than 3 genres from Spotify + Discogs, try these.
+            if (count(array_unique($allGenres)) < 3) {
+                
+                // MusicBrainz
+                try {
+                    $musicBrainzService = new MusicBrainzService();
+                    $mbGenres = $musicBrainzService->getArtistGenres($artistName);
+                    if (is_array($mbGenres) && !isset($mbGenres['error'])) {
+                        $debugSources['musicbrainz_fallback'] = $mbGenres;
+                        $allGenres = array_merge($allGenres, $mbGenres);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: MusicBrainz Error: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::error('SpotifyService Fallback - AudioDB Error: ' . $e->getMessage());
             }
 
-            $genres = array_unique(array_merge($genres, $externalGenres));
-        }
+            // Clean and Sanitize
+            $cleaner = new GenreCleanerService();
+            $uniqueGenres = $cleaner->clean($allGenres);
+            
+            // Limit to top 5 AFTER cleaning to ensure they are high quality
+            $finalGenres = array_slice($uniqueGenres, 0, 5);
 
-        return array_values(array_unique($genres));
+            return [
+                'genres' => $finalGenres,
+                'sources' => $debugSources
+            ];
+        });
     }
     /**
      * Get a user's recently played tracks from Spotify.

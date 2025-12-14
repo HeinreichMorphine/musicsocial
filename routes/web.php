@@ -117,4 +117,6 @@ Route::get('/debug-auth', function () {
     ];
 });
 
+
 require __DIR__.'/auth.php';
+

@@ -738,13 +738,18 @@ def get_recommendations(user_id):
                 # Try TF-IDF-based similarity first (more sophisticated)
                 cf_predictions = content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df)
                 
-                # Fallback to Jaccard-based method if TF-IDF returns nothing
+                # Filter out songs user has already interacted with
+                if cf_predictions:
+                    cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
+                
+                # Fallback to Jaccard-based method if TF-IDF returns nothing (or all were filtered)
                 # This can happen if user has very few interactions or metadata is sparse
                 if not cf_predictions:
                     cf_predictions = content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
+                    # Filter out songs user has already interacted with
+                    if cf_predictions:
+                        cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
                 
-                # If still empty (brand new user with 0 interactions), return empty
-                # In production, you might return globally popular songs here
                 # If still empty (brand new user with 0 interactions), return global popular songs
                 if not cf_predictions:
                      print("Cold start: No user history found. Fetching global top songs.")
@@ -754,16 +759,23 @@ def get_recommendations(user_id):
                         LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
                         GROUP BY s.id
                         ORDER BY popularity DESC
-                        LIMIT 10
+                        LIMIT 20
                      """)
                      top_songs_df = pd.read_sql(top_songs_query, connection)
                      
                      for _, row in top_songs_df.iterrows():
+                         s_id = int(row['song_id'])
+                         if s_id in user_interacted_song_ids:
+                             continue
+
                          cf_predictions.append({
-                             'song_id': int(row['song_id']),
+                             'song_id': s_id,
                              'score': 0.1, # Low score to indicate it's generic
                              'reason': 'Popular in the community'
                          })
+                         
+                         if len(cf_predictions) >= 10:
+                             break
 
             # --- STEP 4: TRUST-BASED SOCIAL BOOSTING ---
             # This implements a sophisticated trust calculation based on social network theory.

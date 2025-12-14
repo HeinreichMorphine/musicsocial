@@ -1,14 +1,11 @@
 <?php
-
 namespace App\Console\Commands;
 
 use App\Models\Song;
 use App\Services\SpotifyService;
 use App\Services\YouTubeService;
-use App\Services\MusicBrainzService;
-use App\Services\AudioDbService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
+
 
 class BackfillShareMetadata extends Command
 {
@@ -17,7 +14,7 @@ class BackfillShareMetadata extends Command
      *
      * @var string
      */
-    protected $signature = 'app:backfill-genres {--force}';
+    protected $signature = 'app:backfill-genres {--force} {--track=}';
 
     /**
      * The console command description.
@@ -29,14 +26,20 @@ class BackfillShareMetadata extends Command
     /**
      * Execute the console command.
      */
-    public function handle(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService)
+    public function handle(SpotifyService $spotifyService, YouTubeService $youTubeService)
     {
         $this->info('Starting to backfill song metadata...');
 
         $query = Song::query();
 
-        if (!$this->option('force')) {
-             $query->whereNull('genres')->orWhere('genres', '[]')->orWhere('genres', '');
+        if ($this->option('track')) {
+            $query->where('track_name', 'like', '%' . $this->option('track') . '%');
+        }
+
+        if (!$this->option('force') && !$this->option('track')) {
+             $query->where(function ($q) {
+                 $q->whereNull('genres')->orWhere('genres', '[]')->orWhere('genres', '');
+             });
         }
 
         $songsToUpdate = $query->get();
@@ -58,33 +61,35 @@ class BackfillShareMetadata extends Command
             $genres = json_decode($song->genres, true) ?? [];
             if (!is_array($genres)) $genres = [];
 
-            // 1. AudioDB
-            $audioDbGenres = $audioDbService->getGenres($song->track_name, $song->artist_name);
-            if (!empty($audioDbGenres)) {
-                $genres = array_unique(array_merge($genres, $audioDbGenres));
-            }
-
-            // 2. MusicBrainz
-            if ($song->artist_name) {
+            // 1. Fetch from Spotify Service (includes Spotify, MusicBrainz, AudioDB with caching)
+            if ($song->spotify_track_id) {
                 try {
-                    $mbGenres = $musicBrainzService->getArtistGenres($song->artist_name);
-                    if (!empty($mbGenres) && !isset($mbGenres['error'])) {
-                        $genres = array_unique(array_merge($genres, $mbGenres));
+                    // Use new method to get sources
+                    $responseData = $spotifyService->getGenresWithSources($song->spotify_track_id);
+                    $fetchedGenres = $responseData['genres'] ?? [];
+                    $sources = $responseData['sources'] ?? [];
+
+                    if (!empty($fetchedGenres) || !empty($sources)) {
+                        if (!empty($fetchedGenres)) {
+                            $genres = array_unique(array_merge($genres, $fetchedGenres));
+                        }
+
+                        // Display detailed source info
+                        $this->info("  Includes genre tags for '{$song->track_name}':");
+                        foreach ($sources as $source => $tags) {
+                            if (!empty($tags)) {
+                                 // Clean formatting for nicer output
+                                 $prettySource = ucwords(str_replace('_', ' ', $source));
+                                 $this->line("    <comment>{$prettySource}</comment>: " . implode(', ', $tags));
+                            }
+                        }
                     }
                 } catch (\Exception $e) {
-                    // Silent fail
+                    // Log::error("Backfill Error for {$song->id}: " . $e->getMessage());
                 }
             }
 
-            // 3. Spotify
-            if ($song->spotify_track_id) {
-                $spotifyGenres = $spotifyService->getGenresForTrack($song->spotify_track_id);
-                if (!empty($spotifyGenres)) {
-                    $genres = array_unique(array_merge($genres, $spotifyGenres));
-                }
-            }
-
-            // 4. YouTube as fallback
+            // 2. YouTube as fallback (if genres are still empty or for enrichment)
             if (empty($genres) && $song->youtube_video_id) {
                 try {
                     $videoData = $youTubeService->getVideo($song->youtube_video_id);
@@ -115,10 +120,21 @@ class BackfillShareMetadata extends Command
     private function extractGenresFromText(string $text): array
     {
         $genreKeywords = [
-            'pop', 'rock', 'hip hop', 'hip-hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 
-            'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 
-            'house', 'techno', 'trance', 'trap', 'world', 'lo-fi', 'lofi', 'chill', 'bedroom pop', 'dream pop', 'shoegaze',
-            'synthwave', 'new wave', 'punk', 'folk', 'ambient', 'acoustic'
+            // Mainstream Genres
+            'pop', 'rock', 'hip hop', 'hip-hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal',
+            'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel',
+            'house', 'techno', 'trance', 'trap', 'world', 'lo-fi', 'lofi', 'chill', 'bedroom pop',
+
+            // Niche Genres
+            'synthwave', 'new wave', 'punk', 'folk', 'ambient', 'acoustic', 'shoegaze', 'dream pop', 'post-rock', 'math rock',
+            'midwest emo', 'screamo', 'hardcore', 'metalcore', 'death metal', 'black metal', 'doom metal', 'stoner rock',
+            'psychedelic rock', 'garage rock', 'surf rock', 'jangle pop', 'power pop', 'noise pop', 'twee pop', 'chamber pop',
+            'art pop', 'hyperpop', 'glitchcore', 'bubblegum bass', 'deconstructed club', 'future bass', 'vaporwave', 'seapunk',
+            'witch house', 'darkwave', 'coldwave', 'ethereal wave', 'gothic rock', 'industrial', 'ebm', 'aggrotech',
+            'futurepop', 'synth-pop', 'electropop', 'electro-industrial', 'idm', 'drill and bass', 'glitch', 'breakcore',
+            'jungle', 'drum and bass', 'dubstep', 'grime', 'uk garage', '2-step', 'footwork', 'juke', 'chicago house',
+            'acid house', 'deep house', 'progressive house', 'electro house', 'big room', 'hardstyle', 'jumpstyle',
+            'gabba', 'hardcore techno', 'speedcore', 'terrorcore', 'frenchcore', 'uptempo hardcore'
         ];
         
         $foundGenres = [];

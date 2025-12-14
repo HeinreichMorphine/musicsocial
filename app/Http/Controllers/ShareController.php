@@ -125,7 +125,23 @@ class ShareController extends Controller
 
     private function extractGenresFromText(string $text): array
     {
-        $genreKeywords = ['pop', 'rock', 'hip hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal', 'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel', 'house', 'techno', 'trance', 'trap', 'world'];
+        $genreKeywords = [
+            // Mainstream Genres
+            'pop', 'rock', 'hip hop', 'hip-hop', 'r&b', 'electronic', 'dance', 'country', 'jazz', 'classical', 'metal',
+            'indie', 'alternative', 'soul', 'funk', 'reggae', 'latin', 'k-pop', 'afrobeat', 'blues', 'disco', 'gospel',
+            'house', 'techno', 'trance', 'trap', 'world', 'lo-fi', 'lofi', 'chill', 'bedroom pop',
+
+            // Niche Genres
+            'synthwave', 'new wave', 'punk', 'folk', 'ambient', 'acoustic', 'shoegaze', 'dream pop', 'post-rock', 'math rock',
+            'midwest emo', 'screamo', 'hardcore', 'metalcore', 'death metal', 'black metal', 'doom metal', 'stoner rock',
+            'psychedelic rock', 'garage rock', 'surf rock', 'jangle pop', 'power pop', 'noise pop', 'twee pop', 'chamber pop',
+            'art pop', 'hyperpop', 'glitchcore', 'bubblegum bass', 'deconstructed club', 'future bass', 'vaporwave', 'seapunk',
+            'witch house', 'darkwave', 'coldwave', 'ethereal wave', 'gothic rock', 'industrial', 'ebm', 'aggrotech',
+            'futurepop', 'synth-pop', 'electropop', 'electro-industrial', 'idm', 'drill and bass', 'glitch', 'breakcore',
+            'jungle', 'drum and bass', 'dubstep', 'grime', 'uk garage', '2-step', 'footwork', 'juke', 'chicago house',
+            'acid house', 'deep house', 'progressive house', 'electro house', 'big room', 'hardstyle', 'jumpstyle',
+            'gabba', 'hardcore techno', 'speedcore', 'terrorcore', 'frenchcore', 'uptempo hardcore'
+        ];
         $foundGenres = [];
         foreach ($genreKeywords as $keyword) {
             if (stripos($text, $keyword) !== false) {
