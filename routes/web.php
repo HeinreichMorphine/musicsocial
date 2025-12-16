@@ -36,6 +36,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('shares/{id}', [AdminController::class, 'deleteShare'])->name('shares.delete');
         Route::delete('comments/{id}', [AdminController::class, 'deleteComment'])->name('comments.delete');
         Route::get('retrain', [AdminController::class, 'retrainPage'])->name('retrain.page');
+        Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
+        Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
         Route::get('profile', [AdminController::class, 'profile'])->name('profile');
         Route::post('profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     });
@@ -43,7 +45,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 // Breeze's default dashboard, let's rename it to our Feed
 Route::get('/dashboard', [FeedController::class, 'index'])
-    ->middleware(['auth', 'verified'])->name('dashboard');
+    ->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // Breeze's profile routes (for editing your own profile)

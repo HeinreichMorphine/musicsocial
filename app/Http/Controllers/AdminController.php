@@ -147,4 +147,20 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
+
+    public function retrainProcess()
+    {
+        try {
+            $client = new \GuzzleHttp\Client();
+            $response = $client->request('POST', "http://127.0.0.1:5000/retrain");
+            
+            if ($response->getStatusCode() == 200) {
+                return redirect()->back()->with('success', 'Model retraining initiated successfully.');
+            } else {
+                return redirect()->back()->with('error', 'Failed to initiate retraining. API returned status: ' . $response->getStatusCode());
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error calling Recommender Service: ' . $e->getMessage());
+        }
+    }
 }

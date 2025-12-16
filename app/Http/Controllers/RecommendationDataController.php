@@ -26,16 +26,12 @@ class RecommendationDataController extends Controller
             ];
         }
 
-        // Fetch 'not interested' feedback (negative feedback)
-        // Assuming a 'user_feedback' table with 'feedback_type' column
-        $notInterested = DB::table('user_feedback')
-                            ->where('feedback_type', 'not_interested')
-                            ->select('user_id', 'share_id')
-                            ->get();
-        foreach ($notInterested as $feedback) {
+        // Fetch dislikes (negative feedback)
+        $dislikes = DB::table('dislikes')->select('user_id', 'share_id')->get();
+        foreach ($dislikes as $dislike) {
             $interactions[] = [
-                'user_id' => $feedback->user_id,
-                'item_id' => $feedback->share_id,
+                'user_id' => $dislike->user_id,
+                'item_id' => $dislike->share_id,
                 'rating' => -1, // Negative feedback
             ];
         }

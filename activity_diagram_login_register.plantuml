@@ -1,0 +1,87 @@
+@startuml
+title Login/Register View Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|User|
+|System| (Web App & Database)
+|External_API| (Spotify/Google)
+
+|User|
+start
+:Access Login/Register Page;
+|System|
+:Display Login Form (Email/Password) AND OAuth Buttons;
+
+|User|
+if (Login Method?) then (Email)
+    if (Have Account?) then (Yes - Login)
+        if (Forgot Password?) then (Yes)
+            :Click "Forgot Password";
+            |System|
+            :Show Password Reset Form;
+            |User|
+            :Submit Email;
+            |System|
+            :Send Reset Link (Email);
+            stop
+        else (No)
+        endif
+        |User|
+        :Fill Email, Password;
+        :Click Login;
+        |System|
+        :Check Credentials;
+        if (Invalid?) then (Yes)
+            :Display Error;
+            stop
+        else (No)
+        endif
+    else (No - Register)
+        :Fill Name, Email, Password;
+        :Click Register;
+        |System|
+        :Validate Input;
+        :Create User Record;
+        :Trigger "Verification Email" Event;
+    endif
+
+    |System|
+    :Login User (Session);
+    if (Email Verified?) then (Yes)
+    else (No)
+        :Redirect to "Verify Email" Page;
+        |User|
+        :Check Email & Click Link;
+        |System|
+        :Mark Email Verified;
+    endif
+    :Redirect to Home/Dashboard;
+    stop
+
+else (OAuth)
+    :Click Provider Button;
+    |System|
+    :Redirect to Provider (OAuth);
+    |External_API|
+    :User Authenticates;
+    :Redirect Back with Code;
+    |System|
+    :Handle Callback;
+
+    if (Error?) then (Yes)
+        :Display Error Message;
+        stop
+    else (No)
+        :Find or Create User;
+        :Login User (Session);
+        :Redirect to Home/Dashboard;
+        stop
+    endif
+endif
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+title Profile Page Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|User|
+|System| (Web App & Database)
+
+|User|
+start
+:Access Profile Page;
+|System|
+:Find User by Name/ID;
+:Fetch Header Data (Stats/Badge);
+:Render Header;
+
+|User|
+split
+    :Select **Posts** Tab (Default);
+    |System|
+    :Fetch User Shares;
+    :Render Share Feed;
+    |User|
+    :View/Scroll Feed;
+split again
+    :Select **Taste DNA** Tab;
+    |System|
+    :Get Shared & Liked Songs;
+    :Calculate Genre DNA (%);
+    :Calculate Radar Chart Values;
+    :Find "Taste Twins" (Similar Artists);
+    :Render Taste View;
+    |User|
+    :View Genre DNA;
+    :View Taste Twins;
+split again
+    :Select **Saved** Tab;
+    note right: Only visible to Owner
+    |System|
+    :Fetch Bookmarked Shares;
+    :Render Saved Posts;
+    |User|
+    :View Saved Content;
+end split
+
+|User|
+split
+    :Interact with Content;
+split again
+    if (Is Own Profile?) then (Yes)
+        :Edit Profile;
+    else (No)
+        :Follow/Unfollow;
+    endif
+end split
+stop
+@enduml

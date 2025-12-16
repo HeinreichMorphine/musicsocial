@@ -1,0 +1,38 @@
+@startuml
+title Admin Content Moderation Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|Admin_User|
+|System| (Web App & Database)
+
+|Admin_User|
+start
+:Access Moderation Page;
+|System|
+:Fetch Latest Shares (Paginated);
+:Fetch Latest Comments (Paginated);
+:Render Moderation View;
+|Admin_User|
+:Review Content;
+if (Action?) then (Delete Share)
+    :Click Delete Share;
+    |System|
+    :Delete Share Record;
+    :Return Success Message;
+elseif (Delete Comment)
+    :Click Delete Comment;
+    |System|
+    :Delete Comment Record;
+    :Return Success Message;
+else (None)
+endif
+|Admin_User|
+:View Updated Lists;
+stop
+@enduml

@@ -40,3 +40,5 @@ surprise_model.pkl
 
 # Scripts
 *.bat
+
+!activity_diagram_description.md

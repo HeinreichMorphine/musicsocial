@@ -1,0 +1,36 @@
+@startuml
+title Admin Recommender Retrain Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|Admin_User|
+|System| 
+|External_API| (Python Recommender Service)
+
+|Admin_User|
+start
+:Access Retrain/Recs Page;
+|System|
+:Fetch User List (for dropdown);
+:Render Retrain View;
+|Admin_User|
+:Select User ID & Click "Get Recs";
+|System|
+:Send Request to Python Service;
+|External_API|
+:Calculate Recommendations 
+(Collaborative + Content-Based);
+:Return List of Song IDs;
+|System|
+:Receive JSON Response;
+:Match IDs with Song Database;
+:Render Recommendations List;
+|Admin_User|
+:View Recommended Songs (Debug);
+stop
+@enduml

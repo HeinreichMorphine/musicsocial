@@ -1,0 +1,50 @@
+@startuml
+title Discovery Page (Main Column) Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|User|
+|System| (Web App & Database)
+|External_API| (Python Recommender Service)
+
+|User|
+start
+:Access Discovery Page;
+|System|
+:Get Authenticated User;
+:Fetch Recommendations (Service);
+
+|External_API|
+if (Interactions >= 5?) then (Yes)
+    :Collaborative Filtering (Hybrid);
+    note right
+        Algorithm: **SVD (Singular Value Decomposition)**
+        Matrix Factorization of User-Item Interactions
+    end note
+else (No - Cold Start)
+    :Content-Based Filtering;
+    note right
+        Algorithm: **TF-IDF + Cosine Similarity**
+        Matches Song Metadata (Genres/Artists)
+    end note
+endif
+:Apply Social Graph Boosting;
+:Return Song IDs & Scores;
+
+|System|
+:Fetch Song Details (Database);
+:Sort by Score;
+:Render Main Discovery Grid;
+
+|User|
+:View Recommended Songs;
+:Click Song Card;
+|System|
+:Redirect to Song Details;
+stop
+@enduml

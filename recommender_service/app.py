@@ -774,7 +774,7 @@ def get_recommendations(user_id):
                              'reason': 'Popular in the community'
                          })
                          
-                         if len(cf_predictions) >= 10:
+                         if len(cf_predictions) >= 12:
                              break
 
             # --- STEP 4: TRUST-BASED SOCIAL BOOSTING ---
@@ -860,7 +860,7 @@ def get_recommendations(user_id):
             final_scores.sort(key=lambda x: x['score'], reverse=True)
             
             # Select Top N
-            recommendations = final_scores[:10]
+            recommendations = final_scores[:12]
             
             return jsonify({"user_id": user_id, "recommendations": recommendations})
     except Exception as e:
@@ -872,8 +872,8 @@ def schedule_training():
     Background task to retrain the model periodically.
     """
     while True:
-        print("\n[Scheduler] Waiting 60 seconds before next training cycle...")
-        time.sleep(60)
+        print("\n[Scheduler] Waiting 1 hour before next training cycle...")
+        time.sleep(3600)
         print("[Scheduler] Starting scheduled model training...")
         with app.app_context():
             try:

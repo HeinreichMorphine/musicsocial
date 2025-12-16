@@ -1,0 +1,34 @@
+@startuml
+title Admin Profile Management Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|Admin_User|
+|System| (Web App & Database)
+
+|Admin_User|
+start
+:Access Admin Profile;
+|System|
+:Fetch Admin User Data;
+:Render Profile Form;
+|Admin_User|
+:Update Name, Email, or Password;
+:Click Update;
+|System|
+:Validate Input;
+if (Valid?) then (Yes)
+    :Update Admin Record;
+    :Return Success Message;
+else (No)
+    :Return Validation Errors;
+endif
+|Admin_User|
+:View Updated Profile;
+stop
+@enduml

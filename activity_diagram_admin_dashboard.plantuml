@@ -1,0 +1,25 @@
+@startuml
+title Admin Dashboard Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|Admin_User|
+|System| (Web App & Database)
+
+|Admin_User|
+start
+:Access Dashboard;
+|System|
+:Fetch User Count;
+:Fetch Share Count;
+:Fetch Comment Count;
+:Render Dashboard View (Stats);
+|Admin_User|
+:View Admin Statistics;
+stop
+@enduml

@@ -1,0 +1,67 @@
+@startuml
+title Authentication Module Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|User|
+|System| (Web App & Database)
+|External_API| (Spotify/Google)
+
+|User|
+start
+if (Login Method?) then (Email)
+    |User|
+    if (Has Account?) then (Yes)
+        :Enter Email & Password;
+        |System|
+        :Validate Credentials;
+        if (Valid?) then (Yes)
+            :Login User;
+        else (No)
+            :Return Error;
+            stop
+        endif
+    else (No)
+        :Enter Registration Details;
+        |System|
+        :Validate Input;
+        :Create New User;
+        :Send Verification Email;
+        :Login User;
+    endif
+else (OAuth)
+    :Click Login (Spotify/Google);
+    |System|
+    :Redirect to Provider;
+    |External_API|
+    :Authenticate User;
+    :Return Callback (Code/Error);
+    |System|
+    if (Error?) then (Yes)
+        :Redirect to Login (Error);
+        stop
+    else (No)
+        :Retrieve User Profile;
+        :Check User (ProviderID/Email);
+        if (User Exists?) then (Yes)
+            :Update OAuth Tokens;
+        else (No)
+            :Create New User;
+        endif
+    endif
+endif
+
+|System|
+:Log User In;
+if (Email Verified?) then (Yes)
+    :Redirect to Dashboard;
+else (No)
+    :Redirect to Verification Page;
+endif
+stop
+@enduml

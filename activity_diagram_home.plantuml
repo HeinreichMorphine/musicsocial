@@ -1,0 +1,49 @@
+@startuml
+title Home Page (Feed) Activity Diagram
+skinparam swimlaneBorderColor black
+skinparam swimlaneTitleBackgroundColor #EEE
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityArrowColor #333
+skinparam activityBorderColor #333
+skinparam nodesep 50
+skinparam ranksep 50
+
+|User|
+|System| (Web App & Database)
+
+|User|
+start
+:Access Home Page;
+|System|
+:Fetch Shares (Paginated);
+:Select Shares with Relations;
+:Return View with Shares;
+
+|User|
+split
+    :Click **Comment**;
+    |System|
+    :Show Comment Input;
+    |User|
+    :Submit Comment;
+    |System|
+    :Store Comment;
+    :Update View;
+split again
+    :Click **Like / Dislike**;
+    |System|
+    :Toggle Status;
+    :Update Counts & Icon;
+split again
+    :Click **Save (Bookmark)**;
+    |System|
+    :Toggle Bookmark Status;
+    :Update Icon (Yellow);
+split again
+    :Click Song Link (Spotify/YouTube);
+    |System|
+    :Redirect to External URL;
+end split
+
+stop
+@enduml
