@@ -4,6 +4,7 @@
     searchResults: [],
     recentTracks: [],
     selectedTrack: null,
+    showRecent: true,
     loading: false,
 
     init() {
@@ -147,17 +148,22 @@
                     placeholder="Search song title or artist..."
                     x-model.debounce.300ms="searchQuery"
                     x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
-                    @focus="fetchRecent()"
+                    @focus="fetchRecent(); showRecent = true"
                 />
             </div>
 
             <!-- Recently Played Section -->
-            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack" 
+            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack && showRecent" 
                  class="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden z-20"
                  @click.away="searchQuery = ''"> <!-- Close on click away (optional logic tweak may be needed depending on UX preference) -->
                  
-                <div class="p-4 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
+                <div class="p-4 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
                     <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Recently Played</h4>
+                     <button @click.stop="showRecent = false" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
                 <ul class="divide-y divide-gray-100 dark:divide-white/5">
                      <template x-for="(track, index) in recentTracks.slice(0, 3)" :key="index">

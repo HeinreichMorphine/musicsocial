@@ -3,6 +3,7 @@
     searchResults: [],
     recentTracks: [],
     selectedTrack: null,
+    showRecent: true,
     loading: false,
 
     init() {
@@ -10,6 +11,7 @@
         this.$watch('isMusicShareModalOpen', (val) => {
             if (val) {
                 this.fetchRecent();
+                this.showRecent = true;
                 this.$nextTick(() => this.$refs.searchInput.focus());
             }
         });
@@ -79,8 +81,15 @@
             />
 
             <!-- Recently Played Section -->
-            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack" class="mt-4">
-                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recently Played</h4>
+            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack && showRecent" class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recently Played</h4>
+                    <button @click="showRecent = false" type="button" class="text-gray-400 hover:text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
                 <ul class="max-h-56 overflow-y-auto divide-y border rounded-lg">
                     <template x-for="track in recentTracks" :key="track.id">
                         <li @click="selectTrack(track)" class="p-3 flex items-center space-x-4 hover:bg-gray-100 cursor-pointer rounded-lg transition">
