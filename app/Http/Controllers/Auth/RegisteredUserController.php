@@ -41,8 +41,8 @@ class RegisteredUserController extends Controller
         if ($request->hasFile('profile_picture')) {
             $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
         } else {
-            // Default to a black box image if no profile picture is uploaded
-            $profilePicturePath = 'profile_pictures/default_black_box.png'; // You'll need to create this default image
+            // Default to null so the frontend renders initials
+            $profilePicturePath = null;
         }
 
         $user = User::create([
