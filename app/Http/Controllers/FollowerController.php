@@ -40,22 +40,22 @@ class FollowerController extends Controller
         $currentUser = Auth::user();
 
         $rawRecommendations = $this->recommendationService->getRecommendations($currentUser->id);
-        $recommendedShares = collect();
+        $recommendedSongs = collect();
 
         if (!empty($rawRecommendations)) {
-            $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
-            $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+            $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-            $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+            $recommendedSongs = \App\Models\Song::whereIn('id', $recommendedSongIds)->get();
 
-            // Sort the recommended shares by score
-            $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
-                return $recommendationData[$share->id]['score'] ?? 0;
+            // Sort the recommended songs by score
+            $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                return $recommendationData[$song->id]['score'] ?? 0;
             });
 
-            $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
-                $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
-                return $share;
+            $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                return $song;
             });
         }
 
@@ -71,7 +71,7 @@ class FollowerController extends Controller
         return view('profile.followers', [
             'user' => $user,
             'followers' => $followers,
-            'recommendedShares' => $recommendedShares,
+            'recommendedSongs' => $recommendedSongs,
             'usersToSuggest' => $usersToSuggest,
         ]);
     }
@@ -90,22 +90,22 @@ class FollowerController extends Controller
         $currentUser = Auth::user();
 
         $rawRecommendations = $this->recommendationService->getRecommendations($currentUser->id);
-        $recommendedShares = collect();
+        $recommendedSongs = collect();
 
         if (!empty($rawRecommendations)) {
-            $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
-            $recommendationData = collect($rawRecommendations)->keyBy('share_id');
+            $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+            $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-            $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+            $recommendedSongs = \App\Models\Song::whereIn('id', $recommendedSongIds)->get();
 
-            // Sort the recommended shares by score
-            $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {
-                return $recommendationData[$share->id]['score'] ?? 0;
+            // Sort the recommended songs by score
+            $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+                return $recommendationData[$song->id]['score'] ?? 0;
             });
 
-            $recommendedShares = $recommendedShares->map(function ($share) use ($recommendationData) {
-                $share->reason = $recommendationData[$share->id]['reason'] ?? 'Based on your taste';
-                return $share;
+            $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                return $song;
             });
         }
 
@@ -121,7 +121,7 @@ class FollowerController extends Controller
         return view('profile.following', [
             'user' => $user,
             'following' => $following,
-            'recommendedShares' => $recommendedShares,
+            'recommendedSongs' => $recommendedSongs,
             'usersToSuggest' => $usersToSuggest,
         ]);
     }

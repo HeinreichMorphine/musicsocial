@@ -15,10 +15,7 @@
                     @foreach($shares as $share)
                     <li>
                         <a>
-                            <span class="image">
-                                <!-- Placeholder for user image -->
-                                <img src="{{ asset('assets/admin/production/images/img.jpg') }}" alt="img" />
-                            </span>
+
                             <span>
                                 <span>{{ $share->user->name ?? 'Unknown' }}</span>
                                 <span class="time">{{ $share->created_at->diffForHumans() }}</span>
@@ -54,9 +51,7 @@
                     @foreach($comments as $comment)
                     <li>
                         <a>
-                            <span class="image">
-                                <img src="{{ asset('assets/admin/production/images/img.jpg') }}" alt="img" />
-                            </span>
+
                             <span>
                                 <span>{{ $comment->user->name ?? 'Unknown' }}</span>
                                 <span class="time">{{ $comment->created_at->diffForHumans() }}</span>

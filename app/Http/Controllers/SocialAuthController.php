@@ -18,7 +18,15 @@ class SocialAuthController extends Controller
         // For Spotify, we need specific scopes to read user data and recently played (future proofing)
         if ($provider === 'spotify') {
             return Socialite::driver('spotify')
-                ->scopes(['user-read-email', 'user-read-private', 'user-read-recently-played'])
+                ->scopes([
+                    'user-read-email', 
+                    'user-read-private', 
+                    'user-read-recently-played',
+                    'playlist-read-private',
+                    'playlist-read-collaborative',
+                    'playlist-modify-public',
+                    'playlist-modify-private'
+                ])
                 ->redirect();
         }
 

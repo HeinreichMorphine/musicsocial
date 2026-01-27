@@ -96,10 +96,19 @@ class UserProfileController extends Controller
         }
 
         // 1. GENRE DNA & ARTIST COLLECTION
-        // Collect songs from Shares and Like
+        // Collect songs from Shares, Likes, and Interaction History (Listened/Liked)
         $sharedSongs = $user->shares()->with('song')->get()->pluck('song');
         $likedSongs = $user->likes()->with('song')->get()->pluck('song');
-        $allSongs = $sharedSongs->merge($likedSongs);
+        
+        // Fetch song interactions where type is NOT dislike
+        $historySongs = $user->songInteractions()
+            ->where('type', '!=', 'dislike')
+            ->with('song')
+            ->get()
+            ->pluck('song');
+
+        // Merge all sources
+        $allSongs = $sharedSongs->merge($likedSongs)->merge($historySongs)->unique('id');
 
         $genreCounts = [];
         $artistCounts = [];
@@ -153,24 +162,49 @@ class UserProfileController extends Controller
         }
 
         // 2. TASTE TWINS (Artist Based)
+        // Enhanced: Now includes Shares, Likes, and Listening History (Song Interactions)
         $tasteTwins = collect();
 
         if (!empty($userArtistKeys)) {
-            // Find users who have shared/liked songs by these artists
-            // We'll inspect Shares only for efficiency in this simplified version
+            // Find users who have shared/liked/listened to songs by these artists
             $potentialTwins = User::where('id', '!=', $user->id)
-                ->whereHas('shares.song', function($q) use ($userArtistKeys) {
-                    $q->whereIn('artist_name', $userArtistKeys);
+                ->where(function($query) use ($userArtistKeys) {
+                    $query->whereHas('shares.song', function($q) use ($userArtistKeys) {
+                        $q->whereIn('artist_name', $userArtistKeys);
+                    })
+                    ->orWhereHas('likes.song', function($q) use ($userArtistKeys) {
+                         $q->whereIn('artist_name', $userArtistKeys);
+                    })
+                    ->orWhereHas('songInteractions.song', function($q) use ($userArtistKeys) {
+                         $q->whereIn('artist_name', $userArtistKeys)
+                           ->where('type', '!=', 'dislike'); // Exclude dislikes from matching
+                    });
                 })
                 ->with(['shares.song' => function($q) {
                     $q->select('id', 'artist_name');
+                }, 'likes.song' => function($q) {
+                    $q->select('id', 'artist_name');
+                }, 'songInteractions' => function($q) {
+                    $q->where('type', '!=', 'dislike')->with('song:id,artist_name');
                 }])
+                ->limit(50) // Optimization: limit candidate pool
                 ->get();
 
             $scoredTwins = [];
             foreach ($potentialTwins as $twin) {
-                // Get twin's artists
-                $twinArtists = $twin->shares->pluck('song.artist_name')->unique()->toArray();
+                // Collect twin's artists from all sources
+                $twinArtists = collect();
+                
+                // From Shares
+                $twinArtists = $twinArtists->merge($twin->shares->pluck('song.artist_name'));
+                
+                // From Likes
+                $twinArtists = $twinArtists->merge($twin->likes->pluck('song.artist_name'));
+                
+                // From Interactions
+                $twinArtists = $twinArtists->merge($twin->songInteractions->pluck('song.artist_name'));
+                
+                $twinArtists = $twinArtists->unique()->filter()->values()->toArray();
                 
                 // Calculate Intersection
                 $commonArtists = array_intersect($userArtistKeys, $twinArtists);
@@ -178,20 +212,17 @@ class UserProfileController extends Controller
                 
                 if ($commonCount > 0) {
                      // Simple Match Score: (Common / My Total) * 100
-                     // This represents "How much of my taste do they cover?"
                      $myTotal = count($userArtistKeys);
                      $matchScore = $myTotal > 0 ? round(($commonCount / $myTotal) * 100) : 0;
                      
-                     // Cap at 100 just in case
                      if ($matchScore > 100) $matchScore = 100;
 
-                     // Pick a random common artist
                      // Pick a random common artist
                      $values = array_values($commonArtists);
                      $commonArtistName = $values[array_rand($values)];
 
                      $twin->match_score = $matchScore;
-                     $twin->common_ground = "You both love " . $commonArtistName;
+                     $twin->common_ground = "You both enjoy " . $commonArtistName;
                      $scoredTwins[] = $twin;
                 }
             }

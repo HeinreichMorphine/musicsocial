@@ -17,36 +17,14 @@
             </div>
 
             <div class="col-span-12 md:col-span-7">
-                <x-share-card :share="$share" />
+                <x-share-card 
+                    :share="$share" 
+                    :paginatedComments="$comments"
+                    :totalCount="$totalCommentsCount"
+                    :previewComments="$previewComments"
+                />
 
-                <div class="mt-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Comments</h2>
-                    
-                    {{-- Comment Form --}}
-                    <div class="bg-white rounded-2xl shadow-sm p-4 mb-6">
-                        <form action="{{ route('shares.comments.store', $share) }}" method="POST">
-                            @csrf
-                            <div class="flex items-start space-x-4">
-                                <img src="{{ auth()->user()->profile_picture ? Storage::url(auth()->user()->profile_picture) : 'https://via.placeholder.com/150' }}" alt="your avatar" class="h-10 w-10 rounded-full object-cover">
-                                <div class="flex-1">
-                                    <textarea name="body" rows="3" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-custom-blue focus:ring focus:ring-custom-blue-light focus:ring-opacity-50" placeholder="Add a comment..."></textarea>
-                                    <button type="submit" class="mt-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-dark-blue transition-colors">Post Comment</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
 
-                    {{-- Existing Comments --}}
-                    <div class="space-y-4">
-                        @forelse ($share->comments->sortByDesc('created_at') as $comment)
-                            <x-comment :comment="$comment" />
-                        @empty
-                            <div class="bg-white rounded-2xl shadow-sm p-4 text-center text-gray-500">
-                                <p>No comments yet. Be the first to comment!</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
 
             </div>
 

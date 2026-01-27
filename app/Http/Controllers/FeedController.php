@@ -43,20 +43,33 @@ class FeedController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Get IDs of users the current user follows
-        $followingIds = $user->following()->pluck('id');
+        $feedType = request('feed', 'following');
 
-        // Get shares from those users, plus the current user's own shares
-        $shares = Share::where(function ($query) use ($followingIds, $user) {
-                           $query->whereIn('user_id', $followingIds)
-                                 ->orWhere('user_id', $user->id);
-                       })
-                       ->whereDoesntHave('dislikes', function ($query) use ($user) {
-                           $query->where('user_id', $user->id);
-                       })
-                       ->with(['user', 'likes'])
-                       ->latest()
-                       ->paginate(20);
+        if ($feedType === 'explore') {
+            $shares = Share::inRandomOrder()
+                ->whereDoesntHave('dislikes', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->with(['user', 'likes'])
+                ->paginate(20)
+                ->appends(['feed' => 'explore']);
+        } else {
+            // Get IDs of users the current user follows
+            $followingIds = $user->following()->pluck('id');
+
+            // Get shares from those users, plus the current user's own shares
+            $shares = Share::where(function ($query) use ($followingIds, $user) {
+                               $query->whereIn('user_id', $followingIds)
+                                     ->orWhere('user_id', $user->id);
+                           })
+                           ->whereDoesntHave('dislikes', function ($query) use ($user) {
+                               $query->where('user_id', $user->id);
+                           })
+                           ->with(['user', 'likes'])
+                           ->latest()
+                           ->paginate(20)
+                           ->appends(['feed' => 'following']);
+        }
 
         // Fetch recommended shares
         $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
@@ -113,6 +126,7 @@ class FeedController extends Controller
             'recommendedShares' => $recommendedShares,
             'usersToSuggest' => $usersToSuggest,
             'recommendedSongs' => $recommendedSongs,
+            'feedType' => $feedType,
         ]);
     }
 }

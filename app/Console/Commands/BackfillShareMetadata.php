@@ -61,7 +61,7 @@ class BackfillShareMetadata extends Command
             $genres = json_decode($song->genres, true) ?? [];
             if (!is_array($genres)) $genres = [];
 
-            // 1. Fetch from Spotify Service (includes Spotify, MusicBrainz, AudioDB with caching)
+            // 1. Fetch from Spotify Service (includes Spotify, MusicBrainz, Discogs with caching)
             if ($song->spotify_track_id) {
                 try {
                     // Use new method to get sources

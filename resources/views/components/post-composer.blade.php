@@ -1,4 +1,4 @@
-<div class="bg-white p-4 shadow-lg rounded-lg mb-6 border border-custom-blue-light" x-data="{
+<div class="w-full" x-data="{
     postType: 'music',
     searchQuery: '',
     searchResults: [],
@@ -14,19 +14,31 @@
             this.searchQuery = '';
             this.searchResults = [];
             this.selectedTrack = null;
+            this.fetchRecent(); // Call fetchRecent when switching to music share
         });
-        // Fetch recent tracks immediately so they are ready
-        this.fetchRecent();
+        // Watch for postType changes to fetch recent tracks if it becomes 'music'
+        this.$watch('postType', (value) => {
+            if (value === 'music') {
+                this.fetchRecent();
+            }
+        });
+        // Fetch recent tracks immediately if postType is already 'music'
+        if (this.postType === 'music') {
+            this.fetchRecent();
+        }
     },
     fetchRecent() {
-        fetch(`{{ route('spotify.recently-played') }}`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            this.recentTracks = data;
-        })
-        .catch(error => console.error('Error fetching recent tracks:', error));
+        // Only fetch recent tracks if user has spotify connected
+        @if(auth()->user()->spotify_token)
+            fetch(`{{ route('spotify.recently-played') }}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.recentTracks = data;
+            })
+            .catch(error => console.error('Error fetching recent tracks:', error));
+        @endif
     },
     search() {
         if (this.searchQuery.length < 3) {
@@ -58,6 +70,9 @@
     getArtistNames(artists) {
         return artists.map(artist => artist.name).join(', ');
     },
+    getAlbumArt(track) {
+        return track.album.images && track.album.images.length > 0 ? track.album.images[0].url : 'https://via.placeholder.com/40';
+    },
     resetComposer() {
         this.postType = 'music';
         this.searchQuery = '';
@@ -84,8 +99,11 @@
             },
             body: formData
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
+        .then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.error || 'Network response was not ok');
+            }
             return response.json();
         })
         .then(data => {
@@ -101,96 +119,116 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to share post. Please try again.');
+            alert('Failed to share post: ' + error.message);
         })
         .finally(() => {
             this.loading = false;
         });
     }
 }">
-    <form @submit.prevent="submitPost" x-ref="form">
+    <form @submit.prevent="submitPost" x-ref="form" class="flex flex-col items-center">
         @csrf
         <input type="hidden" name="type" x-model="postType">
 
-        <div>
-            <h3 class="font-semibold mb-2">Share a Song</h3>
-            <div class="flex items-start space-x-3">
-                 <img src="{{ auth()->user()->profile_picture ? Storage::url(auth()->user()->profile_picture) : 'https://via.placeholder.com/150' }}"
-                     alt="{{ auth()->user()->name }}"
-                     class="w-10 h-10 rounded-full object-cover">
-                <div class="w-full">
-                    <x-text-input
-                        type="text"
-                        class="w-full rounded-2xl bg-gray-50 border-gray-200 focus:bg-white transition"
-                        placeholder="What are you listening to right now?"
-                        x-model.debounce.500ms="searchQuery"
-                        x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
-                        @focus="fetchRecent()"
-                    />
+        <h3 class="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-8 text-center tracking-tight">
+            What are you listening to?
+        </h3>
+
+        <div class="w-full relative max-w-2xl">
+             <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                    <svg class="h-6 w-6 text-gray-400 group-focus-within:text-custom-mid-blue transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </div>
+                <input
+                    type="text"
+                    class="w-full rounded-full border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-4 pl-16 pr-6 shadow-xl transition-all hover:bg-white dark:hover:bg-gray-800 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-lg"
+                    placeholder="Search song title or artist..."
+                    x-model.debounce.300ms="searchQuery"
+                    x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
+                    @focus="fetchRecent()"
+                />
             </div>
 
             <!-- Recently Played Section -->
-            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack" class="mt-4">
-                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recently Played</h4>
-                <ul class="divide-y border rounded-lg">
+            <div x-show="searchQuery.length === 0 && recentTracks.length > 0 && !selectedTrack" 
+                 class="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden z-20"
+                 @click.away="searchQuery = ''"> <!-- Close on click away (optional logic tweak may be needed depending on UX preference) -->
+                 
+                <div class="p-4 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5">
+                    <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Recently Played</h4>
+                </div>
+                <ul class="divide-y divide-gray-100 dark:divide-white/5">
                      <template x-for="(track, index) in recentTracks.slice(0, 3)" :key="index">
-                        <li @click="selectTrack(track)" class="p-3 flex items-center space-x-4 hover:bg-gray-100 cursor-pointer rounded-lg transition">
-                             <img :src="track.album.images[0]?.url" alt="Album" class="w-10 h-10 rounded">
+                        <li @click="selectTrack(track)" class="p-4 flex items-center space-x-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
+                             <img :src="getAlbumArt(track)" alt="Album" class="w-12 h-12 rounded-lg object-cover shadow-sm bg-gray-200">
                              <div class="flex-1 min-w-0">
-                                 <div class="font-semibold text-sm truncate" x-text="track.name"></div>
-                                 <div class="text-xs text-gray-600 truncate" x-text="getArtistNames(track.artists)"></div>
+                                 <div class="font-bold text-gray-900 dark:text-white truncate" x-text="track.name"></div>
+                                 <div class="text-sm text-gray-500 dark:text-gray-400 truncate" x-text="getArtistNames(track.artists)"></div>
                              </div>
-                             <div class="text-xs text-gray-400">Recent</div>
                         </li>
                     </template>
                 </ul>
             </div>
 
-            <div x-show="searchQuery.length >= 3 && searchResults.length === 0 && !loading" class="mt-4 p-3 bg-gray-50 rounded">
-                No tracks found for "<span x-text="searchQuery"></span>".
-            </div>
-
-            <div x-show="loading" class="text-center p-4">Loading...</div>
-
-            <ul x-show="searchResults.length > 0 && !selectedTrack" class="mt-4 max-h-56 overflow-y-auto divide-y border rounded-lg">
+            <!-- Search Results -->
+            <ul x-show="searchResults.length > 0 && !selectedTrack" 
+                class="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden z-20 max-h-[400px] overflow-y-auto">
                 <template x-for="track in searchResults" :key="track.id">
-                    <li @click="selectTrack(track)" class="p-3 flex items-center space-x-4 hover:bg-gray-100 cursor-pointer rounded-lg">
-                        <img :src="track.album.images[0]?.url" alt="Album" class="w-10 h-10 rounded">
-                        <div>
-                            <div class="font-semibold text-sm" x-text="track.name"></div>
-                            <div class="text-xs text-gray-600" x-text="getArtistNames(track.artists)"></div>
+                    <li @click="selectTrack(track)" class="p-4 flex items-center space-x-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer border-b border-gray-100 dark:border-white/5 last:border-0 transition">
+                        <img :src="getAlbumArt(track)" alt="Art" class="w-12 h-12 rounded-lg object-cover shadow-sm bg-gray-200 shrink-0">
+                        <div class="min-w-0">
+                            <div class="font-bold text-gray-900 dark:text-white truncate" x-text="track.name"></div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400 truncate" x-text="getArtistNames(track.artists)"></div>
                         </div>
                     </li>
                 </template>
             </ul>
-
-            <div x-show="selectedTrack" class="mt-4 relative overflow-hidden rounded-xl border border-gray-100 shadow-sm" style="display: none;">
-                 <div class="absolute inset-0 bg-cover bg-center blur-xl opacity-30" :style="`background-image: url('${selectedTrack?.album.images[0].url}');`"></div>
-                 <div class="relative p-4 flex items-center space-x-4 bg-white/60 backdrop-blur-sm">
-                    <img :src="selectedTrack?.album.images[0].url" alt="Album Art" class="w-16 h-16 rounded shadow-sm">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-lg text-gray-900 truncate" x-text="selectedTrack?.name"></div>
-                        <div class="text-gray-600 truncate" x-text="getArtistNames(selectedTrack?.artists || [])"></div>
-                    </div>
-                    <button type="button" @click="selectedTrack = null; searchQuery=''" class="text-gray-400 hover:text-red-500 transition p-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-            </div>
-
-            <input type="hidden" name="spotify_track_id" x-model="selectedTrack?.id">
-
-            <div class="mt-4" x-show="selectedTrack" x-transition>
-                <x-input-label for="caption" :value="__('Caption')" />
-                <textarea id="caption" name="caption" x-ref="captionInput" placeholder="Write a caption..." class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
-            </div>
+        </div>
+        
+        <div x-show="searchQuery.length >= 3 && searchResults.length === 0 && !loading" class="mt-4 p-3 font-semibold text-gray-700 dark:text-white bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full px-6 shadow-lg border border-gray-100 dark:border-white/10">
+            No tracks found for "<span x-text="searchQuery" class="text-custom-mid-blue dark:text-blue-400"></span>".
         </div>
 
-        <div class="mt-3 flex justify-end items-center">
-            <x-primary-button class="bg-custom-mid-blue hover:bg-custom-dark-blue" x-bind:disabled="!selectedTrack" x-bind:class="{ 'opacity-50 cursor-not-allowed': loading }" x-text="loading ? 'Sharing...' : 'Share Song'">
-                Share Song
-            </x-primary-button>
+        <div x-show="loading && !selectedTrack" class="mt-4 text-custom-mid-blue dark:text-blue-400 animate-pulse font-bold tracking-widest text-sm uppercase">SEARCHING SPOTIFY...</div>
+
+        <!-- Selected Track View -->
+        <div x-show="selectedTrack" class="w-full max-w-2xl mt-8">
+            <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl border border-gray-200 dark:border-gray-700 relative overflow-hidden group">
+                <!-- blurred background -->
+                 <div class="absolute inset-0 bg-cover bg-center blur-3xl opacity-20 dark:opacity-40 transition-transform duration-700 group-hover:scale-110" :style="`background-image: url('${selectedTrack?.album.images[0]?.url}');`"></div>
+                 
+                 <div class="relative flex flex-col sm:flex-row items-center gap-6">
+                    <img :src="selectedTrack?.album.images[0]?.url" alt="Album Art" class="w-32 h-32 rounded-2xl shadow-lg transition-transform duration-300">
+                    
+                    <div class="flex-1 text-center sm:text-left min-w-0 w-full">
+                        <h4 class="text-2xl font-bold text-gray-900 dark:text-white truncate leading-tight mb-1" x-text="selectedTrack?.name"></h4>
+                        <p class="text-lg text-gray-600 dark:text-gray-300 truncate mb-4" x-text="getArtistNames(selectedTrack?.artists || [])"></p>
+                        
+                        <div class="relative">
+                            <textarea id="caption" name="caption" x-ref="captionInput" 
+                                placeholder="Your caption goes here...." 
+                                class="w-full border-0 bg-gray-100 dark:bg-white/10 rounded-xl p-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-custom-mid-blue transition resize-none pb-12"></textarea>
+                            
+                            <div class="absolute bottom-3 right-3 flex items-center gap-2">
+                                <button type="button" @click="selectedTrack = null; searchQuery=''" class="text-gray-400 hover:text-red-500 transition text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 font-bold py-1.5 px-4 rounded-lg uppercase tracking-wide text-xs shadow-lg transform hover:-translate-y-0.5 transition-all" 
+                                        x-bind:disabled="loading" 
+                                        x-text="loading ? 'Posting...' : 'Share'">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
 </div>
+<style>
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>

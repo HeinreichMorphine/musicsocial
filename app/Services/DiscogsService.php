@@ -17,7 +17,7 @@ class DiscogsService
         $this->consumerKey = config('services.discogs.key');
         $this->consumerSecret = config('services.discogs.secret');
         // Discogs requires a custom User-Agent
-        $this->userAgent = 'MusicSocialFYP/1.0';
+        $this->userAgent = 'ResoApp/1.0';
     }
 
     /**

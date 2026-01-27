@@ -18,7 +18,9 @@ start
 :Fetch User Count;
 :Fetch Share Count;
 :Fetch Comment Count;
-:Render Dashboard View (Stats);
+:Fetch Latest Users (5);
+:Fetch Latest Shares (5) with Relations;
+:Render Dashboard View (Stats & Lists);
 |Admin_User|
 :View Admin Statistics;
 stop

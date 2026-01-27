@@ -1,5 +1,7 @@
 @startuml
 title Login/Register View Activity Diagram
+scale 1.5
+skinparam defaultFontSize 18
 skinparam swimlaneBorderColor black
 skinparam swimlaneTitleBackgroundColor #EEE
 skinparam activityBackgroundColor #FEFEFE

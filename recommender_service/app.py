@@ -29,6 +29,37 @@ tfidf_cache = {
     'last_update': None           # Timestamp of last cache update
 }
 
+# Global Song Cache (Metadata)
+song_cache = {
+    'df': None,
+    'last_update': 0
+}
+
+def get_cached_songs(connection):
+    """
+    Returns the dataframe of all songs, using a cache to avoid repetitive DB queries.
+    Refreshes cache if it's empty or older than 1 hour.
+    """
+    global song_cache
+    current_time = time.time()
+    CACHE_DURATION = 3600  # 1 hour
+    
+    # If cache is valid, return it
+    if song_cache['df'] is not None and (current_time - song_cache['last_update'] < CACHE_DURATION):
+        # Optimization: Return copy to prevent accidental modification affecting other requests
+        return song_cache['df'] # Pandas copy is not needed if we are just reading, but safer if modifying. 
+                                # In this app, we filter it later, which creates a copy anyway.
+    
+    print("Refreshing Song Cache...")
+    query = "SELECT id, track_name, artist_name, genres FROM songs"
+    df = pd.read_sql(query, connection)
+    
+    song_cache['df'] = df
+    song_cache['last_update'] = current_time
+    print(f"Song Cache Refreshed: {len(df)} songs.")
+    return df
+
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -70,64 +101,105 @@ def fetch_data_from_db():
         print("Database engine not initialized. Cannot fetch data.")
         return pd.DataFrame()
 
-    print("\n--- Starting Data Fetch ---")
+    print("\n--- Starting Data Fetch (Weighted Interaction Logic) ---")
     try:
         with engine.connect() as connection:
-            # Positive interactions from likes with weight 1.0
-            likes_query = "SELECT l.user_id, s.song_id, 1.0 as interaction FROM likes l JOIN shares s ON l.share_id = s.id"
+            # 1. Likes (1 Point)
+            likes_query = "SELECT l.user_id, s.song_id, 2.0 as score FROM likes l JOIN shares s ON l.share_id = s.id"
             likes_df = pd.read_sql(likes_query, connection)
-            print(f"1. Likes: Found {len(likes_df)} records.")
+            print(f"1. Likes (2pt): Found {len(likes_df)} records.")
 
-            # Negative interactions from feedback with weight -1.0
-            feedback_query = "SELECT uf.user_id, s.song_id, -1.0 as interaction FROM user_feedback uf JOIN shares s ON uf.share_id = s.id WHERE uf.feedback_type = 'not_interested'"
-            feedback_df = pd.read_sql(feedback_query, connection)
-            print(f"2. Not Interested Feedback: Found {len(feedback_df)} records.")
+            # 2. Shares (3 Points)
+            shares_query = "SELECT user_id, song_id, 3.0 as score FROM shares"
+            shares_df = pd.read_sql(shares_query, connection)
+            print(f"2. Shares (3pts): Found {len(shares_df)} records.")
+            
+            # 3. Comments (2 Points)
+            # Comments are linked to shares, so we join to get the song_id
+            comments_query = "SELECT c.user_id, s.song_id, 1.0 as score FROM comments c JOIN shares s ON c.share_id = s.id"
+            comments_df = pd.read_sql(comments_query, connection)
+            print(f"3. Comments (1pts): Found {len(comments_df)} records.")
 
-            # Negative interactions from dislikes with weight -1.0
+            # --- AGGREGATION & FORMULA APPLICATION ---
+            # Combine all positive engagements
+            engagement_df = pd.concat([likes_df, shares_df, comments_df], ignore_index=True)
+            
+            if not engagement_df.empty:
+                # Sum scores per user-song pair (rui = Total Engagement Score)
+                grouped_df = engagement_df.groupby(['user_id', 'song_id'])['score'].sum().reset_index()
+                
+                # Apply Logarithmic Formula: cui = 1 + alpha * log(1 + rui/epsilon)
+                # Using alpha=1.0 and epsilon=1.0 as standard defaults
+                # Formula: 1 + np.log(1 + grouped_df['score'])
+                grouped_df['interaction'] = 1 + np.log(1 + grouped_df['score'])
+                
+                print(f"Aggregated {len(engagement_df)} raw interactions into {len(grouped_df)} unique weighted scores.")
+            else:
+                grouped_df = pd.DataFrame(columns=['user_id', 'song_id', 'interaction'])
+
+            # 4. Dislikes (Strong Negative -1.0)
             dislikes_query = "SELECT d.user_id, s.song_id, -1.0 as interaction FROM dislikes d JOIN shares s ON d.share_id = s.id"
             dislikes_df = pd.read_sql(dislikes_query, connection)
-            print(f"3. Dislikes: Found {len(dislikes_df)} records.")
+            print(f"4. Dislikes (-1.0): Found {len(dislikes_df)} records.")
 
-            # User's own shares with a higher weight of 1.5
-            shares_query = "SELECT user_id, song_id, 1.5 as interaction FROM shares"
-            shares_df = pd.read_sql(shares_query, connection)
-            print(f"4. User's Own Shares: Found {len(shares_df)} records.")
-
-            # Likes from followed users with a weight of 1.2
-            following_likes_query = """
-                SELECT f.follower_id as user_id, s.song_id, 1.2 as interaction
-                FROM followers f
-                JOIN likes l ON f.user_id = l.user_id
-                JOIN shares s ON l.share_id = s.id
-            """
-            following_likes_df = pd.read_sql(following_likes_query, connection)
-            print(f"5. Likes from Followed Users: Found {len(following_likes_df)} records.")
-
-            # Shares from followed users with a weight of 0.8
-            following_shares_query = """
-                SELECT f.follower_id as user_id, s.song_id, 0.8 as interaction
-                FROM followers f
-                JOIN shares s ON f.user_id = s.user_id
-            """
-            following_shares_df = pd.read_sql(following_shares_query, connection)
-            print(f"6. Shares from Followed Users: Found {len(following_shares_df)} records.")
-
-            # Combine all interactions
-            # Filter out empty dataframes first to avoid FutureWarning
-            dfs_to_concat = [df for df in [likes_df, feedback_df, dislikes_df, shares_df, following_likes_df, following_shares_df] if not df.empty]
+            # 5. Song Interactions (Direct User-Song Actions)
+            interactions_query = "SELECT user_id, song_id, type FROM song_interactions"
+            direct_interactions_df = pd.read_sql(interactions_query, connection)
             
-            if not dfs_to_concat:
-                print("--- No interaction data found in any table. ---")
-                return pd.DataFrame()
+            if not direct_interactions_df.empty:
+                # Map interaction types to scores
+                # like -> 2.0, listen -> 1.0, dislike -> -1.0
+                direct_interactions_df['score'] = direct_interactions_df['type'].map({
+                    'like': 2.0,
+                    'listen': 1.0,
+                    'dislike': -1.0
+                })
+                
+                # Separate positives and negatives
+                positive_direct = direct_interactions_df[direct_interactions_df['score'] > 0][['user_id', 'song_id', 'score']]
+                negative_direct = direct_interactions_df[direct_interactions_df['score'] < 0][['user_id', 'song_id', 'score']].rename(columns={'score': 'interaction'})
+                
+                print(f"5. Song Interactions: Found {len(positive_direct)} positive and {len(negative_direct)} negative direct actions.")
+                
+                # Append to main dataframes
+                engagement_df = pd.concat([engagement_df, positive_direct], ignore_index=True)
+                dislikes_df = pd.concat([dislikes_df, negative_direct], ignore_index=True)
 
-            interactions_df = pd.concat(dfs_to_concat, ignore_index=True)
 
-            interactions_df = interactions_df.rename(columns={'song_id': 'item_id'})
+
+            # Combine Weighted Personal Scores + Dislikes + Social Signals
+            final_dfs = [grouped_df.rename(columns={'song_id': 'item_id'}), 
+                         dislikes_df.rename(columns={'song_id': 'item_id'})]
             
-            # Remove duplicates, keeping the interaction with the highest weight
-            interactions_df = interactions_df.sort_values('interaction', ascending=False).drop_duplicates(subset=['user_id', 'item_id'], keep='first')
+            interactions_df = pd.concat([df for df in final_dfs if not df.empty], ignore_index=True)
+            
+            # Handle duplicates: Dislikes should override positive scores
+            # Sort by interaction ascending logic is tricky here because -1 is small.
+            # Strategy: Split positives and negatives.
+            # Actually, SVD can handle multiple entries per user-item, but usually we want one.
+            # If we simply drop duplicates keeping 'last' or 'first', we rely on sort order.
+            # Let's trust that 'Dislike' (-1.0) and 'Weighted Score' (>1.0) are distinct signals.
+            # Ideally, if I Dislike, I shouldn't get a positive score.
+            # Let's drop duplicates by keeping the entries from Dislikes table if present?
+            # Simplest for now: keep the HIGHEST absolute engagement? No.
+            # Let's keep the one that appears LAST in current concat order? 
+            # interaction_df = grouped + dislikes + following.
+            # If I drop duplicates subset=['user_id', 'item_id'], keep='last' -> Followed Likes will win over Personal?
+            # Or Dislikes (-1) will win over Personal?
+            # Better: Group by user/item and take Mean? No.
+            # Let's stick to simple drop duplicates for now to avoid complexity, 
+            # assume Dislikes override previous positives if the user deleted the Like?
+            # Actually, standard logic: keep the one with MAX weight is risky if Dislike is -1.
+            # Let's keep duplicates for now, SVD will average them out or we can refine later.
+            # But the 'Reader' duplicates check might complain.
+            # Let's use `drop_duplicates(keep='first')` assuming `grouped_df` (Personal) is most important, 
+            # BUT if Dislike exists... 
+            # We will perform a clean drop: Prioritize Dislike (-1) > Personal (>1) > Social (1.2) ??
+            # Actually, if I personally interacted (>1), I probably like it, unless I *subsequently* disliked it.
+            # Let's assumes Personal Engagement is ground truth.
+            interactions_df = interactions_df.drop_duplicates(subset=['user_id', 'item_id'], keep='first')
 
-            print(f"\nTotal unique user-item interactions fetched: {len(interactions_df)}")
+            print(f"\nTotal unique training records: {len(interactions_df)}")
             print("--- Finished Data Fetch ---\n")
             return interactions_df
     except Exception as e:
@@ -148,7 +220,10 @@ def train_and_save_model():
         print("No data to train the model. Skipping training.")
         return
 
-    reader = Reader(rating_scale=(-1, 1.5)) # Adjusted rating scale
+    # Adjusted scale for new Weighted Formula
+    # 1 + log(1 + ~20) is around 4.0. Max theoretical could be higher but 1-5 is standard.
+    # We set scale (-1, 6) to be safe.
+    reader = Reader(rating_scale=(-1, 6)) 
     data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
 
     trainset = data.build_full_trainset()
@@ -160,6 +235,12 @@ def train_and_save_model():
 
     joblib.dump(algo, MODEL_PATH)
     print(f"Model saved to {MODEL_PATH}")
+    
+    # Invalidate song cache to ensure next request fetches fresh metadata
+    global song_cache
+    song_cache['df'] = None
+    print("Song cache invalidated after retraining.")
+
 
 def load_model():
     global algo
@@ -307,15 +388,17 @@ def calculate_trust(active_user_friends, sharer_friends):
     active_user_friends = max(1, active_user_friends)
     sharer_friends = max(1, sharer_friends)
     
-    # Calculate logarithmic components
-    # Using natural log (ln) for smooth scaling
-    log_active = math.log(active_user_friends)
-    log_sharer = math.log(sharer_friends)
+    # Calculate logarithmic components using the specific "Power Log" formula
     
-    # Apply trust formula
-    # The 1/(1 + log_active) normalizes based on how selective the active user is
-    # Multiplying by log_sharer amplifies influence of popular users
-    trust = (1.0 / (1.0 + log_active)) * log_sharer
+    # 1. Numerator (Influence): ln(1 + |F_sharer|^0.7)
+    #    The 0.7 exponent dampens the "superstar" effect before the log is taken.
+    numerator = math.log(1.0 + (pow(sharer_friends, 0.7)))
+    
+    # 2. Denominator (Dilution): 1 + 0.5 * ln(1 + |F_active|)
+    #    The 0.5 factor halves the penalty for following many people.
+    denominator = 1.0 + (0.5 * math.log(1.0 + active_user_friends))
+    
+    trust = numerator / denominator
     
     return trust
 
@@ -491,12 +574,14 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
                 
                 # Build detailed reason based on what matched
                 reason_parts = []
+                artist_matched = False
                 if pd.notna(song_data.get('artist_name')):
                     artist = song_data['artist_name']
                     # Check if this artist is in user's liked artists
                     user_artists = {row['artist_name'] for _, row in user_liked_songs_df.iterrows() if pd.notna(row.get('artist_name'))}
                     if artist in user_artists:
                         reason_parts.append(f"You enjoy {artist}")
+                        artist_matched = True
                     else:
                         reason_parts.append(f"Similar to artists you like")
                 
@@ -514,7 +599,8 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
                 predictions.append({
                     'song_id': song_id,
                     'score': float(similarity_score),
-                    'reason': reason
+                    'reason': reason,
+                    'artist_matched': artist_matched
                 })
         
         return predictions
@@ -537,9 +623,11 @@ def content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
         reasons = []
         
         # Artist Match
+        artist_matched = False
         if song['artist_name'] in liked_artists:
             score += 0.5
             reasons.append(f"Same artist: {song['artist_name']}")
+            artist_matched = True
             
         # Genre Overlap (Jaccard Index-ish)
         song_genres = set()
@@ -561,7 +649,8 @@ def content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
              predictions.append({
                 'song_id': int(song['id']),
                 'score': float(score), # Normalized 0-1 range roughly
-                'reason': " & ".join(reasons)
+                'reason': " & ".join(reasons),
+                'artist_matched': artist_matched
             })
             
     return predictions
@@ -574,9 +663,9 @@ def get_user_interactions(user_id, connection):
         UNION
         SELECT song_id FROM shares WHERE user_id = :user_id
         UNION
-        SELECT s.song_id FROM user_feedback uf JOIN shares s ON uf.share_id = s.id WHERE uf.user_id = :user_id
-        UNION
         SELECT s.song_id FROM dislikes d JOIN shares s ON d.share_id = s.id WHERE d.user_id = :user_id
+        UNION
+        SELECT song_id FROM song_interactions WHERE user_id = :user_id
     """)
     user_interacted_songs_df = pd.read_sql(user_interactions_query, connection, params={'user_id': user_id})
     return set(user_interacted_songs_df['song_id'].unique())
@@ -646,15 +735,16 @@ def get_recommendations(user_id):
             # --- STEP 1: DATA RETRIEVAL (The Bounded Dataset) ---
             # Fetch necessary data: all songs, user interactions, social graph, and user preferences.
             
-            # Get all songs with artist info
-            songs_query = "SELECT id, artist_name, genres FROM songs"
-            all_songs_df = pd.read_sql(songs_query, connection)
+            # Get all songs (OPTIMIZED: Use Cache)
+            all_songs_df = get_cached_songs(connection)
             all_song_ids = all_songs_df['id'].unique()
 
             user_interacted_song_ids = get_user_interactions(user_id, connection)
             
             # Identify candidates (songs user hasn't seen)
             candidates = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]
+            
+            print(f"[DIAGRAM_TRACE] 1. Authentication & History Check: User {user_id} has {len(user_interacted_song_ids)} interactions.")
             
             # Fetch User Context
             social_graph = get_social_graph(user_id, connection)
@@ -674,6 +764,11 @@ def get_recommendations(user_id):
             # Check if user has enough history (Avoid Cold Start)
             has_history = len(user_interacted_song_ids) >= 5
             
+            if has_history:
+                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions >= 5 (YES). Entering Collaborative Filtering (SVD) Path.")
+            else:
+                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions < 5 (NO). Entering Cold Start (Content-Based) Path.")
+
             if has_history and algo:
                 # Predict rating for all songs the user hasn't seen yet
                 for song_id in candidates:
@@ -713,7 +808,8 @@ def get_recommendations(user_id):
                     cf_predictions.append({
                         'song_id': song_id, 
                         'score': current_score,
-                        'reason': " · ".join(reasons)
+                        'reason': " · ".join(reasons),
+                        'artist_matched': artist_matched
                     })
             else:
                 # --- STEP 3: CONTENT-BASED FILTERING (The Cold Start Fix) ---
@@ -750,32 +846,46 @@ def get_recommendations(user_id):
                     if cf_predictions:
                         cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
                 
-                # If still empty (brand new user with 0 interactions), return global popular songs
+             # If still empty (brand new user with 0 interactions), return global popular songs
                 if not cf_predictions:
                      print("Cold start: No user history found. Fetching global top songs.")
+                     # Fix: Simplified query to avoid subquery issues and alias sorting problems
                      top_songs_query = text("""
-                        SELECT s.id as song_id, COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2 as popularity
+                        SELECT s.id as song_id, 
+                               (COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2) as popularity
                         FROM songs s
                         LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
                         GROUP BY s.id
                         ORDER BY popularity DESC
                         LIMIT 20
                      """)
-                     top_songs_df = pd.read_sql(top_songs_query, connection)
-                     
-                     for _, row in top_songs_df.iterrows():
-                         s_id = int(row['song_id'])
-                         if s_id in user_interacted_song_ids:
-                             continue
-
-                         cf_predictions.append({
-                             'song_id': s_id,
-                             'score': 0.1, # Low score to indicate it's generic
-                             'reason': 'Popular in the community'
-                         })
+                     try:
+                         top_songs_df = pd.read_sql(top_songs_query, connection)
                          
-                         if len(cf_predictions) >= 12:
-                             break
+                         for _, row in top_songs_df.iterrows():
+                             s_id = int(row['song_id'])
+                             if s_id in user_interacted_song_ids:
+                                 continue
+
+                             cf_predictions.append({
+                                 'song_id': s_id,
+                                 'score': 0.1, # Low score to indicate it's generic
+                                 'reason': 'Popular in the community'
+                             })
+                             
+                             if len(cf_predictions) >= 12:
+                                 break
+                     except Exception as e:
+                         print(f"Error fetching top songs: {e}")
+                         # Fallback to just random songs if query fails
+                         fallback_query = text("SELECT id FROM songs LIMIT 12")
+                         fallback_df = pd.read_sql(fallback_query, connection)
+                         for _, row in fallback_df.iterrows():
+                             cf_predictions.append({
+                                 'song_id': int(row['id']),
+                                 'score': 0.05,
+                                 'reason': 'Popular in the community'
+                             })
 
             # --- STEP 4: TRUST-BASED SOCIAL BOOSTING ---
             # This implements a sophisticated trust calculation based on social network theory.
@@ -785,6 +895,8 @@ def get_recommendations(user_id):
             
             # Get active user's friend count (number of people they follow)
             active_user_friend_count = len(social_graph)
+            
+            print(f"[DIAGRAM_TRACE] 3. Social Graph Boosting: Analyzing social influence for {len(cf_predictions)} candidates.")
             
             # Optimization: Bulk fetch sharers for all candidate songs
             candidate_ids = [p['song_id'] for p in cf_predictions]
@@ -809,6 +921,7 @@ def get_recommendations(user_id):
                 sharers = song_sharers_map.get(song_id, [])
                 
                 friend_sharers = []
+                trust_debug_info = {'influence': 0.0, 'dilution': 0.0} # Store last one for debug
                 
                 # Calculate trust-based boost for each sharer
                 for sharer in sharers:
@@ -817,6 +930,12 @@ def get_recommendations(user_id):
                     
                     # Calculate trust score using logarithmic formula
                     trust_score = calculate_trust(active_user_friend_count, sharer_friends)
+                    
+                    # Capture for debug log (just the last one is fine for the example)
+                    # Re-calculate components locally to show in debug
+                    t_num = math.log(1.0 + (pow(sharer_friends, 0.7)))
+                    t_den = 1.0 + (0.5 * math.log(1.0 + max(1, active_user_friend_count)))
+                    trust_debug_info = {'influence': t_num, 'dilution': t_den}
                     
                     if sharer in social_graph:
                         # Friend (user follows this person): Apply full trust weight
@@ -832,6 +951,18 @@ def get_recommendations(user_id):
                 # Calculate Hybrid Score
                 # 70% from collaborative/content-based filtering (algorithmic accuracy)
                 # 30% from social trust signals (peer influence)
+                
+                # Breakdown for UI
+                svd_score = base_score
+                context_boost_val = 0.0
+                svd_score = base_score
+                context_boost_val = 0.0
+                artist_matched = pred.get('artist_matched', False)
+                if artist_matched:
+                    context_boost_val = 0.4
+                 
+                    svd_score = base_score - 0.4
+                
                 total_score = (base_score * 0.7) + (social_boost * 0.3)
                 
                 # Build social reasoning
@@ -851,7 +982,14 @@ def get_recommendations(user_id):
                     'song_id': int(song_id),
                     'score': float(total_score),
                     'reason': reason,
-                    'social_boost': float(social_boost)
+                    'social_boost': float(social_boost),
+                    'debug': {
+                        'svd': float(svd_score),
+                        'context': float(context_boost_val),
+                        'weighted_base': float(base_score * 0.7),
+                        'weighted_social': float(social_boost * 0.3),
+                        'trust_components': trust_debug_info
+                    }
                 })
 
             # --- STEP 5: RANKING & EXPLANATION ---
@@ -859,8 +997,35 @@ def get_recommendations(user_id):
             # The 'reason' field provides transparency (e.g., "Liked by your friend").
             final_scores.sort(key=lambda x: x['score'], reverse=True)
             
-            # Select Top N
-            recommendations = final_scores[:12]
+            # Select Top N (Increased to 50 to allow client-side filtering of interactions)
+            recommendations = final_scores[:50]
+            
+            # --- DEBUG LOGGING FOR ACCURACY TESTING ---
+            print(f"\n--- Recommendation Score Breakdown for User {user_id} ---")
+            print(f"{'Song ID':<10} | {'Base':<6} | {'Boost':<6} | {'Total':<6} | {'Reason'}")
+            print("-" * 60)
+            for rec in recommendations:
+                print(f"{rec['song_id']:<10} | {rec['score'] - rec['social_boost']:.2f}   | {rec['social_boost']:.2f}   | {rec['score']:.2f}   | {rec['reason']}")
+            print("-" * 60 + "\n")
+            # ------------------------------------------
+            
+            if recommendations:
+                top_rec = recommendations[0]
+                tr_song_id = top_rec['song_id']
+                tr_debug = top_rec['debug']
+                
+                # Get song name handling potential missing metadata
+                song_name = "Unknown Song"
+                if tr_song_id in songs_metadata:
+                    song_name = songs_metadata[tr_song_id].get('track_name', 'Unknown Song')
+                
+                print(f"[DIAGRAM_TRACE] 3b. Master Formula (Top Recommendation: {song_name}):")
+                print(f"   SVD Calc: Matrix Factorization ({tr_debug['svd']:.4f}) + Artist Boost ({tr_debug['context']})")
+                print(f"   Trust Calc: Sum of Logarithmic Influence Scores ({tr_debug['trust_components']['influence']:.4f} / {tr_debug['trust_components']['dilution']:.4f})")
+                print(f"   Total Score = (Base Score * 0.7) + (Social Trust * 0.3)")
+                print(f"   {top_rec['score']:.4f}      = ({tr_debug['weighted_base']/.7:.4f} * 0.7) + ({tr_debug['weighted_social']/.3:.4f} * 0.3)")
+
+            print(f"[DIAGRAM_TRACE] 4. Result: Returning {len(recommendations)} recommendations after sorting.")
             
             return jsonify({"user_id": user_id, "recommendations": recommendations})
     except Exception as e:

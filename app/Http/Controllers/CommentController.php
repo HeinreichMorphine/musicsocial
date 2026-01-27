@@ -141,15 +141,51 @@ class CommentController extends Controller
     public function destroy(Share $share, Comment $comment)
     {
         // 1. Authorize the user
-        // We only allow the user who created the comment to delete it.
         if (auth()->id() !== $comment->user_id) {
             return response()->json(['error' => 'Unauthorized action.'], 403);
         }
 
-        // 2. Delete the comment
+        // 2. Check if the comment has replies
+        if ($comment->replies()->exists()) {
+             // Soft Delete: Keep the row, but redact content
+             // We keep the user_id so they still "own" the deletion, standard simple logic
+             $comment->update(['body' => '[deleted]']);
+             return response()->json(['message' => 'Comment deleted (thread preserved).']);
+        }
+
+        // 3. Simple Delete (No replies, so safe to remove)
+        // Store parents before deleting to check them later
+        $parents = $comment->parent;
+        
         $comment->delete();
 
-        // 3. Return a success response
+        // 4. Recursive Cleanup for 'orphaned' soft-deleted parents
+        foreach ($parents as $parent) {
+            $this->cleanupParent($parent);
+        }
+
+        // 5. Return a success response
         return response()->json(['message' => 'Comment deleted.']);
+    }
+
+    /**
+     * Recursively delete parents if they are soft-deleted and have no more children.
+     */
+    private function cleanupParent($comment)
+    {
+        // Reload to ensure we have fresh reply count
+        $comment->loadCount('replies');
+
+        if ($comment->body === '[deleted]' && $comment->replies_count === 0) {
+            // Get grandparents before deleting this parent
+            $grandParents = $comment->parent;
+            
+            $comment->delete(); // Hard delete this soft-deleted orphan
+
+            // Check up the chain
+            foreach ($grandParents as $grandParent) {
+                $this->cleanupParent($grandParent);
+            }
+        }
     }
 }

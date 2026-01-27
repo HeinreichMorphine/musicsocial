@@ -21,7 +21,7 @@
         </form>
 
         <div class="flex items-center gap-4">
-            <a href="{{ route('dashboard') }}" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <a href="{{ session('url.intended', route('dashboard')) }}" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 {{ __('Skip for now') }}
             </a>
 

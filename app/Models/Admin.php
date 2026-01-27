@@ -15,6 +15,14 @@ class Admin extends Authenticatable
         'password',
     ];
 
+    /**
+     * Get the admin's notifications.
+     */
+    public function notifications()
+    {
+        return $this->morphMany(\Illuminate\Notifications\DatabaseNotification::class, 'notifiable')->latest();
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

@@ -30,6 +30,9 @@ class FollowController extends Controller
         // Use toggle to follow or unfollow
         auth()->user()->following()->toggle($user);
 
+        // Invalidate the suggested users cache for the authenticated user
+        \Illuminate\Support\Facades\Cache::forget("user_" . auth()->id() . "_suggested_users");
+
         // Return a JSON response with the new follower count and followed status
         return response()->json([
             'followed' => auth()->user()->following->contains($user),

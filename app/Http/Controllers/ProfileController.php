@@ -109,7 +109,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::back()->with('status', 'profile-updated');
     }
 
     /**
@@ -153,7 +153,7 @@ class ProfileController extends Controller
         $request->user()->profile_picture = $path;
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-picture-updated');
+        return Redirect::back()->with('status', 'profile-picture-updated');
     }
 
     /**
@@ -173,6 +173,6 @@ class ProfileController extends Controller
         $request->user()->cover_photo_path = $path;
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'cover-photo-updated');
+        return Redirect::back()->with('status', 'cover-photo-updated');
     }
 }

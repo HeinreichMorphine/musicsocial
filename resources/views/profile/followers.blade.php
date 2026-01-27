@@ -4,14 +4,16 @@
 
             <div class="hidden md:block col-span-2">
                 <div class="sticky top-0 pt-4">
-                    @php
-                        $isHome = Route::is('dashboard');
-                        $isProfile = false;
-                        $isSettings = false;
-                        $baseClasses = 'flex items-center p-3 rounded-full font-semibold text-lg hover:bg-gray-200 transition duration-150';
-                        $activeClasses = ' !text-custom-dark-blue !font-bold bg-custom-periwinkle/50';
-                    @endphp
-                    @include('layouts.navigation-social')
+                    <div class="bg-white/60 backdrop-blur-lg rounded-3xl p-4 border border-white/40 shadow-xl">
+                        @php
+                            $isHome = Route::is('dashboard');
+                            $isProfile = false;
+                            $isSettings = false;
+                            $baseClasses = 'flex items-center p-3 rounded-full font-semibold text-lg hover:bg-gray-200 transition duration-150';
+                            $activeClasses = ' !text-custom-dark-blue !font-bold bg-custom-periwinkle/50';
+                        @endphp
+                        @include('layouts.navigation-social')
+                    </div>
                 </div>
             </div>
 
@@ -22,18 +24,17 @@
                             Followers of {{ $user->name }}
                         </h2>
 
-                        <ul class="space-y-4">
-                            @foreach ($followers as $follower)
-                                <li class="flex items-center space-x-4">
-                                    <a href="{{ route('profile.show', $follower->name) }}">
-                                        <img src="{{ $follower->profile_picture ? Storage::url($follower->profile_picture) : 'https://via.placeholder.com/40' }}" alt="{{ $follower->name }}'s Avatar" class="h-10 w-10 rounded-full object-cover">
-                                    </a>
-                                    <a href="{{ route('profile.show', $follower->name) }}" class="font-semibold text-gray-800 hover:underline">
-                                        {{ $follower->name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
+                        @if($followers->count() > 0)
+                            <div class="grid grid-cols-1 gap-4">
+                                @foreach ($followers as $follower)
+                                    <x-user-list-item :user="$follower" />
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-10 text-gray-500">
+                                <p>No followers yet.</p>
+                            </div>
+                        @endif
 
                         {{ $followers->links() }}
                     </div>
@@ -42,7 +43,8 @@
 
             <div class="hidden md:block col-span-3">
                 <div class="sticky top-0 pt-4">
-                    <x-sidebar-right :recommendedShares="$recommendedShares" :usersToSuggest="$usersToSuggest" />
+                    <x-who-to-follow :usersToSuggest="$usersToSuggest" />
+                    <x-sidebar-right :recommendedSongs="$recommendedSongs" />
                 </div>
             </div>
         </div>

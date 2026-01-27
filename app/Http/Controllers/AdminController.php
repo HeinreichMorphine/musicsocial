@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Share;
 use App\Models\Comment;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -40,8 +41,11 @@ class AdminController extends Controller
         $userCount = User::count();
         $shareCount = Share::count();
         $commentCount = Comment::count();
+
+        $latestUsers = User::latest()->take(5)->get();
+        $latestShares = Share::with('user', 'song')->latest()->take(5)->get();
         
-        return view('admin.dashboard', compact('userCount', 'shareCount', 'commentCount'));
+        return view('admin.dashboard', compact('userCount', 'shareCount', 'commentCount', 'latestUsers', 'latestShares'));
     }
 
     public function users()
@@ -108,6 +112,13 @@ class AdminController extends Controller
                     foreach ($rawRecommendations as $rec) {
                         $song = $songs->get($rec['song_id']);
                         $rec['song_name'] = $song ? $song->track_name : 'Unknown Song';
+                        // Ensure debug key exists
+                        $rec['debug'] = $rec['debug'] ?? [
+                            'svd' => $rec['score'] * 0.7, // Fallback approximation
+                            'context' => 0,
+                            'weighted_base' => $rec['score'] * 0.7,
+                            'weighted_social' => ($rec['social_boost'] ?? 0) * 0.3
+                        ];
                         $recommendations[] = $rec;
                     }
                 }
@@ -133,19 +144,60 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:admins,email,' . $admin->id,
-            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $admin->name = $request->name;
         $admin->email = $request->email;
-
-        if ($request->filled('password')) {
-            $admin->password = bcrypt($request->password);
-        }
-
         $admin->save();
 
-        return redirect()->back()->with('success', 'Profile updated successfully.');
+        return redirect()->back()->with('success', 'Profile details updated successfully.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $admin->password = bcrypt($request->password);
+        $admin->save();
+
+        return redirect()->back()->with('success', 'Password updated successfully.');
+    }
+
+    public function admins()
+    {
+        $admins = Admin::all();
+        return view('admin.admins', compact('admins'));
+    }
+
+    public function storeAdmin(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:admins',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        Admin::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+
+        return redirect()->back()->with('success', 'New admin created successfully.');
+    }
+
+    public function deleteAdmin($id)
+    {
+        if (Auth::guard('admin')->id() == $id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
+        Admin::destroy($id);
+        return redirect()->back()->with('success', 'Admin deleted successfully.');
     }
 
     public function retrainProcess()

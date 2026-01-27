@@ -58,7 +58,16 @@
                                         <td>{{ $rec['song_name'] }}</td>
                                         <td>{{ number_format($rec['score'], 4) }}</td>
                                         <td>{{ $rec['reason'] }}</td>
-                                        <td>{{ number_format($rec['social_boost'] ?? 0, 2) }}</td>
+                                        <td>
+                                            <small class="text-muted" style="line-height: 1.4; display: block;">
+                                                Base SVD: <strong>{{ number_format($rec['debug']['svd'], 2) }}</strong><br>
+                                                Context Boost: +{{ number_format($rec['debug']['context'], 2) }}<br>
+                                                ----------------<br>
+                                                Weighted (x0.7): {{ number_format($rec['debug']['weighted_base'], 2) }}<br>
+                                                Social (x0.3): {{ number_format($rec['debug']['weighted_social'], 2) }}<br>
+                                                <strong>Total: {{ number_format($rec['score'], 2) }}</strong>
+                                            </small>
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>

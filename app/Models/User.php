@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $profile_picture
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $unreadNotifications
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -176,5 +177,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isFollowing(User $user)
     {
         return $this->following()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Get the song interactions for the user.
+     */
+    public function songInteractions()
+    {
+        return $this->hasMany(SongInteraction::class);
     }
 }

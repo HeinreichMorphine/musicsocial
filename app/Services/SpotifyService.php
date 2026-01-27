@@ -106,7 +106,7 @@ class SpotifyService
     }
 
     /**
-     * Get genres for a track from Spotify, with fallbacks to MusicBrainz and TheAudioDB.
+     * Get genres for a track from Spotify, with fallbacks to MusicBrainz and Discogs.
      *
      * @param string $trackId
      * @return array
@@ -148,7 +148,7 @@ class SpotifyService
                 'spotify_artist' => [],
                 'spotify_album' => [],
                 'musicbrainz' => [],
-                'audiodb' => [],
+                'discogs' => [],
             ];
             $allGenres = [];
 
@@ -199,8 +199,8 @@ class SpotifyService
                 Log::error('SpotifyService: Discogs Error: ' . $e->getMessage());
             }
 
-            // 4. Fallback: MusicBrainz & AudioDB (Only if we don't have enough data)
-            // If we have less than 3 genres from Spotify + Discogs, try these.
+            // 4. Fallback: MusicBrainz (Only if we don't have enough data)
+            // If we have less than 3 genres from Spotify + Discogs, try this.
             if (count(array_unique($allGenres)) < 3) {
                 
                 // MusicBrainz
@@ -312,5 +312,112 @@ class SpotifyService
             Log::error('Spotify Token Refresh Exception: ' . $e->getMessage());
         }
         return null;
+    }
+    /**
+     * Get the current user's playlists.
+     *
+     * @param \App\Models\User $user
+     * @return array
+     */
+    public function getUserPlaylists($user)
+    {
+        if (!$user->spotify_token) return [];
+
+        $response = Http::withToken($user->spotify_token)
+            ->get($this->baseUrl . 'me/playlists', ['limit' => 50]);
+
+        if ($response->status() === 401 && $user->spotify_refresh_token) {
+            $newToken = $this->refreshUserToken($user);
+            if ($newToken) {
+                $response = Http::withToken($newToken)
+                    ->get($this->baseUrl . 'me/playlists', ['limit' => 50]);
+            }
+        }
+
+        if ($response->failed()) {
+            Log::error('Spotify Get Playlists Error: ' . $response->body());
+            return [];
+        }
+
+        return $response->json('items') ?? [];
+    }
+
+    /**
+     * Create a new playlist for the user.
+     *
+     * @param \App\Models\User $user
+     * @param string $name
+     * @return array|null
+     */
+    public function createPlaylist($user, $name)
+    {
+        if (!$user->spotify_token) return null;
+
+        // Get User ID first
+        $profileResponse = Http::withToken($user->spotify_token)->get($this->baseUrl . 'me');
+        $spotifyUserId = $profileResponse->json('id');
+
+        if (!$spotifyUserId) return null;
+
+        $response = Http::withToken($user->spotify_token)
+            ->post($this->baseUrl . "users/{$spotifyUserId}/playlists", [
+                'name' => $name,
+                'description' => 'Created via MusicSocial',
+                'public' => false
+            ]);
+
+        if ($response->status() === 401 && $user->spotify_refresh_token) {
+            $newToken = $this->refreshUserToken($user);
+            if ($newToken) {
+                $response = Http::withToken($newToken)
+                    ->post($this->baseUrl . "users/{$spotifyUserId}/playlists", [
+                        'name' => $name,
+                        'description' => 'Created via MusicSocial',
+                        'public' => false
+                    ]);
+            }
+        }
+
+        if ($response->failed()) {
+             Log::error('Spotify Create Playlist Error: ' . $response->body());
+             return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Add a track to a playlist.
+     *
+     * @param \App\Models\User $user
+     * @param string $playlistId
+     * @param string $trackUri (e.g., spotify:track:xxxx)
+     * @return bool
+     */
+    public function addTrackToPlaylist($user, $playlistId, $trackUri)
+    {
+        if (!$user->spotify_token) return false;
+
+        $response = Http::withToken($user->spotify_token)
+            ->post($this->baseUrl . "playlists/{$playlistId}/tracks", [
+                'uris' => [$trackUri]
+            ]);
+
+        if ($response->status() === 401 && $user->spotify_refresh_token) {
+            $newToken = $this->refreshUserToken($user);
+            if ($newToken) {
+                $response = Http::withToken($newToken)
+                    ->post($this->baseUrl . "playlists/{$playlistId}/tracks", [
+                        'uris' => [$trackUri]
+                    ]);
+            }
+        }
+
+        if ($response->failed()) {
+            Log::error('Spotify Add Track Error: ' . $response->body());
+            return false;
+        }
+
+        return true;
     }
 }

@@ -37,8 +37,10 @@ surprise_model.pkl
 *.md
 !README.md
 !algorithm_validation.md
-
-# Scripts
-*.bat
+!presentation.md
 
 !activity_diagram_description.md
+!recsys.md
+!presentation_technical.md
+
+

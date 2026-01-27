@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>MusicSocial Admin | @yield('title')</title>
+    <title>Reso Admin | @yield('title')</title>
 
     <!-- Bootstrap -->
     <link href="{{ asset('assets/admin/vendors/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -131,21 +131,26 @@
                 <h3>General</h3>
                 <ul class="nav side-menu">
                   <li><a href="{{ route('admin.dashboard') }}"><i class="fa fa-home"></i> Dashboard</a></li>
-                  <li><a href="{{ route('admin.users') }}"><i class="fa fa-users"></i> Manage Users</a></li>
-                  <li><a href="{{ route('admin.moderation') }}"><i class="fa fa-gavel"></i> Moderate Content</a></li>
+                  <li><a href="{{ route('admin.users') }}"><i class="fa fa-users"></i> Users</a></li>
+                  <li><a href="{{ route('admin.moderation') }}"><i class="fa fa-gavel"></i> Moderation</a></li>
                 </ul>
               </div>
               <div class="menu_section">
                 <h3>System</h3>
                 <ul class="nav side-menu">
                     <li>
+                        <a href="{{ route('admin.admins.index') }}">
+                            <i class="fa fa-users"></i> Admins
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('admin.retrain.page') }}">
-                            <i class="fa fa-eye"></i> Preview Recommendations
+                            <i class="fa fa-eye"></i> AI Recs
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('admin.profile') }}">
-                            <i class="fa fa-user"></i> My Profile
+                            <i class="fa fa-user"></i> Profile
                         </a>
                     </li>
                 </ul>

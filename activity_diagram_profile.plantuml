@@ -7,7 +7,8 @@ skinparam activityArrowColor #333
 skinparam activityBorderColor #333
 skinparam nodesep 50
 skinparam ranksep 50
-
+scale 1.5
+skinparam defaultFontSize 18
 |User|
 |System| (Web App & Database)
 

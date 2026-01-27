@@ -35,6 +35,10 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             if (Auth::check()) {
                 $user = Auth::user();
+
+                if (!($user instanceof \App\Models\User)) {
+                   return;
+                }
                 
                 // 1. Users to Suggest (Existing Logic)
                 $usersToSuggest = \Illuminate\Support\Facades\Cache::remember("user_{$user->id}_suggested_users", 300, function () use ($user) {
@@ -58,9 +62,18 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+                    
+                    // Filter out IDs that the user has already interacted with
+                    $interactedSongIds = $user->songInteractions()->pluck('song_id')->toArray();
+                    $filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
+
+                    if (empty($filteredSongIds)) {
+                        return collect();
+                    }
+
                     $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-                    $songs = \App\Models\Song::whereIn('id', $recommendedSongIds)->get();
+                    $songs = \App\Models\Song::whereIn('id', $filteredSongIds)->get();
 
                     // Sort and add metadata
                     return $songs->map(function ($song) use ($recommendationData) {

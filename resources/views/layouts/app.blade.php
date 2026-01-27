@@ -13,14 +13,16 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
 
         <script>
+            // Dark Mode
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
         </script>
     </head>
-    <body class="font-sans antialiased bg-white min-h-screen">
+    <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
         <div class="min-h-screen">
 
             <!-- [FIXED] This logic MUST come BEFORE the navigation is included -->
@@ -42,5 +44,9 @@
                 {{ $slot }}
             </main>
         </div>
+        
+        <x-add-to-playlist-modal />
+        <x-spotify-link-modal />
+        @livewireScripts
     </body>
 </html>

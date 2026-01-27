@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Handles the display of the discovery page, which provides personalized content
@@ -47,20 +48,56 @@ class DiscoveryController extends Controller
             $recommendedSongs = collect();
 
             if (!empty($rawRecommendations)) {
+                Log::error("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
                 $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
+                Log::error("DiscoveryController: Raw IDs: " . json_encode($recommendedSongIds));
+                
+                // --- [NEW] Filter out songs user has interacted with (Listened/Liked/Disliked) ---
+                $interactedSongIds = \App\Models\SongInteraction::where('user_id', $user->id)
+                                        ->pluck('song_id')
+                                        ->toArray();
+                
+                Log::error("DiscoveryController: Interacted song IDs count: " . count($interactedSongIds));
+                // Log::error("DiscoveryController: Interacted IDs: " . json_encode($interactedSongIds));
+
+                // Exclude interacted IDs
+                $filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
+                Log::error("DiscoveryController: Filtered song IDs count: " . count($filteredSongIds));
+                Log::error("DiscoveryController: Filtered IDs: " . json_encode(array_values($filteredSongIds)));
+                
+                // Take top 12 from the filtered list (preserving order from recommender)
+                
+                // Take top 12 from the filtered list (preserving order from recommender)
+                // Recommender returns sorted list, so we just take the first 12 valid ones.
+                $top12Ids = array_slice($filteredSongIds, 0, 12);
+                
                 $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-                $recommendedSongs = Song::whereIn('id', $recommendedSongIds)->get();
+                $recommendedSongs = Song::whereIn('id', $top12Ids)->get();
+                Log::info("DiscoveryController: Songs retrieved from DB: " . $recommendedSongs->count());
+                
+                // Check if we are missing any songs
+                if ($recommendedSongs->count() < count($top12Ids)) {
+                     Log::warning("DiscoveryController: Mismatch! Expected " . count($top12Ids) . " songs, but got " . $recommendedSongs->count() . " from DB. IDs missing potentially.");
+                     $retrievedIds = $recommendedSongs->pluck('id')->toArray();
+                     $missingIds = array_diff($top12Ids, $retrievedIds);
+                     Log::warning("DiscoveryController: Missing IDs: " . implode(',', $missingIds));
+                }
 
-                // Sort the recommended songs by score
+                // Sort the recommended songs by score (re-apply sorting since whereIn doesn't guarantee order)
                 $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
                     return $recommendationData[$song->id]['score'] ?? 0;
                 });
 
+                $recommendedSongs = $recommendedSongs->values(); // Reset keys
+
                 $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
                     $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                    // Pass debug info if needed, but for now just reason
                     return $song;
                 });
+            } else {
+                Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
             // --- [NEW] Improved "Who to Follow" Logic ---

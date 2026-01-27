@@ -25,9 +25,7 @@
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100">
                             <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
                                 <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                                        <path fill-rule="evenodd" d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 .437-.32l3.869-7.525A1.5 1.5 0 0 0 19.467.43a.75.75 0 0 1 .485 1.22zM8.36 1.765a.75.75 0 0 1 1.498 0v16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 .437-.32l.758-1.22V3.75c0-.66.33-1.27.876-1.63L8.36 1.765z" clip-rule="evenodd" />
-                                    </svg>
+                                    <span class="text-2xl">🎵</span>
                                 </span>
                                 Genre DNA
                             </h3>

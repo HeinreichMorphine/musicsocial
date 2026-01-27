@@ -74,13 +74,6 @@ entity "Bookmark" as bookmarks {
   *share_id : integer <<FK, not null>>
 }
 
-entity "UserFeedback" as user_feedback {
-  *id : integer <<PK, not null>>
-  --
-  *user_id : integer <<FK, not null>>
-  *share_id : integer <<FK, not null>>
-  *feedback_type : string
-}
 
 entity "Comment" as comments {
   *id : integer <<PK, not null>>
@@ -142,18 +135,30 @@ likes -[hidden]up- followers
 likes -[hidden]down- dislikes
 
 bookmarks -[hidden]up- songs
-bookmarks -[hidden]down- user_feedback
+bookmarks -[hidden]down- comment_threads
 
 ' Align interactions with Share
 shares -[hidden]left- likes
 shares -[hidden]left- dislikes
 
 shares -[hidden]right- bookmarks
-shares -[hidden]right- user_feedback
 
-' Bottom: Comment spine
 shares -[hidden]down- comments
 comments -[hidden]down- comment_threads
+
+
+entity "SongInteraction" as song_interactions {
+  *id : integer <<PK, not null>>
+  --
+  *user_id : integer <<FK, not null>>
+  *song_id : integer <<FK, not null>>
+  type : enum('listen', 'like', 'dislike')
+  created_at : timestamp
+}
+
+song_interactions -[hidden]up- songs
+users ||-right-o{ song_interactions : "interacts"
+songs ||-down-o{ song_interactions : "has"
 
 
 ' --- RELATIONSHIPS ---
@@ -166,6 +171,12 @@ comments ||-down-o{ comment_threads : "has reply"
 ' Comment self-reference (replies) moved to left
 comments ||-left-o{ comments : "replies"
 users ||-down-o{ comments : "writes"
+
+' Admin Relationships
+admins ||-down-o{ users : "moderates"
+admins ||-down-o{ comments : "checks"
+admins ||-right-o{ notifications : "receives"
+users ||-right-o{ notifications : "receives"
 
 ' 2. Left Side Components
 users ||-left-o{ followers : "follows"
@@ -185,7 +196,5 @@ shares }o-right-|| songs : "includes"
 users ||-right-o{ bookmarks : "saves"
 shares ||-right-o{ bookmarks : "bookmarked"
 
-users ||-right-o{ user_feedback : "provides"
-shares ||-right-o{ user_feedback : "subject of"
 
 @enduml

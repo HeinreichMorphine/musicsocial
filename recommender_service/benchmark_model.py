@@ -123,11 +123,11 @@ if __name__ == "__main__":
         print(f"Data loaded: {len(interactions_df)} rows.")
         
         # 1. Load Data
-        reader = Reader(rating_scale=(-1, 1.5))
+        reader = Reader(rating_scale=(-1, 6))
         data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
         
-        # 2. Train/Test Split (80/20)
-        # We need a test set to calculate ranking metrics
+        # 2. Train/Test Split (80/20) - Logic from Rimal et al. (2025)
+        # "Ensures majority of data (80%) is available for learning... while 20% serves as objective benchmark"
         trainset, testset = train_test_split(data, test_size=0.2, random_state=42)
         
         # 3. Define Model
@@ -140,6 +140,12 @@ if __name__ == "__main__":
         # 5. Predict on Testset
         print("Predicting on Testset...")
         predictions = algo.test(testset)
+
+        # OPTIONAL: K-Fold Cross Valuation (Robustness check)
+        from surprise.model_selection import cross_validate
+        print("\n--- Running 5-Fold Cross Validation (Robustness Check) ---")
+        cv_results = cross_validate(algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=True)
+
         
         # 6. Calculate Metrics (RMSE/MAE)
         from surprise import accuracy

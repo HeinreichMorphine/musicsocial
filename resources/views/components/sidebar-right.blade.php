@@ -1,23 +1,23 @@
-<div class="bg-white/60 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg p-6 space-y-4">
-    <h3 class="text-xl font-bold text-gray-900 border-b border-gray-200/50 pb-2">Suggested for you</h3>
+<div class="bg-white/60 dark:bg-black backdrop-blur-lg rounded-3xl p-6 border border-white/40 dark:border-white/10 shadow-xl space-y-4">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200/50 dark:border-gray-700/50 pb-2">Suggested for you</h3>
     @if (isset($recommendedSongs) && !$recommendedSongs->isEmpty())
         @foreach ($recommendedSongs->take(5) as $song)
-            <a href="{{ $song->spotify_url }}" target="_blank" class="flex items-center space-x-4 group hover:bg-white/40 p-3 rounded-2xl transition-all duration-300">
-            <div class="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-xl shadow-md">
+            <a href="{{ $song->spotify_url }}" target="_blank" class="flex items-center space-x-4 group hover:bg-white/40 dark:hover:bg-gray-800 p-2 rounded-xl transition-all duration-300">
+            <div class="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg shadow-md">
                  <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" src="{{ $song->album_art_url }}" alt="Album Art">
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-base font-bold text-gray-900 leading-tight group-hover:text-custom-mid-blue transition-colors mb-0.5">{{ $song->track_name }}</p>
-                <p class="text-sm text-gray-600 truncate mb-1.5">{{ $song->artist_name }}</p>
+                <p class="text-base font-bold text-gray-900 dark:text-white leading-tight group-hover:text-custom-mid-blue dark:group-hover:text-blue-400 transition-colors mb-1">{{ $song->track_name }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 truncate mb-1.5">{{ $song->artist_name }}</p>
                 @if(isset($song->reason))
-                    <div class="inline-flex items-center text-[10px] font-bold text-white px-2 py-0.5 rounded-full shadow-sm {{ 
-                        Str::contains($song->reason, 'friend') ? 'bg-pink-500' : 
+                    <div class="inline-flex items-center text-xs font-bold text-white px-2.5 py-1 rounded-full shadow-sm {{ 
+                        Str::contains($song->reason, 'friend') ? 'bg-purple-500' : 
                         (Str::contains($song->reason, ['favorite artist', 'Same artist']) ? 'bg-yellow-500' : 
                         (Str::contains($song->reason, 'listening history') ? 'bg-blue-500' : 
                         (Str::contains($song->reason, 'Popular') ? 'bg-orange-500' : 'bg-indigo-500'))) 
                     }}">
                         @if(Str::contains($song->reason, 'friend'))
-                            <span class="mr-1">❤️</span> Friends
+                            <span class="mr-1">👥</span> Friends
                         @elseif(Str::contains($song->reason, ['favorite artist', 'Same artist']))
                             <span class="mr-1">⭐</span> Artist
                         @elseif(Str::contains($song->reason, 'listening history'))

@@ -10,6 +10,7 @@ skinparam ranksep 50
 
 |User|
 |System| (Web App & Database)
+|Spotify| (External App / API)
 
 |User|
 start
@@ -20,7 +21,8 @@ start
 :Return View with Shares;
 
 |User|
-split
+if (User Action) is (Comment) then
+    |User|
     :Click **Comment**;
     |System|
     :Show Comment Input;
@@ -29,21 +31,40 @@ split
     |System|
     :Store Comment;
     :Update View;
-split again
+    stop
+elseif (User Action) is (Song Link) then
+    |User|
+    :Click Song Link (Spotify/YouTube);
+    |System|
+    :Redirect to External URL;
+    stop
+elseif (User Action) is (Like / Dislike) then
+    |User|
     :Click **Like / Dislike**;
     |System|
     :Toggle Status;
     :Update Counts & Icon;
-split again
+    stop
+elseif (User Action) is (Save) then
+    |User|
     :Click **Save (Bookmark)**;
     |System|
     :Toggle Bookmark Status;
     :Update Icon (Yellow);
-split again
-    :Click Song Link (Spotify/YouTube);
+    stop
+elseif (User Action) is (Add to Playlist) then
+    |User|
+    :Click **Add to Playlist**;
     |System|
-    :Redirect to External URL;
-end split
-
-stop
+    :Show Playlist Modal;
+    |User|
+    :Select Playlist & Confirm;
+    |System|
+    :Add Song to Playlist (API);
+    |Spotify|
+    :Save to User Library;
+    |System|
+    :Show Success Message;
+    stop
+endif
 @enduml

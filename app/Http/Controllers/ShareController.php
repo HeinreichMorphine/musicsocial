@@ -7,7 +7,7 @@ use App\Models\Song;
 use App\Services\SpotifyService;
 use App\Services\YouTubeService;
 use App\Services\MusicBrainzService;
-use App\Services\AudioDbService;
+use App\Services\DiscogsService;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -18,15 +18,15 @@ class ShareController extends Controller
     protected $spotifyService;
     protected $youTubeService;
     protected $musicBrainzService;
-    protected $audioDbService;
+    protected $discogsService;
     protected $recommendationService;
 
-    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, AudioDbService $audioDbService, RecommendationService $recommendationService)
+    public function __construct(SpotifyService $spotifyService, YouTubeService $youTubeService, MusicBrainzService $musicBrainzService, DiscogsService $discogsService, RecommendationService $recommendationService)
     {
         $this->spotifyService = $spotifyService;
         $this->youTubeService = $youTubeService;
         $this->musicBrainzService = $musicBrainzService;
-        $this->audioDbService = $audioDbService;
+        $this->discogsService = $discogsService;
         $this->recommendationService = $recommendationService;
     }
 
@@ -44,6 +44,9 @@ class ShareController extends Controller
 
         if ($validated['type'] === 'music') {
             if (empty($validated['spotify_track_id']) && empty($validated['youtube_video_id'])) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Spotify track ID or YouTube video ID is required for music shares.'], 422);
+                }
                 return back()->withErrors(['music_id' => 'Spotify track ID or YouTube video ID is required for music shares.']);
             }
 
@@ -53,6 +56,9 @@ class ShareController extends Controller
                 $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
 
                 if (isset($trackData['error'])) {
+                    if ($request->wantsJson()) {
+                        return response()->json(['error' => $trackData['error']], 400);
+                    }
                     return back()->with('error', $trackData['error']);
                 }
 
@@ -68,10 +74,10 @@ class ShareController extends Controller
                     $genres = array_unique(array_merge($genres, $musicBrainzGenres));
                 }
 
-                // 2. Enhance with AudioDB (Track Genres)
-                $audioDbGenres = $this->audioDbService->getGenres($song->track_name, $song->artist_name);
-                if (!empty($audioDbGenres)) {
-                    $genres = array_unique(array_merge($genres, $audioDbGenres));
+                // 2. Enhance with Discogs (Track Styles/Genres)
+                $discogsGenres = $this->discogsService->getGenres($song->artist_name, $song->track_name);
+                if (!empty($discogsGenres)) {
+                    $genres = array_unique(array_merge($genres, $discogsGenres));
                 }
 
                 // Ensure we have a YouTube Video ID
@@ -104,18 +110,24 @@ class ShareController extends Controller
                     'type' => $validated['type'],
                 ]);
             } else {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Could not create or find song.'], 400);
+                }
                 return back()->with('error', 'Could not create or find song.');
             }
 
         } elseif ($validated['type'] === 'text') {
             if (empty($validated['caption'])) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Caption is required for text shares.'], 422);
+                }
                 return back()->withErrors(['caption' => 'Caption is required for text shares.']);
             }
             $share = $request->user()->shares()->create($validated);
         }
 
         if ($request->wantsJson() && isset($share)) {
-            $share->load(['user', 'song', 'likes', 'dislikes', 'comments']); // Load relationships needed for the card
+            $share->load(['user', 'song', 'likes', 'dislikes', 'comments.user', 'comments.replies', 'comments.parent']); // Load relationships needed for the card
             $html = view('components.share-card', ['share' => $share])->render();
             return response()->json(['html' => $html, 'message' => 'Share created successfully.']);
         }
@@ -177,8 +189,8 @@ class ShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Eager load relationships
-        $share->load(['song', 'comments.user', 'comments.replies']);
+        // Eager load relationships (removed generic 'comments' eager load for performance)
+        $share->load(['song']);
 
         $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
         $recommendedSongs = collect();
@@ -209,10 +221,24 @@ class ShareController extends Controller
                             ->limit(5)
                             ->get();
 
+        // Optimize Comment Loading
+        $totalCommentsCount = $share->comments()->count();
+        $previewComments = $share->comments()->latest()->with('user')->take(3)->get();
+        
+        // Fetch paginated top-level comments
+        $comments = $share->comments()
+            ->whereDoesntHave('parent')
+            ->with(['user', 'replies.user', 'replies.replies.user']) // recursive loading for depth
+            ->latest()
+            ->paginate(10);
+
         return view('shares.show', [
             'share' => $share,
             'usersToSuggest' => $usersToSuggest,
             'recommendedSongs' => $recommendedSongs,
+            'comments' => $comments,
+            'totalCommentsCount' => $totalCommentsCount,
+            'previewComments' => $previewComments,
         ]);
     }
 
@@ -232,12 +258,22 @@ class ShareController extends Controller
      */
     public function update(Request $request, Share $share)
     {
-        // For now, assuming only caption can be updated for a share
+        if ($request->user()->id !== $share->user_id) {
+             return response()->json(['error' => 'Unauthorized action.'], 403);
+        }
+
         $validated = $request->validate([
             'caption' => 'nullable|string|max:1000',
         ]);
 
         $share->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Share updated successfully.',
+                'caption' => $share->caption
+            ]);
+        }
 
         return redirect(route('dashboard'))->with('success', 'Share updated successfully.');
     }
@@ -247,7 +283,9 @@ class ShareController extends Controller
      */
     public function destroy(Share $share)
     {
-        if (auth()->id() !== $share->user_id) {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        if ($user->id !== $share->user_id) {
             return response()->json(['error' => 'Unauthorized action.'], 403);
         }
 
@@ -261,6 +299,7 @@ class ShareController extends Controller
      */
     public function toggleDislike(Share $share)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         if ($user->id === $share->user_id) {
@@ -290,6 +329,7 @@ class ShareController extends Controller
      */
     public function toggleBookmark(Share $share)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         $user->bookmarks()->toggle($share);

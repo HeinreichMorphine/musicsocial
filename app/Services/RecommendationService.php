@@ -26,10 +26,16 @@ class RecommendationService
     public function getRecommendations(int $userId): array
     {
         try {
-            $response = Http::get($this->pythonServiceUrl . '/recommendations/' . $userId);
+            $url = $this->pythonServiceUrl . '/recommendations/' . $userId;
+            Log::info("RecommendationService: Requesting recommendations from: " . $url);
+
+            // Retry up to 3 times, waiting 1000ms (1s) between attempts.
+            // Set a timeout of 5 seconds per attempt.
+            $response = Http::timeout(5)->retry(3, 1000)->get($url);
 
             if ($response->successful()) {
                 $recommendations = $response->json();
+                Log::info("RecommendationService: Received " . count($recommendations['recommendations'] ?? []) . " recommendations.");
                 // Return the full array of recommendation objects, including share_id, score, and reason.
                 return $recommendations['recommendations'] ?? [];
             } else {

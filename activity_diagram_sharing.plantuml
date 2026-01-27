@@ -7,11 +7,23 @@ skinparam activityArrowColor #333
 skinparam activityBorderColor #333
 
 |User|
-|System| (Web App & Database)
+|System| 
 |External_API| (Spotify, Discogs, MusicBrainz, YouTube)
 
 |User|
 start
+:Click on Share Song TextBox ;
+|User|
+:Search for Song;
+|System|
+:Validate Input/Query;
+:Call SpotifyService.searchTracks();
+|External_API|
+:Get Search Results (Spotify);
+|System|
+:Return Search Results;
+|User|
+:Select Song;
 :Submit Share (Spotify Link);
 |System|
 :Validate Input;
@@ -40,6 +52,6 @@ endif
 :Merge All Genres;
 :Update Song Metadata (Database);
 :Create Share Record (Database);
-:Return Success;
+:Display Post in Feed;
 stop
 @enduml

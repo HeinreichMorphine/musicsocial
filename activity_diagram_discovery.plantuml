@@ -7,9 +7,10 @@ skinparam activityArrowColor #333
 skinparam activityBorderColor #333
 skinparam nodesep 50
 skinparam ranksep 50
-
+scale 1.5
+skinparam defaultFontSize 18
 |User|
-|System| (Web App & Database)
+|System| 
 |External_API| (Python Recommender Service)
 
 |User|
@@ -34,6 +35,10 @@ else (No - Cold Start)
     end note
 endif
 :Apply Social Graph Boosting;
+note right
+    Increases score if followed friends
+    have shared or liked the song.
+end note
 :Return Song IDs & Scores;
 
 |System|
@@ -43,7 +48,7 @@ endif
 
 |User|
 :View Recommended Songs;
-:Click Song Card;
+:Click Song Shared by Discovery;
 |System|
 :Redirect to Song Details;
 stop
