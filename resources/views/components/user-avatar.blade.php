@@ -6,7 +6,8 @@
              alt="{{ $user->name }}"
              {{ $attributes->merge(['class' => $class . ' rounded-full object-cover']) }}
              x-show="!avatarError"
-             x-on:error="avatarError = true">
+             x-on:error="avatarError = true"
+             onerror="this.style.display='none'">
              
         <div {{ $attributes->merge(['class' => $class . ' rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0']) }}
              x-show="avatarError"
