@@ -141,6 +141,9 @@
                     <div class="grid grid-cols-4 gap-2 w-full mt-2">
                         <!-- Like Zone -->
                         <form @submit.prevent="
+                            liked = !liked;
+                            liked ? likesCount++ : likesCount--;
+                            
                             fetch('{{ route('shares.like', $share) }}', {
                                 method: 'POST',
                                 headers: {
@@ -148,10 +151,20 @@
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 }
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                window.reloadWithScroll();
+                            .then(response => {
+                                if (!response.ok) {
+                                    // Revert on error
+                                    liked = !liked;
+                                    liked ? likesCount++ : likesCount--;
+                                }
+                                return response.json();
                             })
+                            .catch(err => {
+                                console.error(err);
+                                // Revert on error
+                                liked = !liked;
+                                liked ? likesCount++ : likesCount--;
+                            });
                         " class="flex justify-center">
                             @csrf
                             <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-pink-50 transition-colors group w-full justify-center" title="Like">
@@ -170,6 +183,14 @@
                         <!-- Dislike Zone -->
                         @if ($share->user->isNot(auth()->user()))
                         <form @submit.prevent="
+                            disliked = !disliked;
+                            // Optimistic update for dislike logic could be complex if likes are involved (toggleDislike untoggles like)
+                            // Ideally we should wait for response if logic is complex, but let's try basic optimism:
+                            if (disliked && liked) {
+                                liked = false;
+                                likesCount--;
+                            }
+                            
                             fetch('{{ route('shares.dislike', $share) }}', {
                                 method: 'POST',
                                 headers: {
@@ -177,10 +198,20 @@
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 }
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                window.reloadWithScroll();
+                            .then(response => {
+                                if (!response.ok) throw new Error('Failed');
+                                return response.json();
                             })
+                            .then(data => {
+                                // Sync actual state from server to be safe
+                                disliked = data.disliked;
+                                liked = data.liked;
+                                likesCount = data.likesCount;
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                window.location.reload(); // Fallback on error
+                            });
                         " class="flex justify-center">
                             @csrf
                             <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-gray-100 transition-colors group w-full justify-center" title="Dislike">
@@ -220,6 +251,7 @@
                         <!-- Bookmark Zone -->
                         <div class="flex justify-center">
                             <form @submit.prevent="
+                                bookmarked = !bookmarked;
                                 fetch('{{ route('shares.bookmark', $share) }}', {
                                     method: 'POST',
                                     headers: {
@@ -227,10 +259,13 @@
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                     },
                                 })
-                                .then(response => response.json())
-                                .then(data => {
-                                    window.reloadWithScroll();
+                                .then(response => {
+                                    if (!response.ok) bookmarked = !bookmarked; // Revert
+                                    return response.json();
                                 })
+                                .catch(err => {
+                                    bookmarked = !bookmarked; // Revert
+                                });
                             " class="flex justify-center w-full">
                                 @csrf
                                 <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-yellow-50 transition-colors group w-full justify-center" title="Bookmark">
@@ -285,13 +320,13 @@
                             })
                             .then(response => response.text())
                             .then(html => {
-                                let wrapper = $el.closest('[x-data="{ newComment: \'\' }"]');
+                                let wrapper = $el.closest('[x-data]');
                                 let commentSection = wrapper.querySelector('.space-y-4');
-                                commentSection.insertAdjacentHTML('beforeend', html);
+                                commentSection.insertAdjacentHTML('afterbegin', html); // Add to top
                                 newComment = '';
                                 // Update comment count
                                 let countEl = $el.closest('.flex-1').querySelector('.text-gray-600.group-hover\:text-custom-mid-blue');
-                                countEl.textContent = parseInt(countEl.textContent) + 1;
+                                if(countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
                             })
                         " class="flex items-center space-x-3 mb-6">
                             @csrf

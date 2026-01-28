@@ -1,5 +1,10 @@
-<div id="comment-{{ $comment->id }}" class="flex space-x-3 scroll-mt-20" x-data="{ openReply: false, openEdit: false }">
-    {{-- Always show User Avatar (Request: Name and Avatar Maintain) --}}
+<div id="comment-{{ $comment->id }}" class="flex space-x-3 scroll-mt-20" x-data="{ 
+    openReply: false, 
+    openEdit: false, 
+    bodyText: @js($comment->body),
+    isDeleted: {{ $comment->body === '[deleted]' ? 'true' : 'false' }} 
+}">
+    {{-- Always show User Avatar --}}
     <x-user-avatar :user="$comment->user" class="h-10 w-10" />
     
     <div class="flex-1">
@@ -11,26 +16,24 @@
             @endif
         </div>
 
-        @if($comment->body === '[deleted]')
-            {{-- Deleted Body --}}
+        {{-- Deleted State Handles --}}
+        <div x-show="isDeleted" style="display: {{ $comment->body === '[deleted]' ? 'block' : 'none' }};">
             <div class="mt-1 text-gray-500 italic">
                 [deleted]
             </div>
-            
-            {{-- Deleted Actions: Only Reply --}}
             <div class="mt-2 flex items-center space-x-4 text-sm">
                 <button @click="openReply = !openReply" class="text-gray-500 hover:text-gray-900">Reply</button>
             </div>
-        @else
-            {{-- Normal Body --}}
+        </div>
+
+        {{-- Normal State Handles --}}
+        <div x-show="!isDeleted" style="display: {{ $comment->body !== '[deleted]' ? 'block' : 'none' }};">
             <div x-show="!openEdit">
-                <p class="mt-1 text-gray-800 dark:text-white">
-                    {{ $comment->body }}
-                </p>
+                <p class="mt-1 text-gray-800 dark:text-white" x-text="bodyText"></p>
             </div>
 
             {{-- Edit Form --}}
-            <div x-show="openEdit" x-transition class="mt-2" style="display: none;" x-data="{ editedBody: '{{ $comment->body }}' }">
+            <div x-show="openEdit" x-transition class="mt-2" style="display: none;">
                 <form @submit.prevent="
                     fetch('{{ route('shares.comments.update', ['share' => $comment->share, 'comment' => $comment]) }}', {
                         method: 'POST',
@@ -38,18 +41,24 @@
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({ body: editedBody, _method: 'PATCH' })
+                        body: JSON.stringify({ body: bodyText, _method: 'PATCH' })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.body) {
-                            window.reloadWithScroll();
+                            bodyText = data.body;
+                            openEdit = false;
                         }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Failed to update comment');
                     })
                 ">
                     @csrf
                     @method('PATCH')
-                    <textarea x-model="editedBody" name="body" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
+                    {{-- Bind to bodyText --}}
+                    <textarea x-model="bodyText" name="body" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
                     <div class="mt-2 space-x-2">
                         <x-primary-button type="submit" class="bg-custom-mid-blue">Save</x-primary-button>
                         <button type="button" @click="openEdit = false" class="text-gray-500">Cancel</button>
@@ -72,16 +81,13 @@
                             },
                             body: JSON.stringify({ _method: 'DELETE' })
                         })
-                        .then(response => {
-                            if (response.ok) {
-                                // If hard deleted (removed from DOM)
-                                if (response.status === 200) {
-                                    return response.json();
-                                }
-                            }
-                        })
+                        .then(response => response.json())
                         .then(data => {
-                           window.reloadWithScroll();
+                           if (data.message.includes('thread preserved')) {
+                               isDeleted = true;
+                           } else {
+                               $el.closest('#comment-{{ $comment->id }}').remove();
+                           }
                         })
                     ">
                         @csrf
@@ -90,7 +96,7 @@
                     </form>
                 @endif
             </div>
-        @endif
+        </div>
 
         <div x-show="openReply" x-transition class="mt-2" style="display: none;" x-data="{
             newReply: '',
