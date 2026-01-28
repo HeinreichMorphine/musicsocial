@@ -131,7 +131,7 @@ def fetch_data_from_db():
                 # Apply Logarithmic Formula: cui = 1 + alpha * log(1 + rui/epsilon)
                 # Using alpha=1.0 and epsilon=1.0 as standard defaults
                 # Formula: 1 + np.log(1 + grouped_df['score'])
-                grouped_df['interaction'] = 1 + np.log(1 + grouped_df['score'])
+                grouped_df['interaction'] = 1 + np.log(1 + grouped_df['score'].astype(float))
                 
                 print(f"Aggregated {len(engagement_df)} raw interactions into {len(grouped_df)} unique weighted scores.")
             else:
