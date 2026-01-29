@@ -150,6 +150,12 @@
                         <form @submit.prevent="
                             liked = !liked;
                             liked ? likesCount++ : likesCount--;
+                            if (liked) {
+                                if (typeof disliked !== 'undefined' && disliked) {
+                                    disliked = false;
+                                    // dislikesCount--; // Optional: depending on if we show dislike count
+                                }
+                            }
                             
                             fetch('{{ route('shares.like', $share) }}', {
                                 method: 'POST',
@@ -165,6 +171,10 @@
                                     liked ? likesCount++ : likesCount--;
                                 }
                                 return response.json();
+                            })
+                            .then(data => {
+                                if (data.disliked !== undefined) disliked = data.disliked;
+                                // dislikesCount = data.dislikesCount;
                             })
                             .catch(err => {
                                 console.error(err);
@@ -191,11 +201,11 @@
                         @if ($share->user->isNot(auth()->user()))
                         <form @submit.prevent="
                             disliked = !disliked;
-                            // Optimistic update for dislike logic could be complex if likes are involved (toggleDislike untoggles like)
-                            // Ideally we should wait for response if logic is complex, but let's try basic optimism:
-                            if (disliked && liked) {
-                                liked = false;
-                                likesCount--;
+                            if (disliked) {
+                                if (typeof liked !== 'undefined' && liked) {
+                                    liked = false;
+                                    likesCount--;
+                                }
                             }
                             
                             fetch('{{ route('shares.dislike', $share) }}', {
@@ -221,15 +231,15 @@
                             });
                         " class="flex justify-center">
                             @csrf
-                            <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-gray-100 transition-colors group w-full justify-center" title="Dislike">
+                            <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-gray-100 transition-colors group w-full justify-center" title="Not Interested">
                                 <template x-if="disliked">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-red-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-red-500">
                                         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                        <path d="M12 13l-1-1 2-2-3-3 2-2" />
+                                        <path d="M12 13l-1-1 2-2-3-3 2-2" stroke="white" />
                                     </svg>
                                 </template>
                                 <template x-if="!disliked">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-500 group-hover:text-red-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-red-500 hover:text-red-700 transition-colors">
                                         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                                         <path d="M12 13l-1-1 2-2-3-3 2-2" />
                                     </svg>
