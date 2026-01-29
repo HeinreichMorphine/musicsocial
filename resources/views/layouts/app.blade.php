@@ -20,6 +20,20 @@
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
+
+            // Scroll Position Persistence
+            window.reloadWithScroll = function() {
+                sessionStorage.setItem('scrollPosition', window.scrollY);
+                window.location.reload();
+            };
+
+            document.addEventListener("DOMContentLoaded", function(event) { 
+                var scrollpos = sessionStorage.getItem('scrollPosition');
+                if (scrollpos) {
+                    window.scrollTo(0, scrollpos);
+                    sessionStorage.removeItem('scrollPosition');
+                }
+            });
         </script>
     </head>
     <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
