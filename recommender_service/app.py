@@ -764,7 +764,7 @@ def get_recommendations(user_id):
 
             user_interacted_song_ids = get_user_interactions(user_id, connection)
             # Add dislikes to interactions so they are excluded from candidates
-            user_interacted_song_ids = list(set(user_interacted_song_ids + disliked_song_ids))
+            user_interacted_song_ids = list(set(list(user_interacted_song_ids) + disliked_song_ids))
             
             # Identify candidates (songs user hasn't seen)
             candidates = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]
