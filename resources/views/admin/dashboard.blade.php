@@ -58,7 +58,7 @@
                                         <li>
                                             <a>
                                                 <span class="image">
-                                                    <img src="{{ $user->profile_picture ? Storage::url($user->profile_picture) : 'https://via.placeholder.com/40' }}" alt="img" style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover; margin-right: 10px;" />
+                                                    <img src="{{ $user->profile_picture ? Storage::url($user->profile_picture) : ($user->avatar ?? 'https://via.placeholder.com/40') }}" alt="img" style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover; margin-right: 10px;" />
                                                 </span>
                                                 <span>
                                                     <span><b>{{ $user->name }}</b></span>
