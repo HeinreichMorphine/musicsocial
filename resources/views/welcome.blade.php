@@ -123,9 +123,6 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center max-w-4xl mx-auto">
-                <div class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-custom-mid-blue text-xs font-bold uppercase tracking-wider mb-6">
-                    Join the Movement
-                </div>
                 <h1 class="font-casual text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-8">
                     Social Audio, <br>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-custom-mid-blue to-purple-600">Built for Connection.</span>
@@ -133,12 +130,6 @@
                 <p class="text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
                     Reso brings the human element back to music discovery. Find your "Taste Neighbors" and discover music through genuine peer-to-peer recommendations.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href="{{ route('register') }}" class="px-8 py-4 rounded-full bg-custom-mid-blue text-white font-bold text-lg hover:bg-custom-dark-blue transition shadow-lg shadow-blue-500/30 flex items-center gap-2">
-                        <span>Find Your Community</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </a>
-                </div>
             </div>
 
             <!-- WINDOW OS MOCKUP -->
