@@ -65,14 +65,13 @@
                         <button @click="editing = false; editCaption = originalCaption" class="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
                         <button @click="
                             fetch('{{ route('shares.update', $share) }}', {
-                                method: 'POST',
+                                method: 'PATCH',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
                                 body: JSON.stringify({ 
-                                    _method: 'PATCH',
                                     caption: editCaption
                                 })
                             })
