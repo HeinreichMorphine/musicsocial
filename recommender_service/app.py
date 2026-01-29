@@ -837,39 +837,47 @@ def get_recommendations(user_id):
                         'artist_matched': artist_matched
                     })
             else:
-                # --- STEP 3: CONTENT-BASED FILTERING (The Cold Start Fix) ---
-                # For new users with <5 interactions, use TF-IDF + Cosine Similarity
-                # This is more sophisticated than simple Jaccard similarity
+                # --- STEP 3: COLD START (Most Popular Strategy) ---
+                # User has < 5 interactions. Instead of guessing with content-based filtering,
+                # we show the globally most popular songs to help them get started.
                 
-                # Fetch user's liked songs with full metadata for TF-IDF
-                user_liked_query = text("""
-                    SELECT DISTINCT so.id, so.artist_name, so.genres
-                    FROM likes l
-                    JOIN shares s ON l.share_id = s.id
-                    JOIN songs so ON s.song_id = so.id
-                    WHERE l.user_id = :user_id
-                    UNION
-                    SELECT DISTINCT so.id, so.artist_name, so.genres
-                    FROM shares s
-                    JOIN songs so ON s.song_id = so.id
-                    WHERE s.user_id = :user_id
+                print(f"[DIAGRAM_TRACE] 2b. Cold Start: Fetching Global Top 50 Songs.")
+                
+                # Weighted popularity query: Shares (3pts) + Likes (1pt)
+                top_songs_query = text("""
+                     SELECT s.id as song_id, 
+                            (
+                                (SELECT COUNT(*) FROM likes l WHERE l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)) * 1 + 
+                                (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 3
+                            ) as popularity
+                     FROM songs s
+                     ORDER BY popularity DESC
+                     LIMIT 50
                 """)
-                user_liked_songs_df = pd.read_sql(user_liked_query, connection, params={'user_id': user_id})
                 
-                # Try TF-IDF-based similarity first (more sophisticated)
-                cf_predictions = content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df)
-                
-                # Filter out songs user has already interacted with
-                if cf_predictions:
-                    cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
-                
-                # Fallback to Jaccard-based method if TF-IDF returns nothing (or all were filtered)
-                # This can happen if user has very few interactions or metadata is sparse
-                if not cf_predictions:
-                    cf_predictions = content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
-                    # Filter out songs user has already interacted with
-                    if cf_predictions:
-                        cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
+                try:
+                    top_songs_df = pd.read_sql(top_songs_query, connection)
+                    
+                    for _, row in top_songs_df.iterrows():
+                        s_id = int(row['song_id'])
+                        score = float(row['popularity'])
+                        
+                        # Filter out what they have already seen/disliked
+                        if s_id in user_interacted_song_ids:
+                            continue
+                            
+                        # Normalize score for consistency with SVD scale (1-5)
+                        # We use log to dampen huge popularity counts
+                        display_score = min(5.0, 2.5 + np.log(1 + score))
+
+                        cf_predictions.append({
+                            'song_id': s_id,
+                            'score': display_score,
+                            'reason': 'Popular in the community'
+                        })
+                        
+                except Exception as e:
+                    print(f"Error serving popular songs: {e}")
                 
                 # --- POPULARITY FALLBACK (Fill if results are sparse) ---
                 # If we have fewer than 10 recommendations, fill the rest with global popular songs.
