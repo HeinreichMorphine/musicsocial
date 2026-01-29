@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('app:retrain-recommender')->everyThirtyMinutes();
+        $schedule->command('app:retrain-recommender')->hourly();
         $schedule->command('app:backfill-share-metadata')->daily();
     }
 
