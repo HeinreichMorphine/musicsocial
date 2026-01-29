@@ -28,10 +28,12 @@
 
             <div>
                  @if(Auth::user()->spotify_id)
-                    <button disabled class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-md text-sm font-medium cursor-not-allowed">
-                        Connected
-                    </button>
-                    {{-- Optional: Add Disconnect Logic Here --}}
+                    <form method="POST" action="{{ route('social.unlink', 'spotify') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ease-in-out duration-150">
+                            Unlink
+                        </button>
+                    </form>
                 @else
                     <a href="{{ route('social.redirect', 'spotify') }}" class="inline-flex items-center px-4 py-2 bg-[#1DB954] border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-[#1ed760] focus:bg-[#1ed760] active:bg-[#1aa34a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1DB954] transition ease-in-out duration-150">
                         Connect Spotify
@@ -58,9 +60,12 @@
 
              <div>
                  @if(Auth::user()->google_id)
-                    <button disabled class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-md text-sm font-medium cursor-not-allowed">
-                        Connected
-                    </button>
+                    <form method="POST" action="{{ route('social.unlink', 'google') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ease-in-out duration-150">
+                            Unlink
+                        </button>
+                    </form>
                 @else
                     <a href="{{ route('social.redirect', 'google') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                         Connect Google

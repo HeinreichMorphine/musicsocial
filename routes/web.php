@@ -124,6 +124,7 @@ Route::middleware('auth')->group(function () {
 // Social Auth Routes
 Route::get('auth/{provider}', [App\Http\Controllers\SocialAuthController::class, 'redirect'])->name('social.redirect');
 Route::get('auth/{provider}/callback', [App\Http\Controllers\SocialAuthController::class, 'callback'])->name('social.callback');
+Route::post('auth/{provider}/unlink', [App\Http\Controllers\SocialAuthController::class, 'unlink'])->middleware('auth')->name('social.unlink');
 
 
 Route::get('/discovery', [App\Http\Controllers\DiscoveryController::class, 'index'])->middleware(['auth'])->name('discovery');

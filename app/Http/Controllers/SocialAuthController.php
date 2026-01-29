@@ -174,4 +174,32 @@ class SocialAuthController extends Controller
         return $newUser;
 
     }
+
+    /**
+     * Unlink a social provider from the authenticated user's account.
+     */
+    public function unlink($provider)
+    {
+        $user = Auth::user();
+
+        // Validate provider
+        if (!in_array($provider, ['spotify', 'google'])) {
+            return redirect()->route('settings.index')->with('error', 'Invalid provider.');
+        }
+
+        // Clear provider-specific fields
+        $updateData = [
+            $provider . '_id' => null,
+        ];
+
+        // For Spotify, also clear tokens
+        if ($provider === 'spotify') {
+            $updateData['spotify_token'] = null;
+            $updateData['spotify_refresh_token'] = null;
+        }
+
+        $user->update($updateData);
+
+        return redirect()->route('settings.index')->with('status', ucfirst($provider) . ' account disconnected successfully.');
+    }
 }
