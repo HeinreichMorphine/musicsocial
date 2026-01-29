@@ -28,12 +28,16 @@ if (Interactions >= 5?) then (Yes)
         Matrix Factorization of User-Item Interactions
     end note
 else (No - Cold Start)
-    :Content-Based Filtering;
+    :Popularity-Based Filtering;
     note right
-        Algorithm: **TF-IDF + Cosine Similarity**
-        Matches Song Metadata (Genres/Artists)
+        Strategy: **Global Top 50**
+        Weighted by Shares (3x) and Likes (1x)
     end note
 endif
+:Exclude Disliked Songs;
+note right
+    Removes songs user marked as "Uninterested"
+end note
 :Apply Social Graph Boosting;
 note right
     Increases score if followed friends
