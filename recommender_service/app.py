@@ -908,53 +908,53 @@ def get_recommendations(user_id):
                 except Exception as e:
                     print(f"Error serving popular songs: {e}")
                 
-                # --- POPULARITY FALLBACK (Fill if results are sparse) ---
-                # If we have fewer than 10 recommendations, fill the rest with global popular songs.
-                # This ensures even users with very little history get a full list.
-                if len(cf_predictions) < 12:
-                     print(f"Low result count ({len(cf_predictions)}). Filling with global top songs.")
-                     needed = 12 - len(cf_predictions)
-                     
-                     # Simplified popularity query
-                     top_songs_query = text("""
-                        SELECT s.id as song_id, 
-                               (COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2) as popularity
-                        FROM songs s
-                        LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
-                        GROUP BY s.id
-                        ORDER BY popularity DESC
-                        LIMIT 30
-                     """)
-                     try:
-                         top_songs_df = pd.read_sql(top_songs_query, connection)
-                         
-                         # Get existing IDs to avoid duplicates
-                         existing_ids = {p['song_id'] for p in cf_predictions}
-                         
-                         filled_count = 0
-                         for _, row in top_songs_df.iterrows():
-                             s_id = int(row['song_id'])
-                             
-                             # Skip if already in predictions or already seen by user
-                             if s_id in existing_ids or s_id in user_interacted_song_ids:
-                                 continue
+            # --- POPULARITY FALLBACK (Fill if results are sparse - APPLIES TO ALL PHASES) ---
+            # If we have fewer than 10 recommendations, fill the rest with global popular songs.
+            # This ensures even users with very little history get a full list.
+            if len(cf_predictions) < 12:
+                    print(f"Low result count ({len(cf_predictions)}). Filling with global top songs.")
+                    needed = 12 - len(cf_predictions)
+                    
+                    # Simplified popularity query
+                    top_songs_query = text("""
+                    SELECT s.id as song_id, 
+                            (COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2) as popularity
+                    FROM songs s
+                    LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
+                    GROUP BY s.id
+                    ORDER BY popularity DESC
+                    LIMIT 30
+                    """)
+                    try:
+                        top_songs_df = pd.read_sql(top_songs_query, connection)
+                        
+                        # Get existing IDs to avoid duplicates
+                        existing_ids = {p['song_id'] for p in cf_predictions}
+                        
+                        filled_count = 0
+                        for _, row in top_songs_df.iterrows():
+                            s_id = int(row['song_id'])
+                            
+                            # Skip if already in predictions or already seen by user
+                            if s_id in existing_ids or s_id in user_interacted_song_ids:
+                                continue
 
-                             cf_predictions.append({
-                                 'song_id': s_id,
-                                 'score': 0.1, # Low score to indicate it's generic
-                                 'reason': 'Popular in the community'
-                             })
-                             
-                             filled_count += 1
-                             if filled_count >= needed:
-                                 break
-                     except Exception as e:
-                         print(f"Error fetching top songs: {e}")
-                         # Fallback to random songs if query fails
-                         fallback_query = text("SELECT id FROM songs ORDER BY RAND() LIMIT 12")
-                         fallback_df = pd.read_sql(fallback_query, connection)
-                         for _, row in fallback_df.iterrows():
-                             if int(row['id']) not in user_interacted_song_ids:
+                            cf_predictions.append({
+                                'song_id': s_id,
+                                'score': 0.1, # Low score to indicate it's generic
+                                'reason': 'Popular in the community'
+                            })
+                            
+                            filled_count += 1
+                            if filled_count >= needed:
+                                break
+                    except Exception as e:
+                        print(f"Error fetching top songs: {e}")
+                        # Fallback to random songs if query fails
+                        fallback_query = text("SELECT id FROM songs ORDER BY RAND() LIMIT 12")
+                        fallback_df = pd.read_sql(fallback_query, connection)
+                        for _, row in fallback_df.iterrows():
+                            if int(row['id']) not in user_interacted_song_ids:
                                 cf_predictions.append({
                                     'song_id': int(row['id']),
                                     'score': 0.05,
