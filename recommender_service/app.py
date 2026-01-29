@@ -752,7 +752,19 @@ def get_recommendations(user_id):
             all_songs_df = get_cached_songs(connection)
             all_song_ids = all_songs_df['id'].unique()
 
+            # Fetch User Dislikes explicitly to filter them out
+            disliked_song_ids = []
+            try:
+                dislikes_q = text("SELECT DISTINCT s.song_id FROM dislikes d JOIN shares s ON d.share_id = s.id WHERE d.user_id = :uid")
+                dislikes_res = connection.execute(dislikes_q, {'uid': user_id})
+                disliked_song_ids = [row[0] for row in dislikes_res]
+                print(f"User {user_id} disliked {len(disliked_song_ids)} songs.")
+            except Exception as e:
+                print(f"Error fetching dislikes: {e}")
+
             user_interacted_song_ids = get_user_interactions(user_id, connection)
+            # Add dislikes to interactions so they are excluded from candidates
+            user_interacted_song_ids = list(set(user_interacted_song_ids + disliked_song_ids))
             
             # Identify candidates (songs user hasn't seen)
             candidates = [item_id for item_id in all_song_ids if item_id not in user_interacted_song_ids]

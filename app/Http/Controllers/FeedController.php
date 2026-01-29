@@ -47,9 +47,10 @@ class FeedController extends Controller
 
         if ($feedType === 'explore') {
             $shares = Share::inRandomOrder()
-                ->whereDoesntHave('dislikes', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })
+                // User requested to NOT hide disliked posts
+                // ->whereDoesntHave('dislikes', function ($query) use ($user) {
+                //     $query->where('user_id', $user->id);
+                // })
                 ->with(['user', 'likes'])
                 ->paginate(20)
                 ->appends(['feed' => 'explore']);
@@ -62,9 +63,10 @@ class FeedController extends Controller
                                $query->whereIn('user_id', $followingIds)
                                      ->orWhere('user_id', $user->id);
                            })
-                           ->whereDoesntHave('dislikes', function ($query) use ($user) {
-                               $query->where('user_id', $user->id);
-                           })
+                           // User requested to NOT hide disliked posts, just use them for algo
+                           // .whereDoesntHave('dislikes', function ($query) use ($user) {
+                           //    $query->where('user_id', $user->id);
+                           // })
                            ->with(['user', 'likes'])
                            ->latest()
                            ->paginate(20)
