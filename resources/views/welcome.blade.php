@@ -8,7 +8,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,6 +21,7 @@
                     fontFamily: {
                         sans: ['Figtree', 'sans-serif'],
                         display: ['Space Grotesk', 'sans-serif'],
+                        casual: ['Outfit', 'sans-serif'],
                     },
                     colors: {
                         'custom-mid-blue': '#2563EB',
@@ -125,7 +126,7 @@
                 <div class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-custom-mid-blue text-xs font-bold uppercase tracking-wider mb-6">
                     Join the Movement
                 </div>
-                <h1 class="font-display text-5xl md:text-7xl font-bold text-gray-900 leading-tight mb-8 tracking-tight">
+                <h1 class="font-casual text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-8">
                     Social Audio, <br>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-custom-mid-blue to-purple-600">Built for Connection.</span>
                 </h1>
