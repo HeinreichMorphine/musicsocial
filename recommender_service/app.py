@@ -786,56 +786,85 @@ def get_recommendations(user_id):
             # Create fast lookup for song metadata (Artist/Genre)
             songs_metadata = all_songs_df.set_index('id').to_dict('index')
             
-            # Check if user has enough history (Avoid Cold Start)
-            has_history = len(user_interacted_song_ids) >= 5
+            # Check history to determine Strategy Phase
+            num_interactions = len(user_interacted_song_ids)
             
-            if has_history:
-                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions >= 5 (YES). Entering Collaborative Filtering (SVD) Path.")
-            else:
-                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions < 5 (NO). Entering Cold Start (Content-Based) Path.")
+            # PHASE 3: HOT (Deep Personalization via SVD)
+            if num_interactions >= 10:
+                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions >= 10 (HOT). Entering Collaborative Filtering (SVD) Path.")
+                if algo:
+                    # Predict rating for all songs the user hasn't seen yet
+                    for song_id in candidates:
+                        # 1. Base Score: Collaborative Filtering (SVD)
+                        pred = algo.predict(user_id, song_id)
+                        current_score = pred.est
+                        reasons = []
+                        
+                        # 2. Explicit Boost: Artist Match
+                        artist_matched = False
+                        if song_id in songs_metadata:
+                            artist = songs_metadata[song_id]['artist_name']
+                            if artist and artist.lower().strip() in liked_artists:
+                                current_score += 0.4
+                                reasons.append(f"You've enjoyed {artist} before")
+                                artist_matched = True
+                        
+                        # Add genre info if available and not artist matched
+                        if not artist_matched and song_id in songs_metadata:
+                            genres_data = songs_metadata[song_id].get('genres')
+                            if genres_data:
+                                try:
+                                    song_genres = set(g.lower() for g in json.loads(genres_data))
+                                    matching_genres = song_genres.intersection(liked_genres)
+                                    if matching_genres:
+                                        genre_list = list(matching_genres)[:2]
+                                        reasons.append(f"Matches your taste in {', '.join(genre_list)}")
+                                except:
+                                    pass
+                        
+                        if not reasons:
+                            reasons.append("Recommended based on your listening patterns")
+                        
+                        cf_predictions.append({
+                            'song_id': song_id, 
+                            'score': current_score,
+                            'reason': " · ".join(reasons),
+                            'artist_matched': artist_matched
+                        })
 
-            if has_history and algo:
-                # Predict rating for all songs the user hasn't seen yet
-                for song_id in candidates:
-                    # 1. Base Score: Collaborative Filtering (SVD)
-                    pred = algo.predict(user_id, song_id)
-                    current_score = pred.est
-                    reasons = []
-                    
-                    # 2. Explicit Boost: Artist Match
-                    # If this song is by an artist the user likes, give it a significant boost
-                    artist_matched = False
-                    if song_id in songs_metadata:
-                        artist = songs_metadata[song_id]['artist_name']
-                        # Check strictly case-insensitive
-                        if artist and artist.lower().strip() in liked_artists:
-                            current_score += 0.4
-                            reasons.append(f"You've enjoyed {artist} before")
-                            artist_matched = True
-                    
-                    # Add genre info if available and not artist matched
-                    if not artist_matched and song_id in songs_metadata:
-                        genres_data = songs_metadata[song_id].get('genres')
-                        if genres_data:
-                            try:
-                                song_genres = set(g.lower() for g in json.loads(genres_data))
-                                matching_genres = song_genres.intersection(liked_genres)
-                                if matching_genres:
-                                    genre_list = list(matching_genres)[:2]
-                                    reasons.append(f"Matches your taste in {', '.join(genre_list)}")
-                            except:
-                                pass
-                    
-                    # Default reason if no specific match found
-                    if not reasons:
-                        reasons.append("Recommended based on your listening patterns")
-                    
-                    cf_predictions.append({
-                        'song_id': song_id, 
-                        'score': current_score,
-                        'reason': " · ".join(reasons),
-                        'artist_matched': artist_matched
-                    })
+            # PHASE 2: WARM (Content-Based Filtering)
+            elif num_interactions >= 5:
+                print(f"[DIAGRAM_TRACE] 2. Decision: Interactions 5-9 (WARM). Entering Content-Based Filtering Path.")
+                
+                # Fetch user's liked songs with full metadata for TF-IDF
+                user_liked_query = text("""
+                    SELECT DISTINCT so.id, so.artist_name, so.genres
+                    FROM likes l
+                    JOIN shares s ON l.share_id = s.id
+                    JOIN songs so ON s.song_id = so.id
+                    WHERE l.user_id = :user_id
+                    UNION
+                    SELECT DISTINCT so.id, so.artist_name, so.genres
+                    FROM shares s
+                    JOIN songs so ON s.song_id = so.id
+                    WHERE s.user_id = :user_id
+                """)
+                user_liked_songs_df = pd.read_sql(user_liked_query, connection, params={'user_id': user_id})
+                
+                # Try TF-IDF-based similarity
+                cf_predictions = content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df)
+                
+                # Filter out seen songs
+                if cf_predictions:
+                     cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
+                
+                # Fallback to Jaccard if TF-IDF fails
+                if not cf_predictions:
+                    cf_predictions = content_based_similarity(user_id, all_songs_df, liked_genres, liked_artists)
+                    if cf_predictions:
+                         cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
+
+            # PHASE 1: COLD (Popularity)
             else:
                 # --- STEP 3: COLD START (Most Popular Strategy) ---
                 # User has < 5 interactions. Instead of guessing with content-based filtering,

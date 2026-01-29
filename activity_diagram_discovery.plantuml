@@ -21,11 +21,17 @@ start
 :Fetch Recommendations (Service);
 
 |External_API|
-if (Interactions >= 5?) then (Yes)
-    :Collaborative Filtering (Hybrid);
+if (Interactions >= 10?) then (Yes - Hot Start)
+    :Collaborative Filtering (SVD);
     note right
-        Algorithm: **SVD (Singular Value Decomposition)**
-        Matrix Factorization of User-Item Interactions
+        Algorithm: **Matrix Factorization**
+        "Deep Personalization"
+    end note
+elseif (Interactions >= 5?) then (Yes - Warm Start)
+    :Content-Based Filtering;
+    note right
+        Algorithm: **TF-IDF + Cosine**
+        "Find songs like ones you liked"
     end note
 else (No - Cold Start)
     :Popularity-Based Filtering;
