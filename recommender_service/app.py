@@ -585,15 +585,28 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
                     else:
                         reason_parts.append(f"Similar to artists you like")
                 
-                # Add genre info if available
+                # Add genre info only if it actually matches user's taste
                 if pd.notna(song_data.get('genres')):
                     try:
                         genres = json.loads(song_data['genres'])
                         if genres:
-                            reason_parts.append(f"Matches your taste in {genres[0]}")
+                            # We need to know user's liked genres here to be accurate
+                            # Since we don't pass liked_genres to this function, we can infer 
+                            # or just be more generic if we can't verify.
+                            # BETTER: Pass liked_genres or calculate intersection if possible.
+                            # For now, let's just avoid saying "Matches your taste in X" unless we are sure.
+                            # Actually, we can just say "Similar to songs you like" which is true because of TF-IDF.
+                            pass 
                     except:
                         pass
                 
+                # If we have an exact artist match, explicit is better
+                if artist_matched:
+                     pass # Already added "You enjoy [Artist]"
+                else:
+                     # For generic TF-IDF matches, be more generic unless we know the specific feature
+                     reason_parts.append("Similar to songs you shared")
+
                 reason = " · ".join(reason_parts) if reason_parts else 'Matches your music taste'
                 
                 predictions.append({
@@ -846,10 +859,14 @@ def get_recommendations(user_id):
                     if cf_predictions:
                         cf_predictions = [p for p in cf_predictions if p['song_id'] not in user_interacted_song_ids]
                 
-             # If still empty (brand new user with 0 interactions), return global popular songs
-                if not cf_predictions:
-                     print("Cold start: No user history found. Fetching global top songs.")
-                     # Fix: Simplified query to avoid subquery issues and alias sorting problems
+                # --- POPULARITY FALLBACK (Fill if results are sparse) ---
+                # If we have fewer than 10 recommendations, fill the rest with global popular songs.
+                # This ensures even users with very little history get a full list.
+                if len(cf_predictions) < 12:
+                     print(f"Low result count ({len(cf_predictions)}). Filling with global top songs.")
+                     needed = 12 - len(cf_predictions)
+                     
+                     # Simplified popularity query
                      top_songs_query = text("""
                         SELECT s.id as song_id, 
                                (COUNT(l.id) + (SELECT COUNT(*) FROM shares sh WHERE sh.song_id = s.id) * 2) as popularity
@@ -857,14 +874,20 @@ def get_recommendations(user_id):
                         LEFT JOIN likes l ON l.share_id IN (SELECT id FROM shares WHERE song_id = s.id)
                         GROUP BY s.id
                         ORDER BY popularity DESC
-                        LIMIT 20
+                        LIMIT 30
                      """)
                      try:
                          top_songs_df = pd.read_sql(top_songs_query, connection)
                          
+                         # Get existing IDs to avoid duplicates
+                         existing_ids = {p['song_id'] for p in cf_predictions}
+                         
+                         filled_count = 0
                          for _, row in top_songs_df.iterrows():
                              s_id = int(row['song_id'])
-                             if s_id in user_interacted_song_ids:
+                             
+                             # Skip if already in predictions or already seen by user
+                             if s_id in existing_ids or s_id in user_interacted_song_ids:
                                  continue
 
                              cf_predictions.append({
@@ -873,19 +896,21 @@ def get_recommendations(user_id):
                                  'reason': 'Popular in the community'
                              })
                              
-                             if len(cf_predictions) >= 12:
+                             filled_count += 1
+                             if filled_count >= needed:
                                  break
                      except Exception as e:
                          print(f"Error fetching top songs: {e}")
-                         # Fallback to just random songs if query fails
-                         fallback_query = text("SELECT id FROM songs LIMIT 12")
+                         # Fallback to random songs if query fails
+                         fallback_query = text("SELECT id FROM songs ORDER BY RAND() LIMIT 12")
                          fallback_df = pd.read_sql(fallback_query, connection)
                          for _, row in fallback_df.iterrows():
-                             cf_predictions.append({
-                                 'song_id': int(row['id']),
-                                 'score': 0.05,
-                                 'reason': 'Popular in the community'
-                             })
+                             if int(row['id']) not in user_interacted_song_ids:
+                                cf_predictions.append({
+                                    'song_id': int(row['id']),
+                                    'score': 0.05,
+                                    'reason': 'Popular in the community'
+                                })
 
             # --- STEP 4: TRUST-BASED SOCIAL BOOSTING ---
             # This implements a sophisticated trust calculation based on social network theory.
