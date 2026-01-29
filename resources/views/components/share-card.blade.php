@@ -75,15 +75,23 @@
                                     caption: editCaption
                                 })
                             })
-                            .then(response => {
-                                if (!response.ok) throw new Error('Failed to update');
+                            .then(async response => {
+                                if (!response.ok) {
+                                    const contentType = response.headers.get('content-type');
+                                    if (contentType && contentType.includes('application/json')) {
+                                        const data = await response.json();
+                                        throw new Error(data.message || data.error || 'Server Error (' + response.status + ')');
+                                    } else {
+                                        throw new Error('Request failed (' + response.status + ')');
+                                    }
+                                }
                                 return response.json();
                             })
                             .then(data => {
                                 window.reloadWithScroll();
                             })
                             .catch(error => {
-                                alert('Error updating share');
+                                alert(error.message);
                                 console.error(error);
                             })
                         " class="px-3 py-1 text-sm bg-custom-mid-blue text-white rounded-lg hover:bg-custom-dark-blue">Save</button>
