@@ -27,6 +27,7 @@ class SocialAuthController extends Controller
                     'playlist-modify-public',
                     'playlist-modify-private'
                 ])
+                ->with(['show_dialog' => 'true'])
                 ->redirect();
         }
 
