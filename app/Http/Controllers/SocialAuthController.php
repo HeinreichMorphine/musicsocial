@@ -56,6 +56,14 @@ class SocialAuthController extends Controller
             if (Auth::check()) { return redirect()->route('settings.index')->with('error', $msg); }
             return redirect()->route('login')->withErrors(['email' => $msg]);
         } catch (\Exception $e) {
+            // Log the actual error for debugging
+            \Log::error('Spotify OAuth Error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             $msg = 'Unable to login using ' . ucfirst($provider) . '. Please try again.';
             if (Auth::check()) { return redirect()->route('settings.index')->with('error', $msg); }
             return redirect()->route('login')->withErrors(['email' => $msg]);
