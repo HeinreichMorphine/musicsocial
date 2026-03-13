@@ -13,6 +13,15 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <style>
+            /* Scale the entire UI down dynamically on small mobile devices */
+            @media (max-width: 480px) {
+                html {
+                    font-size: clamp(10px, 3.75vw, 16px);
+                }
+            }
+        </style>
     </head>
     <body class="font-sans text-gray-900 antialiased bg-white">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 
 
 
@@ -10,11 +11,25 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
 
 ?>
 
-<nav x-data="{ open: false }" class="sticky top-0 z-50 bg-white/80 dark:bg-black backdrop-blur-md border-b border-indigo-100 dark:border-white/10 transition-colors duration-300">
+<nav x-data="{ 
+    open: false,
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('darkMode', this.darkMode);
+        if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }
+}" class="sticky top-0 z-50 bg-white/80 dark:bg-black backdrop-blur-md border-b border-indigo-100 dark:border-white/10 transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <div class="flex">
-                <div class="shrink-0 flex items-center">
+            <div class="flex items-center">
+                <!-- Mobile Dark Mode Toggle was moved to right side of nav -->
+
+                <div class="shrink-0 flex items-center pl-1 sm:pl-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center" wire:navigate>
                         <img src="{{ asset('icons/reso.png') }}" alt="Platform Logo" class="block h-12 w-auto">
                     </a>
@@ -28,33 +43,29 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-6">
-                <form action="{{ route('user.search') }}" method="GET" class="flex items-center">
-                    <div class="relative">
-                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <form action="{{ route('user.search') }}" method="GET" class="flex items-center" x-data="{ expanded: false }">
+                    <div class="relative flex items-center">
+                        <button type="button" @click="expanded = true; $nextTick(() => $refs.searchInput.focus())" x-show="!expanded" class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" title="Global Search">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                        </span>
-                        <input type="text" name="query" placeholder="Search users, posts and songs..." class="pl-10 pr-4 py-2 border-gray-300 dark:border-white/10 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-300 dark:focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50 rounded-full shadow-sm w-64 text-sm transition-all focus:w-80">
+                        </button>
+                        
+                        <div x-show="expanded" x-transition.opacity.duration.300ms class="relative" @click.away="expanded = false" style="display: none;">
+                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </span>
+                            <input x-ref="searchInput" type="text" name="query" placeholder="Search..." class="pl-10 pr-4 py-2 border-gray-300 dark:border-white/10 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-300 dark:focus:border-indigo-500 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50 rounded-full shadow-sm w-64 text-sm transition-all">
+                        </div>
                     </div>
-                    <!-- <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md">Search</button> -->
                 </form>
 
                 <div class="flex items-center space-x-4">
                     <!-- Dark Mode Toggle -->
-                    <div x-data="{
-                        darkMode: localStorage.getItem('darkMode') === 'true',
-                        toggle() {
-                            this.darkMode = !this.darkMode;
-                            localStorage.setItem('darkMode', this.darkMode);
-                            if (this.darkMode) {
-                                document.documentElement.classList.add('dark');
-                            } else {
-                                document.documentElement.classList.remove('dark');
-                            }
-                        }
-                    }" class="mr-2">
-                        <button @click="toggle()" class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200" title="Toggle Dark Mode">
+                    <div class="mr-2">
+                        <button @click="toggleDarkMode()" class="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 dark:bg-white/5 rounded-full dark:text-gray-400 dark:hover:text-white focus:outline-none transition-colors duration-200" title="Toggle Dark Mode">
                             <!-- Sun Icon (show when dark) -->
                             <svg x-show="darkMode" style="display: none;" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -153,7 +164,8 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                 </x-dropdown>
             </div>
 
-            <div class="-me-2 flex items-center sm:hidden">
+            <div class="flex items-center justify-end flex-1 sm:hidden space-x-3 pr-1">
+                <!-- Existing Mobile Hamburger Button (Only used for settings dropdown when using bottom nav) -->
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

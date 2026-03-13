@@ -1,30 +1,122 @@
 @props(['share', 'paginatedComments' => null, 'totalCount' => null, 'previewComments' => null])
 
 <a href="{{ route('shares.show', $share) }}" class="block text-current no-underline">
-    <div id="share-{{ $share->id }}" class="bg-white/60 dark:bg-black backdrop-blur-md rounded-3xl shadow-sm border border-white/50 dark:border-white/10 p-6 mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20" 
+    <div id="share-{{ $share->id }}" class="bg-white/60 dark:bg-black backdrop-blur-md rounded-3xl shadow-sm border border-white/50 dark:border-white/10 p-4 shrink md:p-6 mb-4 md:mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20" 
          x-data="{ 
             commentsOpen: false, 
             editing: false, 
             editCaption: @js($share->caption),
-            originalCaption: @js($share->caption)
+            originalCaption: @js($share->caption),
+            liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
+            likesCount: {{ $share->likes->count() }},
+            disliked: {{ auth()->check() && auth()->user()->dislikes->contains($share) ? 'true' : 'false' }},
+            bookmarked: {{ auth()->check() && auth()->user()->bookmarks->contains($share) ? 'true' : 'false' }}
          }">
-        <div class="flex space-x-3">
-            <x-user-avatar :user="$share->user" class="h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm shrink-0" />
+        <div class="flex flex-col md:flex-row md:space-x-3">
+            
+            <!-- Mobile Header Row (Visible Only on Mobile) -->
+            <div class="flex md:hidden items-center mb-3 space-x-3 w-full">
+                <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm shrink-0" />
+                <div class="flex-1 min-w-0">
+                    <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
+                    <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
+                </div>
+                <div x-data="{ open: false }" class="relative" x-on:click.stop>
+                    <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+                    </button>
+                    <!-- Copy Dropdown from below for mobile -->
+                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 py-1 ring-1 ring-black/5 dark:ring-white/10" style="display: none;" x-transition>
+                        @if ($share->user->is(auth()->user()))
+                            <!-- Edit Button -->
+                            <button @click="editing = true; open = false;" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                Edit Caption
+                            </button>
+                            
+                            <form @submit.prevent="
+                                if (!confirm('Are you sure you want to delete this share?')) return;
+                                fetch('{{ route('shares.destroy', $share) }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({ _method: 'DELETE' })
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        window.reloadWithScroll();
+                                    }
+                                })
+                            ">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                    Delete Share
+                                </button>
+                            </form>
+                        @else
+                            <!-- Not for me / Dislike -->
+                            <button @click="
+                                open = false;
+                                disliked = !disliked;
+                                if (disliked) {
+                                    if (typeof liked !== 'undefined' && liked) {
+                                        liked = false;
+                                        likesCount--;
+                                    }
+                                }
+                                
+                                fetch('{{ route('shares.dislike', $share) }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    }
+                                })
+                                .then(response => {
+                                    if (!response.ok) throw new Error('Failed');
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    disliked = data.disliked;
+                                    liked = data.liked;
+                                    likesCount = data.likesCount;
+                                })
+                                .catch(err => {
+                                    window.location.reload(); 
+                                });
+                            " class="w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors"
+                            :class="disliked ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                <span x-text="disliked ? 'Undo Not For Me' : 'Not for me'"></span>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
 
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center">
+            <!-- Desktop Avatar (Hidden on Mobile) -->
+            <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm shrink-0" />
+
+            <!-- Main Content Area (Stretches full width on mobile) -->
+            <div class="flex-1 min-w-0 w-full">
+                <!-- Desktop Header Row (Hidden on Mobile) -->
+                <div class="hidden md:flex items-center">
                     <div class="text-left">
                         <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
                         <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
                     </div>
-                    @if ($share->user->is(auth()->user()))
-                        <div x-data="{ open: false }" class="relative ml-auto" x-on:click.stop>
-                            <button @click="open = !open" class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg z-10 py-1 ring-1 ring-black/5" style="display: none;" x-transition>
+                    <div x-data="{ open: false }" class="relative ml-auto" x-on:click.stop>
+                        <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 py-1 ring-1 ring-black/5 dark:ring-white/10" style="display: none;" x-transition>
+                            @if ($share->user->is(auth()->user()))
                                 <!-- Edit Button -->
-                                <button @click="editing = true; open = false;" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <button @click="editing = true; open = false;" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                     Edit Caption
                                 </button>
                                 
@@ -46,17 +138,55 @@
                                 ">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                                         Delete Share
                                     </button>
                                 </form>
-                            </div>
+                            @else
+                                <!-- Not for me / Dislike -->
+                                <button @click="
+                                    open = false;
+                                    disliked = !disliked;
+                                    if (disliked) {
+                                        if (typeof liked !== 'undefined' && liked) {
+                                            liked = false;
+                                            likesCount--;
+                                        }
+                                    }
+                                    
+                                    fetch('{{ route('shares.dislike', $share) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) throw new Error('Failed');
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        disliked = data.disliked;
+                                        liked = data.liked;
+                                        likesCount = data.likesCount;
+                                    })
+                                    .catch(err => {
+                                        window.location.reload(); 
+                                    });
+                                " class="w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors"
+                                :class="disliked ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                    <span x-text="disliked ? 'Undo Not For Me' : 'Not for me'"></span>
+                                </button>
+                            @endif
                         </div>
-                    @endif
+                    </div>
                 </div>
 
                 <!-- Display Mode -->
-                <p class="mt-2 text-gray-800 dark:text-gray-100 text-lg leading-relaxed break-words" x-show="!editing" x-text="editCaption"></p>
+                <p class="mt-2 text-gray-800 dark:text-gray-100 text-base md:text-lg leading-snug md:leading-relaxed break-words" x-show="!editing" x-text="editCaption"></p>
 
                 <!-- Edit Mode -->
                 <div x-show="editing" class="mt-2" style="display: none;" x-on:click.stop>
@@ -98,16 +228,16 @@
                     </div>
                 </div>
 
-                <div class="mt-4 relative overflow-hidden rounded-3xl p-6 group">
+                <div class="mt-3 md:mt-4 relative overflow-hidden rounded-2xl md:rounded-3xl p-4 md:p-6 group">
                      <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover:scale-125" style="background-image: url('{{ $share->song->album_art_url }}');"></div>
                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    <div class="relative flex items-center space-x-6">
-                        <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl shadow-2xl transition-transform duration-300 group-hover:scale-105 shrink-0">
+                    <div class="relative flex items-center space-x-4 md:space-x-6">
+                        <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl md:rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105 shrink-0">
                         <div class="flex-1 min-w-0">
-                            <p class="text-2xl font-bold text-white truncate drop-shadow-md">{{ $share->song->track_name }}</p>
-                            <p class="text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
+                            <p class="text-xl md:text-2xl font-bold text-white truncate drop-shadow-md">{{ $share->song->track_name }}</p>
+                            <p class="text-base md:text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
                             
-                            <div class="flex items-center space-x-3 mt-3">
+                            <div class="flex items-center space-x-3 mt-2 md:mt-3">
                                 <a href="{{ $share->song->spotify_url }}" x-on:click.stop target="_blank" title="Listen on Spotify" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)]">
                                     <svg class="w-8 h-8 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
                                 </a>
@@ -136,16 +266,9 @@
                     </div>
                 </div>
 
-                <div class="mt-5 border-t border-gray-100/50 pt-3" x-on:click.stop
-                    x-data="{
-                        liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
-                        likesCount: {{ $share->likes->count() }},
-                        disliked: {{ auth()->check() && auth()->user()->dislikes->contains($share) ? 'true' : 'false' }},
-                        dislikesCount: {{ $share->dislikes->count() }},
-                        bookmarked: {{ auth()->check() && auth()->user()->bookmarks->contains($share) ? 'true' : 'false' }}
-                    }">
+                <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
                     
-                    <div class="grid grid-cols-4 gap-2 w-full mt-2">
+                    <div class="grid grid-cols-3 gap-1 md:gap-2 w-full mt-1 md:mt-2">
                         <!-- Like Zone -->
                         <form @submit.prevent="
                             liked = !liked;
@@ -197,63 +320,6 @@
                             </button>
                         </form>
 
-                        <!-- Dislike Zone -->
-                        @if ($share->user->isNot(auth()->user()))
-                        <form @submit.prevent="
-                            disliked = !disliked;
-                            if (disliked) {
-                                if (typeof liked !== 'undefined' && liked) {
-                                    liked = false;
-                                    likesCount--;
-                                }
-                            }
-                            
-                            fetch('{{ route('shares.dislike', $share) }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
-                            })
-                            .then(response => {
-                                if (!response.ok) throw new Error('Failed');
-                                return response.json();
-                            })
-                            .then(data => {
-                                // Sync actual state from server to be safe
-                                disliked = data.disliked;
-                                liked = data.liked;
-                                likesCount = data.likesCount;
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                window.location.reload(); // Fallback on error
-                            });
-                        " class="flex justify-center">
-                            @csrf
-                            <button type="submit" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-gray-100 transition-colors group w-full justify-center" title="Not Interested">
-                                <template x-if="disliked">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-red-500">
-                                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                        <path d="M12 13l-1-1 2-2-3-3 2-2" stroke="white" />
-                                    </svg>
-                                </template>
-                                <template x-if="!disliked">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-gray-500 group-hover:text-red-500 transition-colors">
-                                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                        <path d="M12 13l-1-1 2-2-3-3 2-2" />
-                                    </svg>
-                                </template>
-                            </button>
-                        </form>
-                        @else
-                        <div class="flex items-center justify-center text-gray-300 cursor-not-allowed py-2" title="You cannot dislike your own post">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
-                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                <path d="M12 13l-1-1 2-2-3-3 2-2" />
-                            </svg>
-                        </div>
-                        @endif
 
                         <!-- Comment Zone -->
                         <div class="flex justify-center">
@@ -296,7 +362,6 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0111.186 0z" />
                                         </svg>
                                     </template>
-                                    <span x-text="bookmarked ? 'Saved' : 'Save'" class="text-sm font-bold text-gray-600 group-hover:text-yellow-500 transition-colors"></span>
                                 </button>
                             </form>
                         </div>
@@ -341,9 +406,18 @@
                                 let commentSection = wrapper.querySelector('.space-y-4');
                                 commentSection.insertAdjacentHTML('afterbegin', html); // Add to top
                                 newComment = '';
+                                
+                                // Remove placeholder if it exists
+                                let placeholder = commentSection.querySelector('.text-sm.text-gray-500.text-center.py-4');
+                                if (placeholder && placeholder.textContent.includes('No comments yet')) {
+                                    placeholder.remove();
+                                }
+                                
                                 // Update comment count
-                                let countEl = $el.closest('.flex-1').querySelector('.text-gray-600.group-hover\:text-custom-mid-blue');
-                                if(countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+                                let countEl = wrapper.querySelector('span.text-sm.font-bold.text-gray-600');
+                                if (countEl && !isNaN(parseInt(countEl.textContent))) {
+                                    countEl.textContent = parseInt(countEl.textContent) + 1;
+                                }
                             })
                         " class="flex items-center space-x-3 mb-6">
                             @csrf

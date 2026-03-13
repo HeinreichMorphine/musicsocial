@@ -21,6 +21,14 @@
                 document.documentElement.classList.add('dark');
             }
 
+            document.addEventListener('livewire:navigated', () => {
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+
             // Scroll Position Persistence
             window.reloadWithScroll = function() {
                 sessionStorage.setItem('scrollPosition', window.scrollY);
@@ -35,6 +43,21 @@
                 }
             });
         </script>
+        <style>
+            /* Scale the entire UI down dynamically on small mobile devices to prevent element overlapping */
+            @media (max-width: 480px) {
+                html {
+                    font-size: clamp(10px, 3.75vw, 16px);
+                }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(5px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
+        </style>
     </head>
     <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
         <div class="min-h-screen">
@@ -54,11 +77,12 @@
             @include('layouts.navigation')
 
             <!-- Page Content -->
-            <main>
+            <main class="animate-fade-in pb-20 md:pb-0">
                 {{ $slot }}
             </main>
         </div>
         
+        <x-mobile-bottom-nav />
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
         @livewireScripts

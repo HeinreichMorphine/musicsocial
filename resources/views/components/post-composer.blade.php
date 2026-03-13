@@ -131,25 +131,28 @@
         @csrf
         <input type="hidden" name="type" x-model="postType">
 
-        <h3 class="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-8 text-center tracking-tight">
+        <h3 class="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-4 md:mb-8 text-center tracking-tight">
             What are you listening to?
         </h3>
 
         <div class="w-full relative max-w-2xl">
-             <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                    <svg class="h-6 w-6 text-gray-400 group-focus-within:text-custom-mid-blue transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+             <div class="relative group flex items-center">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <x-user-avatar :user="auth()->user()" class="h-10 w-10 border-2 border-white dark:border-gray-800 shadow-sm rounded-full shrink-0" />
                 </div>
                 <input
                     type="text"
-                    class="w-full rounded-full border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-4 pl-16 pr-6 shadow-xl transition-all hover:bg-white dark:hover:bg-gray-800 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-lg"
-                    placeholder="Search song title or artist..."
+                    class="w-full rounded-[2rem] border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-3 md:py-4 pl-16 pr-24 shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-lg"
+                    placeholder="Share a song you're loving..."
                     x-model.debounce.300ms="searchQuery"
                     x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
                     @focus="fetchRecent(); showRecent = true"
                 />
+                <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+                    <button type="button" @click="searchQuery ? search() : $el.previousElementSibling.focus()"
+                            :class="searchQuery.length > 0 ? 'bg-custom-mid-blue text-white shadow-lg border-transparent shadow-blue-500/30' : 'bg-transparent text-gray-400 border border-gray-300 dark:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300'"
+                            class="rounded-full px-5 py-2 font-bold transition-all text-sm">Post</button>
+                </div>
             </div>
 
             <!-- Recently Played Section -->

@@ -81,7 +81,7 @@
             @if($user->cover_photo_path)
                 <div class="mb-4">
                      <p class="text-sm text-gray-500 mb-1">Current Banner:</p>
-                     <img src="{{ $user->cover_photo_url }}" alt="Current Banner" class="w-full h-32 object-cover rounded-lg border border-gray-200">
+                     <img src="{{ $user->cover_photo_url }}" alt="Current Banner" class="w-full aspect-[3/1] object-cover rounded-lg border border-gray-200">
                 </div>
             @endif
 

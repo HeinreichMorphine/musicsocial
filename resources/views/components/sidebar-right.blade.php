@@ -2,8 +2,8 @@
     <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200/50 dark:border-gray-700/50 pb-2">Suggested for you</h3>
     @if (isset($recommendedSongs) && !$recommendedSongs->isEmpty())
         @foreach ($recommendedSongs->take(5) as $song)
-            <a href="{{ $song->spotify_url }}" target="_blank" class="flex items-center space-x-4 group hover:bg-white/40 dark:hover:bg-gray-800 p-2 rounded-xl transition-all duration-300">
-            <div class="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-lg shadow-md">
+            <a href="{{ $song->spotify_url }}" target="_blank" class="flex items-center space-x-3 xl:space-x-4 group hover:bg-white/40 dark:hover:bg-gray-800 p-2 rounded-xl transition-all duration-300">
+            <div class="relative w-12 h-12 xl:w-16 xl:h-16 flex-shrink-0 overflow-hidden rounded-lg shadow-md">
                  <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" src="{{ $song->album_art_url }}" alt="Album Art">
             </div>
             <div class="flex-1 min-w-0">

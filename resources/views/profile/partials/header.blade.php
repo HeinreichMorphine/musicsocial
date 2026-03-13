@@ -7,13 +7,13 @@
     
     <!-- Cover Image -->
     @if($user->cover_photo_url)
-        <div class="h-32 w-full bg-cover bg-center" style="background-image: url('{{ $user->cover_photo_url }}');"></div>
+        <div class="w-full aspect-[3/1] bg-cover bg-center" style="background-image: url('{{ $user->cover_photo_url }}');"></div>
     @else
-        <div class="h-32 bg-gradient-to-r from-blue-400 to-purple-500 w-full object-cover"></div>
+        <div class="w-full aspect-[3/1] bg-gradient-to-r from-blue-400 to-purple-500 object-cover"></div>
     @endif
 
     <div class="px-6 pb-6 text-gray-900 dark:text-gray-100 relative">
-        <div class="flex flex-col sm:flex-row items-end -mt-12 mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-end -mt-12 mb-4">
              <!-- Avatar -->
              <x-user-avatar :user="$user" class="h-24 w-24 border-4 border-white dark:border-gray-800 shadow-lg" />
              

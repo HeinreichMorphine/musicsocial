@@ -4,16 +4,16 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
 
                 <!-- Left Sidebar -->
-                <div class="hidden md:block col-span-2">
+                <div class="hidden md:block md:col-span-4 lg:col-span-3 xl:col-span-2">
                     <div class="sticky top-0 pt-4">
-                        <div class="bg-white/60 backdrop-blur-lg rounded-3xl p-4 border border-white/40 shadow-xl">
+                        <div class="bg-white/60 dark:bg-black backdrop-blur-lg rounded-3xl p-4 border border-white/40 dark:border-white/10 shadow-xl transition-colors duration-300">
                             @include('layouts.navigation-social')
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Content -->
-                <div class="col-span-12 md:col-span-7">
+                <div class="col-span-12 md:col-span-8 lg:col-span-6 xl:col-span-7">
                     
                     <!-- Profile Header (Shared) -->
                     @include('profile.partials.header', ['user' => $user, 'badge' => $badge ?? null])
@@ -22,8 +22,8 @@
                     <div class="space-y-6">
                         
                         <!-- Genre DNA Card -->
-                        <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100">
-                            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="bg-white dark:bg-black overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100 dark:border-white/10">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                 <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">
                                     <span class="text-2xl">🎵</span>
                                 </span>
@@ -50,11 +50,11 @@
                                         @endphp
                                         <div class="group">
                                             <div class="flex justify-between items-center mb-2">
-                                                <span class="text-base font-bold text-gray-800 capitalize">{{ $genre }}</span>
+                                                <span class="text-base font-bold text-gray-800 dark:text-gray-200 capitalize">{{ $genre }}</span>
                                                 <span class="text-sm font-bold {{ $color['text'] }}">{{ $data['percent'] }}%</span>
                                             </div>
                                             <!-- The Hero Section Bars: Thicker (h-4) & Gradient -->
-                                            <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner">
+                                            <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-4 overflow-hidden shadow-inner">
                                                 <div class="bg-gradient-to-r {{ $color['gradient'] }} h-4 rounded-full transition-all duration-1000 ease-out shadow-sm group-hover:scale-x-105 origin-left" style="width: {{ $data['percent'] }}%; min-width: 8%;"></div>
                                             </div>
                                         </div>
@@ -69,8 +69,8 @@
                         </div>
 
                         <!-- Taste Radar Chart -->
-                        <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100">
-                             <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="bg-white dark:bg-black overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100 dark:border-white/10">
+                             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                 <span class="bg-purple-100 text-purple-600 p-2 rounded-lg mr-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
                                         <!-- Outer Ring -->
@@ -152,7 +152,7 @@
                                                             family: "'Figtree', sans-serif",
                                                             weight: 'bold'
                                                         },
-                                                        color: '#374151' // Gray-700
+                                                        color: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#374151'
                                                     },
                                                     ticks: {
                                                         display: false, // Hide numeric ticks
@@ -183,8 +183,8 @@
                         @endif
 
                         <!-- Taste Twins Card -->
-                        <div class="bg-white overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100">
-                             <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="bg-white dark:bg-black overflow-hidden shadow-sm sm:rounded-3xl p-8 border border-gray-100 dark:border-white/10">
+                             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                 <span class="bg-pink-100 text-pink-600 p-2 rounded-lg mr-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                                         <path d="M11.645 20.91a.75.75 0 0 1-1.29 0C8.343 16.63 3.75 12.55 3.75 8.25 3.75 5.399 5.399 3.75 8.25 3.75c1.74 0 3.333.92 4.25 2.336C13.417 4.67 15.01 3.75 16.75 3.75c2.851 0 4.5 1.649 4.5 4.5 0 4.3-4.593 8.38-6.605 10.369a.75.75 0 0 1-1.29-.012Z" />
@@ -196,7 +196,7 @@
                             @if($tasteTwins->isNotEmpty())
                                 <div class="grid grid-cols-1 gap-4">
                                     @foreach($tasteTwins as $twin)
-                                        <div class="flex items-center p-4 rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 bg-white group">
+                                        <div class="flex items-center p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300 bg-white dark:bg-[#121212] group">
                                             <div class="relative">
                                                 <img src="{{ $twin->profile_picture_url }}" alt="{{ $twin->name }}" class="h-16 w-16 rounded-full object-cover border-2 border-white shadow-md">
                                                 <span class="absolute -bottom-1 -right-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">
@@ -206,7 +206,7 @@
                                             
                                             <div class="ml-4 flex-1 min-w-0">
                                                 <div class="flex items-center justify-between">
-                                                    <a href="{{ route('profile.show', $twin->name) }}" class="text-lg font-bold text-gray-900 truncate hover:text-custom-mid-blue transition-colors">
+                                                    <a href="{{ route('profile.show', $twin->name) }}" class="text-lg font-bold text-gray-900 dark:text-white truncate hover:text-custom-mid-blue transition-colors">
                                                         {{ $twin->name }}
                                                     </a>
                                                     @if(auth()->id() !== $twin->id)
@@ -226,7 +226,7 @@
                                                         </svg>
                                                         {{ $twin->match_score }}% Match
                                                      </p>
-                                                     <p class="text-xs text-gray-500 mt-0.5 truncate">
+                                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                                                         {{ $twin->common_ground }}
                                                      </p>
                                                 </div>
@@ -239,9 +239,9 @@
                                     @endforeach
                                 </div>
                             @else
-                                <div class="p-6 text-center bg-gray-50 rounded-2xl">
-                                    <p class="text-gray-500 italic mb-2">No Taste Twins founds yet.</p>
-                                    <p class="text-sm text-gray-400">Share more diverse music to find your tribe!</p>
+                                <div class="p-6 text-center bg-gray-50 dark:bg-white/5 rounded-2xl">
+                                    <p class="text-gray-500 dark:text-gray-400 italic mb-2">No Taste Twins founds yet.</p>
+                                    <p class="text-sm text-gray-400 dark:text-gray-500">Share more diverse music to find your tribe!</p>
                                 </div>
                             @endif
                         </div>
@@ -250,7 +250,7 @@
                 </div>
 
                 <!-- Right Sidebar -->
-                <div class="hidden md:block col-span-3">
+                <div class="hidden lg:block lg:col-span-3">
                     <div class="sticky top-0 pt-4">
                         <x-who-to-follow :usersToSuggest="$usersToSuggest" />
                         <x-sidebar-right :recommendedSongs="$recommendedSongs" />

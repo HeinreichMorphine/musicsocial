@@ -44,6 +44,12 @@
     </script>
     
     <style>
+        /* Scale the entire UI down dynamically on small mobile devices */
+        @media (max-width: 480px) {
+            html {
+                font-size: clamp(10px, 3.75vw, 16px);
+            }
+        }
         .border-inset {
             box-shadow: inset 2px 2px 0px 0px #808080, inset -2px -2px 0px 0px #ffffff;
         }
@@ -123,11 +129,11 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center max-w-4xl mx-auto">
-                <h1 class="font-casual text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-8">
+                <h1 class="font-casual text-4xl sm:text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-8">
                     Social Audio, <br>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-custom-mid-blue to-purple-600">Built for Connection.</span>
                 </h1>
-                <p class="text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+                <p class="text-lg sm:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
                     Reso brings the human element back to music discovery. Find your "Taste Neighbors" and discover music through genuine peer-to-peer recommendations.
                 </p>
             </div>
@@ -155,12 +161,12 @@
                     </div>
 
                     <!-- Browser Body (App Preview) -->
-                    <div class="bg-gray-50 p-6 md:p-8 grid grid-cols-12 gap-8 h-[600px] overflow-hidden relative">
+                    <div class="bg-gray-50 p-4 md:p-8 grid grid-cols-12 gap-8 h-[500px] md:h-[600px] overflow-hidden relative">
                         <!-- Fade Out at bottom -->
                         <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-gray-50 to-transparent z-20 pointer-events-none"></div>
 
                         <!-- Left Nav Mockup -->
-                        <div class="hidden md:block col-span-2">
+                        <div class="hidden md:block md:col-span-4 lg:col-span-3 xl:col-span-2">
                              <div class="bg-white/60 backdrop-blur-lg rounded-3xl p-4 border border-white/40 shadow-sm space-y-4">
                                 <div class="h-6 w-6 bg-custom-mid-blue rounded-full mb-4"></div>
                                 <div class="h-2 bg-gray-200 rounded w-2/3"></div>
@@ -170,7 +176,7 @@
                         </div>
 
                         <!-- Main Feed Area -->
-                        <div class="col-span-12 md:col-span-7 space-y-6">
+                        <div class="col-span-12 md:col-span-8 lg:col-span-6 xl:col-span-7 space-y-6">
                             
                             <!-- Tabs -->
                             <div class="flex space-x-6 border-b border-gray-200 mb-6">
@@ -250,7 +256,7 @@
                         </div>
 
                         <!-- Right Sidebar Mockup -->
-                        <div class="hidden md:block col-span-3">
+                        <div class="hidden lg:block lg:col-span-3">
                             <div class="bg-white/60 backdrop-blur-lg rounded-3xl p-4 border border-white/40 shadow-sm">
                                 <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Suggested People</h3>
                                 <div class="space-y-4">
