@@ -27,9 +27,10 @@ class Share extends Model
     /** @use HasFactory<\Database\Factories\ShareFactory> */
     use HasFactory;
     protected $fillable = [
-    'user_id',
-    'song_id',
-    'caption',
+        'user_id',
+        'song_id',
+        'caption',
+        'type',
     ];
 
     /**

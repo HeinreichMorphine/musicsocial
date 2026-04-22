@@ -46,4 +46,16 @@ class SpotifySearchController extends Controller
 
         return response()->json($formatted);
     }
+
+    /**
+     * Get track details by ID.
+     */
+    public function show($id)
+    {
+        $trackData = $this->spotifyService->getTrack($id);
+        if (isset($trackData['error'])) {
+            return response()->json(['error' => $trackData['error']], 400);
+        }
+        return response()->json($trackData);
+    }
 }

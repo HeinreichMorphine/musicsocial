@@ -36,13 +36,13 @@ class ShareController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:music,text',
+            'type' => 'required|string|in:music,text,recommendation_request',
             'caption' => 'nullable|string|max:1000',
             'spotify_track_id' => 'nullable|string|max:255',
             'youtube_video_id' => 'nullable|string|max:255',
         ]);
 
-        if ($validated['type'] === 'music') {
+        if ($validated['type'] === 'music' || $validated['type'] === 'recommendation_request') {
             if (empty($validated['spotify_track_id']) && empty($validated['youtube_video_id'])) {
                 if ($request->wantsJson()) {
                     return response()->json(['error' => 'Spotify track ID or YouTube video ID is required for music shares.'], 422);
@@ -225,12 +225,27 @@ class ShareController extends Controller
         $totalCommentsCount = $share->comments()->count();
         $previewComments = $share->comments()->latest()->with('user')->take(3)->get();
         
-        // Fetch paginated top-level comments
-        $comments = $share->comments()
+        // Fetch top-level comments
+        $commentsQuery = $share->comments()
             ->whereDoesntHave('parent')
-            ->with(['user', 'replies.user', 'replies.replies.user']) // recursive loading for depth
-            ->latest()
-            ->paginate(10);
+            ->with(['user', 'replies.user', 'replies.replies.user']);
+
+        if ($share->type === 'recommendation_request') {
+            // Fetch all top-level comments to sort them by upvote count in memory
+            // Note: For very large comment sections, a DB column would be better.
+            $comments = $commentsQuery->get()->sortByDesc(fn($c) => $c->getUpvoteCount())->values();
+            // Manually paginate if needed, or just pass the collection for now
+            // Given the 'paginate' call in original code, I'll use simple pagination here
+            $comments = new \Illuminate\Pagination\LengthAwarePaginator(
+                $comments->forPage($request->input('page', 1), 10),
+                $comments->count(),
+                10,
+                $request->input('page', 1),
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            $comments = $commentsQuery->latest()->paginate(10);
+        }
 
         return view('shares.show', [
             'share' => $share,

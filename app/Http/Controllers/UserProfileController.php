@@ -134,7 +134,7 @@ class UserProfileController extends Controller
                 
                 $songHasGenre = false;
                 foreach ($genres as $genre) {
-                    $genre = trim($genre);
+                    $genre = strtolower(trim($genre));
                     if (empty($genre)) continue;
                     
                     if (!isset($genreCounts[$genre])) {
@@ -280,7 +280,7 @@ class UserProfileController extends Controller
               $cleanGenres = str_replace(['[', ']', '"', "'"], '', $genres);
               $list = explode(',', $cleanGenres);
               foreach ($list as $g) {
-                  $g = trim($g);
+                  $g = strtolower(trim($g));
                   if ($g) {
                       if (!isset($genreCounts[$g])) $genreCounts[$g] = 0;
                       $genreCounts[$g]++;

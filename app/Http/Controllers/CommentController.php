@@ -6,12 +6,19 @@ use App\Models\Comment;
 use App\Models\CommentThread;
 use App\Models\Share;
 use Illuminate\Http\Request;
+use App\Services\SpotifyService;
 
 /**
  * Handles the creation, updating, and deletion of comments on music shares.
  */
 class CommentController extends Controller
 {
+    protected $spotifyService;
+
+    public function __construct(SpotifyService $spotifyService)
+    {
+        $this->spotifyService = $spotifyService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -43,10 +50,31 @@ class CommentController extends Controller
             'parent_id' => 'nullable|exists:comments,id',
         ]);
 
+        // Auto-Detect Spotify Track in Comment Body
+        $songId = null;
+        if (preg_match('/https:\/\/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/', $validated['body'], $trackMatches)) {
+            $spotifyTrackId = $trackMatches[1];
+            $trackData = $this->spotifyService->getTrack($spotifyTrackId);
+            if (!isset($trackData['error']) && isset($trackData['song'])) {
+                $songId = $trackData['song']->id;
+            }
+        }
+
+        $body = $validated['body'];
+        if ($songId) {
+            $song = \App\Models\Song::find($songId);
+            if ($song) {
+                // Ensure we don't double add if they already pasted a link that matches
+                if (strpos($body, "[SONG:{$song->spotify_track_id}]") === false) {
+                     $body .= " [SONG:{$song->spotify_track_id}]";
+                }
+            }
+        }
+
         // 2. Create the comment linked to the share and the user
         $comment = $share->comments()->create([
             'user_id' => auth()->id(),
-            'body' => $validated['body'],
+            'body' => $body,
         ]);
 
         // 3. If it's a reply, create a CommentThread record
@@ -187,5 +215,37 @@ class CommentController extends Controller
                 $this->cleanupParent($grandParent);
             }
         }
+    }
+
+    /**
+     * Toggles an upvote for a comment by modifying the body string.
+     */
+    public function toggleUpvote(Share $share, Comment $comment)
+    {
+        $userId = auth()->id();
+        $body = $comment->body;
+
+        if (preg_match('/\[UPVOTES:([^\]]*)\]/', $body, $matches)) {
+            $ids = array_filter(explode(',', $matches[1]));
+            if (in_array((string)$userId, $ids)) {
+                // Remove
+                $ids = array_diff($ids, [(string)$userId]);
+            } else {
+                // Add
+                $ids[] = (string)$userId;
+            }
+            $newList = implode(',', $ids);
+            $body = preg_replace('/\[UPVOTES:[^\]]*\]/', "[UPVOTES:{$newList}]", $body);
+        } else {
+            // Create new
+            $body .= " [UPVOTES:{$userId}]";
+        }
+
+        $comment->update(['body' => $body]);
+
+        return response()->json([
+            'upvoted' => $comment->fresh()->hasUpvoted($userId),
+            'count' => $comment->fresh()->getUpvoteCount(),
+        ]);
     }
 }

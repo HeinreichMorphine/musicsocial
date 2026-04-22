@@ -30,7 +30,7 @@
         <div>
             <x-input-label for="name" :value="__('Name')" class="sr-only" />
             <input id="name" class="block w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm" 
-                   type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Full Name" />
+                   type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="User Name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 

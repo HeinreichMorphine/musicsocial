@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     // Our new routes
     Route::resource('shares', ShareController::class)->only(['store', 'destroy', 'show', 'update']);
     Route::resource('shares.comments', CommentController::class)->only(['store', 'destroy', 'update']);
+    Route::post('/shares/{share}/comments/{comment}/upvote', [CommentController::class, 'toggleUpvote'])->name('shares.comments.upvote');
     Route::post('/shares/{share}/like', [LikeController::class, 'toggle'])->name('shares.like');
     Route::post('/shares/{share}/dislike', [ShareController::class, 'toggleDislike'])->name('shares.dislike');
     Route::post('/shares/{share}/bookmark', [ShareController::class, 'toggleBookmark'])->name('shares.bookmark');
@@ -102,12 +103,14 @@ Route::middleware('auth')->group(function () {
 
     // Spotify search routes
     Route::get('/search/tracks', [SpotifySearchController::class, 'search'])->name('spotify.search');
+    Route::get('/search/tracks/{id}', [SpotifySearchController::class, 'show'])->name('spotify.show');
     Route::get('/spotify/recently-played', [SpotifySearchController::class, 'recentlyPlayed'])->name('spotify.recently-played');
 
     // Spotify Playlist Actions
     Route::get('/spotify/playlists', [App\Http\Controllers\SpotifyPlaylistController::class, 'index'])->name('spotify.playlists.index');
     Route::post('/spotify/playlists/add', [App\Http\Controllers\SpotifyPlaylistController::class, 'addTrack'])->name('spotify.playlists.add');
     Route::post('/spotify/playlists/create', [App\Http\Controllers\SpotifyPlaylistController::class, 'create'])->name('spotify.playlists.create');
+    Route::post('/export-playlist', [App\Http\Controllers\PlaylistExportController::class, 'export'])->name('export-playlist');
 
 
     // Settings route

@@ -420,4 +420,45 @@ class SpotifyService
 
         return true;
     }
+
+    /**
+     * Add multiple tracks to a playlist.
+     *
+     * @param \App\Models\User $user
+     * @param string $playlistId
+     * @param array $trackUris (e.g., ['spotify:track:xxxx', ...])
+     * @return bool
+     */
+    public function addTracksToPlaylist($user, $playlistId, array $trackUris)
+    {
+        if (!$user->spotify_token || empty($trackUris)) return false;
+
+        // Spotify API allows up to 100 tracks per request.
+        $chunks = array_chunk($trackUris, 100);
+        $success = true;
+
+        foreach ($chunks as $chunk) {
+            $response = Http::withToken($user->spotify_token)
+                ->post($this->baseUrl . "playlists/{$playlistId}/tracks", [
+                    'uris' => $chunk
+                ]);
+
+            if ($response->status() === 401 && $user->spotify_refresh_token) {
+                $newToken = $this->refreshUserToken($user);
+                if ($newToken) {
+                    $response = Http::withToken($newToken)
+                        ->post($this->baseUrl . "playlists/{$playlistId}/tracks", [
+                            'uris' => $chunk
+                        ]);
+                }
+            }
+
+            if ($response->failed()) {
+                Log::error('Spotify Add Tracks Error: ' . $response->body());
+                $success = false;
+            }
+        }
+
+        return $success;
+    }
 }

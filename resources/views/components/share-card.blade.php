@@ -10,8 +10,14 @@
             liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
             likesCount: {{ $share->likes->count() }},
             disliked: {{ auth()->check() && auth()->user()->dislikes->contains($share) ? 'true' : 'false' }},
-            bookmarked: {{ auth()->check() && auth()->user()->bookmarks->contains($share) ? 'true' : 'false' }}
-         }">
+            bookmarked: {{ auth()->check() && auth()->user()->bookmarks->contains($share) ? 'true' : 'false' }},
+            type: '{{ $share->type }}',
+            commentSong: null,
+            commentSearch: '',
+            commentResults: [],
+            isSearching: false
+         }"
+         :class="type === 'recommendation_request' ? 'border-custom-mid-blue ring-2 ring-custom-mid-blue/10 shadow-[0_0_40px_-10px_rgba(59,130,246,0.2)] dark:shadow-[0_0_40px_-10px_rgba(59,130,246,0.1)] transition-all' : 'border-white/50 dark:border-white/10'">
         <div class="flex flex-col md:flex-row md:space-x-3">
             
             <!-- Mobile Header Row (Visible Only on Mobile) -->
@@ -108,6 +114,14 @@
                     <div class="text-left">
                         <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
                         <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
+                        @if($share->type === 'recommendation_request')
+                            <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50 uppercase tracking-wider">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4.02-5.53Z" clip-rule="evenodd" />
+                                </svg>
+                                SEEKING RECOMMENDATIONS
+                            </span>
+                        @endif
                     </div>
                     <div x-data="{ open: false }" class="relative ml-auto" x-on:click.stop>
                         <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -397,7 +411,7 @@
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
                                 body: JSON.stringify({
-                                    body: newComment
+                                    body: commentSong ? newComment + ' [SONG:' + commentSong.id + ']' : newComment
                                 })
                             })
                             .then(response => response.text())
@@ -406,6 +420,7 @@
                                 let commentSection = wrapper.querySelector('.space-y-4');
                                 commentSection.insertAdjacentHTML('afterbegin', html); // Add to top
                                 newComment = '';
+                                commentSong = null;
                                 
                                 // Remove placeholder if it exists
                                 let placeholder = commentSection.querySelector('.text-sm.text-gray-500.text-center.py-4');
@@ -419,15 +434,64 @@
                                     countEl.textContent = parseInt(countEl.textContent) + 1;
                                 }
                             })
-                        " class="flex items-center space-x-3 mb-6">
+                        " class="space-y-4 mb-6">
                             @csrf
-                            <x-user-avatar :user="auth()->user()" class="h-8 w-8 border border-gray-200 dark:border-gray-700" />
-                            <x-text-input x-model="newComment" name="body" class="block w-full text-sm rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900 transition-colors dark:text-white" placeholder="Write a comment..." required />
-                            <button type="submit" class="bg-custom-mid-blue text-white rounded-full p-2 hover:bg-custom-dark-blue transition-colors shadow-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                                    <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.925A1.5 1.5 0 004.836 9.25h4.288a.75.75 0 010 1.5H4.836a1.5 1.5 0 00-1.144 1.086l-1.414 4.925a.75.75 0 00.826.95 28.89 28.89 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z" />
-                                </svg>
-                            </button>
+                            
+                            <!-- Search Overlay (Mini) -->
+                            <div x-show="isSearching" class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 border border-gray-200 dark:border-gray-700 shadow-inner" x-transition>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="text" x-model.debounce.300ms="commentSearch" 
+                                        @input="if(commentSearch.length > 2) { 
+                                            fetch('{{ route('spotify.search') }}?query=' + encodeURIComponent(commentSearch))
+                                            .then(r => r.json()).then(d => commentResults = d)
+                                        }"
+                                        class="flex-1 text-sm rounded-lg border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white" placeholder="Search track to recommend...">
+                                    <button type="button" @click="isSearching = false; commentSearch = ''; commentResults = []" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 uppercase text-[10px] font-bold">Close</button>
+                                </div>
+                                <div class="max-h-40 overflow-y-auto space-y-1">
+                                    <template x-for="track in commentResults" :key="track.id">
+                                        <div @click="commentSong = track; isSearching = false; commentSearch = ''; commentResults = []" 
+                                            class="p-2 flex items-center gap-3 hover:bg-white dark:hover:bg-gray-700 rounded-lg cursor-pointer transition">
+                                            <img :src="track.album.images[0]?.url" class="w-8 h-8 rounded shadow-sm">
+                                            <div class="min-w-0">
+                                                <div class="text-xs font-bold text-gray-900 dark:text-white truncate" x-text="track.name"></div>
+                                                <div class="text-[10px] text-gray-500 truncate" x-text="track.artists[0].name"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Attached Track Preview -->
+                            <div x-show="commentSong" class="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl border border-blue-100 dark:border-blue-800/50" x-transition>
+                                <img :src="commentSong?.album.images[0]?.url" class="w-10 h-10 rounded-lg shadow-sm">
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs font-bold text-blue-900 dark:text-blue-100 truncate" x-text="commentSong?.name"></div>
+                                    <div class="text-[10px] text-blue-700 dark:text-blue-300" x-text="commentSong?.artists[0].name"></div>
+                                </div>
+                                <button type="button" @click="commentSong = null" class="text-blue-400 hover:text-red-500 p-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center space-x-3">
+                                <x-user-avatar :user="auth()->user()" class="h-8 w-8 border border-gray-200 dark:border-gray-700" />
+                                <div class="relative flex-1">
+                                    <x-text-input x-model="newComment" name="body" class="block w-full text-sm rounded-full bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900 transition-colors dark:text-white pr-10" placeholder="Write a comment..." required />
+                                    <button type="button" @click="isSearching = true" 
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-custom-mid-blue transition-colors" 
+                                            title="Search for songs">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                            <path d="M18 3a1 1 0 0 0-1.196-.98l-10 2A1 1 0 0 0 6 5v9.114A2.48 2.48 0 0 0 4.5 14a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 2.5-2.5V6.236l9-1.8V12.114A2.48 2.48 0 0 0 14.5 12a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 2.5-2.5V3z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button type="submit" class="bg-custom-mid-blue text-white rounded-full p-2 hover:bg-custom-dark-blue transition-colors shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.925A1.5 1.5 0 004.836 9.25h4.288a.75.75 0 010 1.5H4.836a1.5 1.5 0 00-1.144 1.086l-1.414 4.925a.75.75 0 00.826.95 28.89 28.89 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </form>
 
                         <div class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">

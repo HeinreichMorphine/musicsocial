@@ -1,0 +1,15 @@
+2026-03-14 - Update mobile UI and improve UI consistency
+2026-01-29 - Remove 'Join the Movement' badge and 'Find Your Community' button from hero section
+2026-01-29 - Change hero heading font to casual Outfit for friendlier feel
+2026-01-29 - Change recommender retrain schedule from every 30 minutes to hourly
+2026-01-29 - Add social account unlink feature - Allow users to disconnect Spotify and Google accounts from settings
+2026-01-29 - Add detailed error logging to Spotify OAuth callback to debug connection failures
+2026-01-29 - Fix Spotify Login: Force account selection dialog
+2026-01-29 - Fix Email Logo: Use absolute URL instead of embedding
+2026-01-29 - Configure Resend API Mailer: Install package and set API key env var
+2026-01-29 - Fix 419 Error: Force HTTPS scheme in production
+2026-01-29 - Fix Admin Dashboard Avatars: Use UI Avatars for initials fallback
+2026-01-29 - Allow null passwords for social login users
+2026-01-29 - Fix 419 Page Expired: Trust all proxies for Nginx/SSL
+2026-01-29 - Allow social login users to set password without current password
+2026-01-29 - Fix TypeError: Convert set to list before concatenation

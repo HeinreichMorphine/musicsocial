@@ -18,6 +18,7 @@ class SocialAuthController extends Controller
         // For Spotify, we need specific scopes to read user data and recently played (future proofing)
         if ($provider === 'spotify') {
             return Socialite::driver('spotify')
+                ->stateless()
                 ->scopes([
                     'user-read-email', 
                     'user-read-private', 
@@ -31,7 +32,7 @@ class SocialAuthController extends Controller
                 ->redirect();
         }
 
-        return Socialite::driver($provider)->redirect();
+        return Socialite::driver($provider)->stateless()->redirect();
     }
 
     /**
@@ -50,7 +51,7 @@ class SocialAuthController extends Controller
         }
 
         try {
-            $socialUser = Socialite::driver($provider)->user();
+            $socialUser = Socialite::driver($provider)->stateless()->user();
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
             $msg = 'Invalid state. Please try again.';
             if (Auth::check()) { return redirect()->route('settings.index')->with('error', $msg); }

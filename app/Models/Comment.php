@@ -47,6 +47,53 @@ class Comment extends Model
     }
 
     /**
+     * Get the embedded song data from the body.
+     * Format: [SONG:spotify_id]
+     */
+    public function getEmbeddedSongId()
+    {
+        if (preg_match('/\[SONG:([a-zA-Z0-9]+)\]/', $this->body, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
+    /**
+     * Get the plain text body (without metadata tags).
+     */
+    public function getCleanBody()
+    {
+        $body = preg_replace('/\[SONG:[a-zA-Z0-9]+\]/', '', $this->body);
+        $body = preg_replace('/\[UPVOTES:.*?\]/', '', $body);
+        return trim($body);
+    }
+
+    /**
+     * Get the upvote count from the body.
+     * Format: [UPVOTES:user_id,user_id]
+     */
+    public function getUpvoteCount()
+    {
+        if (preg_match('/\[UPVOTES:([^\]]*)\]/', $this->body, $matches)) {
+            $ids = array_filter(explode(',', $matches[1]));
+            return count($ids);
+        }
+        return 0;
+    }
+
+    /**
+     * Check if a user has upvoted.
+     */
+    public function hasUpvoted($userId)
+    {
+        if (preg_match('/\[UPVOTES:([^\]]*)\]/', $this->body, $matches)) {
+            $ids = explode(',', $matches[1]);
+            return in_array((string)$userId, $ids);
+        }
+        return false;
+    }
+
+    /**
      * Get the parent comment of the current comment.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
