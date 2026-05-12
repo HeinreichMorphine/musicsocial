@@ -186,4 +186,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(SongInteraction::class);
     }
+
+    /**
+     * Get the songs on the user's shelf.
+     */
+    public function shelfSongs()
+    {
+        return $this->hasMany(UserShelfSong::class)->orderBy('position');
+    }
+
+    /**
+     * Get the playlists owned by the user.
+     */
+    public function playlists()
+    {
+        return $this->hasMany(Playlist::class);
+    }
 }

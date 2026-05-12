@@ -52,8 +52,8 @@ class UserShelfController extends Controller
         $internalTrack = $this->spotifyService->getTrack($validated['song_id']);
         if (isset($internalTrack['song'])) {
             SongInteraction::updateOrCreate(
-                ['user_id' => $user->id, 'song_id' => $internalTrack['song']->id, 'type' => 'like'],
-                ['updated_at' => now()]
+                ['user_id' => $user->id, 'song_id' => $internalTrack['song']->id],
+                ['type' => 'like', 'updated_at' => now()]
             );
         }
 

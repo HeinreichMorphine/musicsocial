@@ -342,4 +342,33 @@ class UserProfileController extends Controller
             'recommendedSongs' => $recommendedSongs,
         ]);
     }
+
+    public function shelf($user)
+    {
+        if (is_string($user)) {
+            $userModel = User::where('name', 'like', "%{$user}%")->first();
+            if (!$userModel) {
+                return redirect()->back()->withErrors(['error' => 'User not found.']);
+            }
+            $user = $userModel;
+        }
+
+        $user->load('shelfSongs');
+
+        // Badge Calculation
+        $topGenre = $this->getTopGenre($user);
+        $badge = $topGenre ? "🏆 " . ucfirst($topGenre) . " Lover" : "🎧 Music Explorer";
+
+        // Sidebar Data
+        $currentUser = Auth::user();
+        $usersToSuggest = User::where('id', '!=', $currentUser->id)->limit(5)->get();
+        $recommendedSongs = collect(); 
+
+        return view('profile.shelf', [
+            'user' => $user,
+            'badge' => $badge,
+            'usersToSuggest' => $usersToSuggest,
+            'recommendedSongs' => $recommendedSongs,
+        ]);
+    }
 }

@@ -205,8 +205,8 @@ class PlaylistController extends Controller
         if (!isset($trackData['error']) && isset($trackData['song'])) {
             $song = $trackData['song'];
             SongInteraction::updateOrCreate(
-                ['user_id' => $user->id, 'song_id' => $song->id, 'type' => 'share'],
-                ['created_at' => now(), 'updated_at' => now()]
+                ['user_id' => $user->id, 'song_id' => $song->id],
+                ['type' => 'share', 'created_at' => now(), 'updated_at' => now()]
             );
         }
 

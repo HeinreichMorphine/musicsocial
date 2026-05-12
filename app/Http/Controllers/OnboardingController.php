@@ -52,8 +52,8 @@ class OnboardingController extends Controller
 
             // Save as a "like" for the ML model mapping (TC-02 & TC-05)
             SongInteraction::updateOrCreate(
-                ['user_id' => $user->id, 'song_id' => $song->id, 'type' => 'like'],
-                ['created_at' => now(), 'updated_at' => now()]
+                ['user_id' => $user->id, 'song_id' => $song->id],
+                ['type' => 'like', 'created_at' => now(), 'updated_at' => now()]
             );
         }
 
