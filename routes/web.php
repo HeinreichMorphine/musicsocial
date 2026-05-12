@@ -28,6 +28,13 @@ Route::middleware('guest:admin')->group(function () {
     Route::post('login/admin', [AdminController::class, 'login']);
 });
 
+// Onboarding Routes
+Route::middleware(['auth'])->name('onboarding.')->group(function () {
+    Route::get('/onboarding/genres', [App\Http\Controllers\OnboardingController::class, 'genres'])->name('genres');
+    Route::post('/onboarding/genres', [App\Http\Controllers\OnboardingController::class, 'store'])->name('genres.store');
+    Route::get('/onboarding/skip', [App\Http\Controllers\OnboardingController::class, 'skip'])->name('skip');
+});
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('logout', [AdminController::class, 'logout'])->name('logout');
 
@@ -39,6 +46,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('moderation', [AdminController::class, 'moderation'])->name('moderation');
         Route::delete('shares/{id}', [AdminController::class, 'deleteShare'])->name('shares.delete');
         Route::delete('comments/{id}', [AdminController::class, 'deleteComment'])->name('comments.delete');
+        Route::delete('playlists/{id}', [AdminController::class, 'deletePlaylist'])->name('playlists.delete');
         Route::get('retrain', [AdminController::class, 'retrainPage'])->name('retrain.page');
         Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
         Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
@@ -53,11 +61,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 });
 
+// Routes accessible during onboarding (Auth only, no Onboarding check)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/search/tracks', [SpotifySearchController::class, 'search'])->name('spotify.search');
+    Route::get('/search/tracks/{id}', [SpotifySearchController::class, 'show'])->name('spotify.show');
+});
+
 // Breeze's default dashboard, let's rename it to our Feed
 Route::get('/dashboard', [FeedController::class, 'index'])
-    ->middleware(['auth'])->name('dashboard');
+    ->middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(function () {
     // Breeze's profile routes (for editing your own profile)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -71,6 +85,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/shares/{share}/like', [LikeController::class, 'toggle'])->name('shares.like');
     Route::post('/shares/{share}/dislike', [ShareController::class, 'toggleDislike'])->name('shares.dislike');
     Route::post('/shares/{share}/bookmark', [ShareController::class, 'toggleBookmark'])->name('shares.bookmark');
+    
+    // Playlists routes
+    Route::resource('playlists', App\Http\Controllers\PlaylistController::class)->only(['index', 'store', 'show', 'edit', 'update', 'destroy']);
+    Route::delete('/playlists/{playlist}/songs/{songId}', [App\Http\Controllers\PlaylistController::class, 'removeSong'])->name('playlists.remove-song');
+    Route::post('/playlists/{playlist}/invite', [App\Http\Controllers\PlaylistController::class, 'invite'])->name('playlists.invite');
+    Route::post('/playlists/{playlist}/accept', [App\Http\Controllers\PlaylistController::class, 'acceptInvite'])->name('playlists.accept');
+    Route::post('/playlists/{playlist}/decline', [App\Http\Controllers\PlaylistController::class, 'declineInvite'])->name('playlists.decline');
+    Route::post('/playlists/{playlist}/songs', [App\Http\Controllers\PlaylistController::class, 'addSong'])->name('playlists.add-song');
+    Route::post('/playlists/{playlist}/cover', [App\Http\Controllers\PlaylistController::class, 'updateCover'])->name('playlists.update-cover');
     
     // Song Interactions (Discovery)
     Route::post('/song-interactions', [App\Http\Controllers\SongInteractionController::class, 'store'])->name('song-interactions.store');
@@ -102,8 +125,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/follow', [FollowController::class, 'toggle'])->name('users.follow');
 
     // Spotify search routes
-    Route::get('/search/tracks', [SpotifySearchController::class, 'search'])->name('spotify.search');
-    Route::get('/search/tracks/{id}', [SpotifySearchController::class, 'show'])->name('spotify.show');
     Route::get('/spotify/recently-played', [SpotifySearchController::class, 'recentlyPlayed'])->name('spotify.recently-played');
 
     // Spotify Playlist Actions
@@ -111,13 +132,26 @@ Route::middleware('auth')->group(function () {
     Route::post('/spotify/playlists/add', [App\Http\Controllers\SpotifyPlaylistController::class, 'addTrack'])->name('spotify.playlists.add');
     Route::post('/spotify/playlists/create', [App\Http\Controllers\SpotifyPlaylistController::class, 'create'])->name('spotify.playlists.create');
     Route::post('/export-playlist', [App\Http\Controllers\PlaylistExportController::class, 'export'])->name('export-playlist');
-
+    
+    // Spotify Selective Import
+    Route::get('/playlists/import/spotify', [App\Http\Controllers\SpotifyImportController::class, 'index'])->name('playlists.import.index');
+    Route::post('/playlists/import/spotify/preview', [App\Http\Controllers\SpotifyImportController::class, 'preview'])->name('playlists.import.preview');
+    Route::post('/playlists/import/spotify/process', [App\Http\Controllers\SpotifyImportController::class, 'process'])->name('playlists.import.process');
+    Route::get('/spotify/search-playlists', [App\Http\Controllers\SpotifyImportController::class, 'searchSpotifyPlaylists'])->name('spotify.search-playlists');
 
     // Settings route
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
-    // User profile route
+    // User profile routes
     Route::get('/profile/{user}', [UserProfileController::class, 'show'])->name('user.profile');
+    Route::get('/profile/{user}/shelf', [UserProfileController::class, 'shelf'])->name('profile.shelf');
+    Route::get('/profile/{user}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
+    Route::get('/profile/{user}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
+
+    // Song Shelf CRUD
+    Route::post('/shelf/add', [App\Http\Controllers\UserShelfController::class, 'add'])->name('shelf.add');
+    Route::delete('/shelf/{songId}', [App\Http\Controllers\UserShelfController::class, 'remove'])->name('shelf.remove');
+    Route::post('/shelf/reorder', [App\Http\Controllers\UserShelfController::class, 'reorder'])->name('shelf.reorder');
 
     // Followers and Following routes
     Route::get('/profile/{user}/followers', [FollowerController::class, 'followers'])->name('profile.followers');
@@ -130,7 +164,7 @@ Route::get('auth/{provider}/callback', [App\Http\Controllers\SocialAuthControlle
 Route::post('auth/{provider}/unlink', [App\Http\Controllers\SocialAuthController::class, 'unlink'])->middleware('auth')->name('social.unlink');
 
 
-Route::get('/discovery', [App\Http\Controllers\DiscoveryController::class, 'index'])->middleware(['auth'])->name('discovery');
+Route::get('/discovery', [App\Http\Controllers\DiscoveryController::class, 'index'])->middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->name('discovery');
 
 // Debug Route (Temporary)
 Route::get('/debug-auth', function () {
