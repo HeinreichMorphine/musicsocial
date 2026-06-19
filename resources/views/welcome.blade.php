@@ -102,7 +102,6 @@
                     <span class="font-display font-bold text-2xl tracking-tight text-gray-900">Reso</span>
                 </div>
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-sm font-bold text-gray-600 hover:text-custom-mid-blue transition tracking-wider uppercase">Protocol</a>
                     <a href="#community" class="text-sm font-bold text-gray-600 hover:text-custom-mid-blue transition tracking-wider uppercase">Network</a>
                     @if (Route::has('login'))
                         @auth
@@ -284,98 +283,7 @@
         </div>
     </section>
 
-    <!-- Human First Features (Webcore Aesthetic) -->
-    <section id="features" class="py-24 bg-gray-50 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <!-- Retro Terminal Header -->
-                <div class="inline-block bg-black p-2 mb-4 border-2 border-gray-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] transform -rotate-1">
-                    <span class="font-mono text-green-400 font-bold tracking-widest uppercase text-sm animate-pulse">> HUMAN_FIRST_PROTOCOL_INIT</span>
-                </div>
-                <h2 class="font-mono text-4xl font-bold text-gray-900 mt-2 mb-4 tracking-tighter">RESO.EXE</h2>
-                <p class="font-sans text-gray-600 text-lg border-l-4 border-gray-300 pl-4 text-left bg-gray-200 p-2 font-medium">
-                    <span class="font-bold text-black">System Alert:</span> Algorithms have been disabled. Initiating peer-to-peer aesthetic transfer...
-                </p>
-            </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Feature 1: Taste Neighbors -->
-                <div class="bg-[#C0C0C0] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] group hover:-translate-y-1 transition-transform duration-200">
-                    <!-- Title Bar -->
-                    <div class="bg-gradient-to-r from-[#000080] to-[#1084d0] px-2 py-1 flex justify-between items-center mb-1">
-                        <span class="text-white font-bold font-mono text-sm tracking-wide">NETHOOD.EXE</span>
-                        <div class="flex gap-1">
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[2px]">_</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-gray-300">□</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-red-500 hover:text-white">x</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Window Content -->
-                    <div class="bg-white border-inset border-2 border-gray-400 p-6 h-full flex flex-col items-center text-center">
-                        <div class="mb-4 relative group-hover:animate-bounce">
-                            <img src="{{ asset('icons/network_neighborhood.png') }}" class="w-20 h-20 object-contain pixelated" style="image-rendering: pixelated;" alt="Globe">
-                        </div>
-                        <h3 class="font-mono text-xl font-bold text-black mb-2 highlight-text bg-yellow-200 px-2">Taste Neighbors</h3>
-                        <p class="font-serif text-gray-800 text-sm leading-relaxed">
-                            Scanning for compatible user signals... <br>
-                            We identify other nodes that share your exact frequency. Browse the network neighborhood.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Feature 2: Peer-to-Peer -->
-                <div class="bg-[#C0C0C0] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] group hover:-translate-y-1 transition-transform duration-200">
-                    <!-- Title Bar -->
-                    <div class="bg-gradient-to-r from-[#800080] to-[#d010b0] px-2 py-1 flex justify-between items-center mb-1">
-                        <span class="text-white font-bold font-mono text-sm tracking-wide">P2P_SHARE.DLL</span>
-                         <div class="flex gap-1">
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[2px]">_</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-gray-300">□</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-red-500 hover:text-white">x</button>
-                        </div>
-                    </div>
-
-                    <!-- Window Content -->
-                    <div class="bg-white border-inset border-2 border-gray-400 p-6 h-full flex flex-col items-center text-center">
-                         <div class="mb-4 relative group-hover:rotate-6 transition-transform">
-                             <img src="{{ asset('icons/floppy_disk.png') }}" class="w-20 h-20 object-contain pixelated" style="image-rendering: pixelated;" alt="Floppy">
-                        </div>
-                        <h3 class="font-mono text-xl font-bold text-black mb-2 highlight-text bg-green-200 px-2">Peer-to-Peer</h3>
-                        <p class="font-serif text-gray-800 text-sm leading-relaxed">
-                            Direct file transfer... <br>
-                            Every recommendation is a data packet from a real human. No bot traffic allowed.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Feature 3: Deep Conversation -->
-                <div class="bg-[#C0C0C0] p-1 border-t-2 border-l-2 border-white border-b-2 border-r-2 border-gray-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] group hover:-translate-y-1 transition-transform duration-200">
-                    <!-- Title Bar -->
-                    <div class="bg-gray-800 px-2 py-1 flex justify-between items-center mb-1">
-                        <span class="text-green-400 font-bold font-mono text-sm tracking-wide">CHAT_ROOM_v1.0</span>
-                         <div class="flex gap-1">
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[2px]">_</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-gray-300">□</button>
-                            <button class="w-4 h-4 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-gray-800 flex items-center justify-center text-[8px] font-bold shadow-sm pt-[1px] pl-[1px] hover:bg-red-500 hover:text-white">x</button>
-                        </div>
-                    </div>
-
-                    <!-- Window Content -->
-                    <div class="bg-black border-inset border-2 border-gray-600 p-6 h-full flex flex-col items-center text-center">
-                         <div class="mb-4 relative">
-                            <img src="{{ asset('icons/share.png') }}" class="w-20 h-20 object-contain pixelated" style="image-rendering: pixelated;" alt="Computer">
-                        </div>
-                        <h3 class="font-mono text-xl font-bold text-green-400 mb-2 underline decoration-wavy decoration-green-600">Deep Conv{o}</h3>
-                        <p class="font-mono text-green-200 text-sm leading-relaxed">
-                            > User joined channel.<br>
-                            Move beyond binary likes. Initiate threaded discussions about lyrics, beats, and memories.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
      <!-- Community Section (Revised Visual) -->
     <section id="community" class="py-24 bg-gray-900 text-white relative overflow-hidden">
