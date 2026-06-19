@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Song;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class YouTubeService
 {
@@ -19,31 +20,60 @@ class YouTubeService
     }
 
     /**
-     * Search for a single video and return its details.
+     * Search for a single embeddable video and return its details.
      *
      * @param string $query
      * @return array|null
      */
     public function searchVideo(string $query)
     {
+        $cacheKey = 'yt_search_' . md5($query);
+
+        // 1. Check cache manually first to avoid caching failures
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        // 2. Fetch results with native embeddable filtering
         $response = Http::timeout(30)->get($this->baseUrl . 'search', [
             'key' => $this->apiKey,
             'part' => 'snippet',
-            'q' => $query,
+            'q' => $query . ' official',
             'type' => 'video',
-            'maxResults' => 1,
+            'videoEmbeddable' => 'true', // Native filter saves us a second API call!
+            'maxResults' => 1, // We only need the top result now
         ]);
 
-        if ($response->failed() || empty($response->json('items'))) {
+        // 3. Handle Quota/API Errors (Do NOT cache these so we can retry after reset)
+        if ($response->failed()) {
+            $error = $response->json('error.message') ?? 'Unknown error';
+            if (str_contains(strtolower($error), 'quota')) {
+                \Log::error('YouTube API Quota Exceeded! Searches will fail until reset.');
+            } else {
+                \Log::warning('YouTube Search API failed: ' . $error);
+            }
+            return null; 
+        }
+
+        // 4. Handle "Legitimately No Results" (Safe to cache so we don't spam the API)
+        if (empty($response->json('items'))) {
+            \Log::info('YouTube Search found 0 items for query: ' . $query);
+            Cache::put($cacheKey, null, now()->addDay());
             return null;
         }
 
-        $item = $response->json('items')[0];
-
-        return [
-            'video_id' => $item['id']['videoId'],
-            'url' => 'https://www.youtube.com/watch?v=' . $item['id']['videoId'],
+        // 5. Process Successful Result
+        $videoId = $response->json('items')[0]['id']['videoId'];
+        
+        $result = [
+            'video_id' => $videoId,
+            'url' => 'https://www.youtube.com/watch?v=' . $videoId,
         ];
+
+        // Cache the successful result for 24 hours
+        Cache::put($cacheKey, $result, now()->addDay());
+
+        return $result;
     }
 
     /**

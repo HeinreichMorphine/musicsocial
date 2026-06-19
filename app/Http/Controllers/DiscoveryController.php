@@ -93,7 +93,7 @@ class DiscoveryController extends Controller
 
                 $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
                     $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
-                    // Pass debug info if needed, but for now just reason
+                    $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
                     return $song;
                 });
             } else {

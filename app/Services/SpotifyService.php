@@ -62,6 +62,32 @@ class SpotifyService
     }
 
     /**
+     * Get raw track data from Spotify.
+     *
+     * @param string $trackId
+     * @return array|null
+     */
+    public function getRawTrack(string $trackId)
+    {
+        $token = $this->getAccessToken();
+        if (!$token) {
+            Log::error('Cannot get raw track; Spotify access token is missing.');
+            return null;
+        }
+
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'tracks/' . $trackId);
+
+        if ($response->failed()) {
+            Log::error("Spotify Raw Track API Error ({$response->status()}): " . $response->body());
+            return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
      * Get a single track's details from Spotify and create/update a Song model.
      *
      * @param string $trackId
@@ -89,6 +115,14 @@ class SpotifyService
 
         $primaryArtistName = implode(', ', array_map(fn($a) => $a['name'], $track['artists']));
 
+        // Normalize release_date for database compatibility (Spotify sometimes returns only 'YYYY')
+        $releaseDate = $track['album']['release_date'] ?? null;
+        if ($releaseDate && strlen($releaseDate) === 4) {
+            $releaseDate .= '-01-01';
+        } elseif ($releaseDate && strlen($releaseDate) === 7) {
+            $releaseDate .= '-01';
+        }
+
         // Create or update Song model
         $song = Song::firstOrCreate(
             ['spotify_track_id' => $trackId],
@@ -97,7 +131,7 @@ class SpotifyService
                 'artist_name' => $primaryArtistName,
                 'album_art_url' => $track['album']['images'][0]['url'] ?? null,
                 'genres' => !empty($genres) ? json_encode($genres) : null,
-                'release_date' => $track['album']['release_date'] ?? null,
+                'release_date' => $releaseDate,
                 'spotify_url' => $track['external_urls']['spotify'] ?? '#',
             ]
         );
@@ -339,7 +373,27 @@ class SpotifyService
             return [];
         }
 
-        return $response->json('items') ?? [];
+        $allPlaylists = $response->json('items') ?? [];
+        
+        // Ensure we have the user's Spotify ID to filter by owner
+        $spotifyId = $user->spotify_id;
+        if (!$spotifyId) {
+            $profileResponse = Http::withToken($user->spotify_token)->get($this->baseUrl . 'me');
+            if ($profileResponse->successful()) {
+                $spotifyId = $profileResponse->json('id');
+                // Use updateQuietly or similar if we don't want to trigger observers, 
+                // but standard update is fine here.
+                $user->update(['spotify_id' => $spotifyId]);
+            }
+        }
+
+        if (!$spotifyId) {
+            return $allPlaylists; // Fallback to all if still missing
+        }
+
+        return array_values(array_filter($allPlaylists, function($playlist) use ($spotifyId) {
+            return ($playlist['owner']['id'] ?? '') === $spotifyId;
+        }));
     }
 
     /**
@@ -362,7 +416,7 @@ class SpotifyService
         $response = Http::withToken($user->spotify_token)
             ->post($this->baseUrl . "users/{$spotifyUserId}/playlists", [
                 'name' => $name,
-                'description' => 'Created via MusicSocial',
+                'description' => 'Created via Reso',
                 'public' => false
             ]);
 
@@ -372,7 +426,7 @@ class SpotifyService
                 $response = Http::withToken($newToken)
                     ->post($this->baseUrl . "users/{$spotifyUserId}/playlists", [
                         'name' => $name,
-                        'description' => 'Created via MusicSocial',
+                        'description' => 'Created via Reso',
                         'public' => false
                     ]);
             }
@@ -460,5 +514,55 @@ class SpotifyService
         }
 
         return $success;
+    }
+    /**
+     * Get multiple tracks' details from a Spotify playlist.
+     *
+     * @param string $playlistId
+     * @return array|null
+     */
+    public function getPlaylistTracks(string $playlistId)
+    {
+        $token = $this->getAccessToken();
+        if (!$token) return null;
+
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'playlists/' . $playlistId);
+
+        if ($response->failed()) {
+            Log::error('Spotify Playlist API Error: ' . $response->status() . ' - ' . $response->body());
+            return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Search for playlists on Spotify.
+     *
+     * @param string $query
+     * @param int $limit
+     * @return array
+     */
+    public function searchPlaylists($query, $limit = 10)
+    {
+        $token = $this->getAccessToken();
+        if (!$token) return [];
+
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . 'search', [
+                'q' => $query,
+                'type' => 'playlist',
+                'limit' => $limit,
+            ]);
+
+        if ($response->failed()) {
+            Log::error('Spotify Search Playlists Error: ' . $response->status());
+            return [];
+        }
+
+        return $response->json('playlists.items') ?? [];
     }
 }

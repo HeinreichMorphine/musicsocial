@@ -1,4 +1,4 @@
-<x-app-layout pageTitle="Select Tracks to Import">
+<x-app-layout pageTitle="Import your Spotify Playlist">
     <div class="py-4 sm:py-12 min-h-screen" x-data="{ 
         selectedTracks: [], 
         maxSelection: 15,
@@ -15,7 +15,8 @@
         },
         deselectAll() {
             this.selectedTracks = [];
-        }
+        },
+        isImporting: false
     }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
             
@@ -50,7 +51,7 @@
                         <img src="{{ $playlist_image }}" alt="Playlist Cover" class="w-20 h-20 md:w-32 md:h-32 rounded-2xl object-cover shadow-xl border border-white/10">
                     @endif
                     <div class="flex-1 text-center md:text-left">
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white leading-tight">Curate: {{ $playlist_name }}</h2>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white leading-tight">Playlist: {{ $playlist_name }}</h2>
                         <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Select your absolute favorites to import.</p>
                     </div>
                     
@@ -82,7 +83,7 @@
                     <!-- New Playlist Name Input -->
                     <div class="bg-white dark:bg-black rounded-3xl p-6 border border-gray-100 dark:border-white/10 shadow-sm flex flex-col sm:flex-row gap-4 sm:items-end">
                         <div class="flex-1">
-                            <label for="playlist_name" class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">New MusicSocial Playlist Name</label>
+                            <label for="playlist_name" class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">New Playlist Name</label>
                             <input type="text" name="playlist_name" id="playlist_name" 
                                    class="w-full bg-gray-50 dark:bg-black border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white rounded-2xl px-5 py-3 focus:ring-indigo-500 font-bold" 
                                    value="{{ $playlist_name }}" required>
@@ -175,10 +176,22 @@
                             <div class="flex-1 flex gap-2">
                                 <a href="{{ route('playlists.import.index') }}" class="flex-1 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-900 dark:text-white font-bold py-3 rounded-2xl text-center transition">Cancel</a>
                                 <button type="submit" 
-                                        :disabled="selectedTracks.length === 0"
+                                        :disabled="selectedTracks.length === 0 || isImporting"
+                                        @click="isImporting = true"
                                         :class="selectedTracks.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-50'"
-                                        class="flex-[2] text-white font-black py-3 rounded-2xl shadow-xl transition transform hover:-translate-y-1 disabled:transform-none">
-                                    Import Selected
+                                        class="flex-[2] text-white font-black py-3 rounded-2xl shadow-xl transition transform hover:-translate-y-1 disabled:transform-none flex items-center justify-center gap-3">
+                                    <template x-if="!isImporting">
+                                        <span>Import Selected</span>
+                                    </template>
+                                    <template x-if="isImporting">
+                                        <span class="flex items-center gap-2">
+                                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Importing...
+                                        </span>
+                                    </template>
                                 </button>
                             </div>
                         </div>

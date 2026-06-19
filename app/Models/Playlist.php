@@ -15,6 +15,8 @@ class Playlist extends Model
         'cover_image',
     ];
 
+    protected $appends = ['cover_image_url'];
+
     public function collaborators()
     {
         return $this->hasMany(PlaylistCollaborator::class);
@@ -42,7 +44,7 @@ class Playlist extends Model
             return $firstSong->song->album_art_url;
         }
 
-        return '';
+        return asset('icons/reso.png');
     }
 
     public function creator()

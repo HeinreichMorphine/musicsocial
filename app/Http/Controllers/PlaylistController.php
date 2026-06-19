@@ -94,8 +94,8 @@ class PlaylistController extends Controller
 
         $playlist->load(['songs.addedBy', 'collaborators.user']);
 
-        // Fetch users the current user follows, so they can invite them
-        $following = $user->following()->get();
+        // Fetch users the current user follows and who follow back (mutuals)
+        $following = $user->friends()->get();
 
         // Sidebar Data
         $usersToSuggest = User::where('id', '!=', $user->id)
@@ -199,18 +199,27 @@ class PlaylistController extends Controller
             'added_by_user_id' => $user->id
         ]);
 
-        // TC-09: High-effort Interaction (c_ui = 3 pts)
-        // Adding to a shared playlist is treated as a 'share' for maximum affinity boost
+        // Record as a song interaction for Discovery page exclusion filtering.
+        // Note: The recommender's SVD training weight (2.0 pts) comes from the
+        // playlist_songs table directly, NOT from this SongInteraction entry.
+        // This entry just ensures the song is marked as "seen" so it won't
+        // be re-recommended on the Discovery page.
         $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
         if (!isset($trackData['error']) && isset($trackData['song'])) {
             $song = $trackData['song'];
             SongInteraction::updateOrCreate(
                 ['user_id' => $user->id, 'song_id' => $song->id],
-                ['type' => 'share', 'created_at' => now(), 'updated_at' => now()]
+                ['type' => 'like', 'created_at' => now(), 'updated_at' => now()]
             );
         }
 
-        return response()->json(['success' => true]);
+        $playlistSong->load(['addedBy']);
+        
+        return response()->json([
+            'success' => true,
+            'playlist_song' => $playlistSong,
+            'song' => $song ?? null
+        ]);
     }
 
     public function updateCover(Request $request, Playlist $playlist)
@@ -279,11 +288,18 @@ class PlaylistController extends Controller
         }
 
         // Delete cover image if it exists
-        if ($playlist->cover_image) {
-            \Illuminate\Support\Facades\Storage::delete($playlist->cover_image);
+        if ($playlist->cover_image && !str_starts_with($playlist->cover_image, 'http')) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($playlist->cover_image);
         }
 
+        // Explicitly detach to avoid any FK constraints if cascade fails
+        $playlist->songs()->delete();
+        $playlist->collaborators()->delete();
         $playlist->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Playlist deleted successfully.']);
+        }
 
         return redirect()->route('playlists.index')->with('success', 'Playlist deleted successfully.');
     }
@@ -305,6 +321,10 @@ class PlaylistController extends Controller
         }
 
         $playlistSong->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return back()->with('success', 'Song removed from playlist.');
     }

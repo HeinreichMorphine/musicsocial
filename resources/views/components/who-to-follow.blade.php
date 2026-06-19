@@ -1,6 +1,6 @@
 @props(['usersToSuggest'])
 
-<div class="bg-white/60 dark:bg-black backdrop-blur-lg rounded-3xl p-6 border border-white/40 dark:border-white/10 shadow-xl mb-6">
+<div class="bg-white/60 dark:bg-black backdrop-blur-lg rounded-3xl p-5 border border-white/40 dark:border-white/10 shadow-xl mb-6">
     <div class="text-gray-900 dark:text-white">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Who to Follow</h3>
 
@@ -33,7 +33,7 @@
                     <button type="submit" 
                             x-text="followed ? 'Unfollow' : 'Follow'" 
                             :class="followed ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/30'" 
-                            class="shrink-0 text-white text-xs font-bold py-1.5 px-3 xl:py-2 xl:px-5 rounded-full transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            class="shrink-0 text-white text-xs font-bold py-1.5 px-3 xl:py-2 xl:px-4 rounded-full transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     </button>
                 </form>
             </div>

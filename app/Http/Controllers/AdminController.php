@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Share;
 use App\Models\Comment;
@@ -38,20 +39,53 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        $userCount = User::count();
-        $shareCount = Share::count();
+        $userCount    = User::count();
+        $shareCount   = Share::count();
         $commentCount = Comment::count();
+        $songCount    = \App\Models\Song::count();
+        $playlistCount = \App\Models\Playlist::count();
 
-        $latestUsers = User::latest()->take(5)->get();
+        $latestUsers  = User::latest()->take(5)->get();
         $latestShares = Share::with('user', 'song')->latest()->take(5)->get();
-        
-        return view('admin.dashboard', compact('userCount', 'shareCount', 'commentCount', 'latestUsers', 'latestShares'));
+
+        // Daily share activity for the last 7 days (Chart.js)
+        $activityLabels = [];
+        $activityData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $activityLabels[] = now()->subDays($i)->format('M j');
+            $activityData[]   = Share::whereDate('created_at', $date)->count();
+        }
+
+        // Top 5 genres from songs table
+        $topGenres = \Illuminate\Support\Facades\DB::table('songs')
+            ->select(\Illuminate\Support\Facades\DB::raw('genres, COUNT(*) as count'))
+            ->whereNotNull('genres')
+            ->groupBy('genres')
+            ->orderByDesc('count')
+            ->limit(5)
+            ->get();
+
+        return view('admin.dashboard', compact(
+            'userCount', 'shareCount', 'commentCount',
+            'songCount', 'playlistCount',
+            'latestUsers', 'latestShares',
+            'activityLabels', 'activityData',
+            'topGenres'
+        ));
     }
 
     public function users()
     {
-        $users = User::paginate(10);
-        return view('admin.users', compact('users'));
+        $search = request('search');
+        $users = User::withCount('shares')
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%")
+                                        ->orWhere('email', 'like', "%{$search}%"))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.users', compact('users', 'search'));
     }
 
     public function banUser($id)
@@ -72,14 +106,36 @@ class AdminController extends Controller
 
     public function moderation()
     {
-        $shares = Share::with('user')->latest()->paginate(10);
-        $comments = Comment::with('user')->latest()->paginate(10);
-        return view('admin.moderation', compact('shares', 'comments'));
+        $search   = request('search');
+        $shares   = Share::with('user', 'song')
+            ->withCount('likes')
+            ->when($search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%")))
+            ->latest()->paginate(12)->withQueryString();
+        $comments = Comment::with('user')
+            ->when($search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                                        ->orWhere('body', 'like', "%{$search}%"))
+            ->latest()->paginate(12)->withQueryString();
+
+        return view('admin.moderation', compact('shares', 'comments', 'search'));
     }
 
     public function deleteShare($id)
     {
-        Share::destroy($id);
+        $share = Share::findOrFail($id);
+        
+        // Manual cleanup to ensure no FK constraint failures
+        \App\Models\Like::where('share_id', $share->id)->delete();
+        \App\Models\Bookmark::where('share_id', $share->id)->delete();
+        \App\Models\Notification::where('data->share_id', $share->id)->delete();
+        \App\Models\SongInteraction::where('share_id', $share->id)->delete();
+        
+        // Delete comments manually if they aren't cascading
+        foreach ($share->comments as $comment) {
+            \App\Models\Upvote::where('comment_id', $comment->id)->delete();
+            $comment->delete();
+        }
+
+        $share->delete();
         return redirect()->back()->with('success', 'Share deleted successfully.');
     }
 
@@ -214,5 +270,14 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error calling Recommender Service: ' . $e->getMessage());
         }
+    }
+
+    public function markAllNotificationsRead()
+    {
+        $admin = Auth::guard('admin')->user();
+        if ($admin) {
+            $admin->unreadNotifications->markAsRead();
+        }
+        return redirect()->back()->with('success', 'All notifications marked as read.');
     }
 }

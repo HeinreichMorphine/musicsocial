@@ -51,7 +51,7 @@ class FeedController extends Controller
                 // ->whereDoesntHave('dislikes', function ($query) use ($user) {
                 //     $query->where('user_id', $user->id);
                 // })
-                ->with(['user', 'likes'])
+                ->with(['user', 'song', 'likes'])
                 ->paginate(20)
                 ->appends(['feed' => 'explore']);
         } else {
@@ -67,7 +67,7 @@ class FeedController extends Controller
                            // .whereDoesntHave('dislikes', function ($query) use ($user) {
                            //    $query->where('user_id', $user->id);
                            // })
-                           ->with(['user', 'likes'])
+                           ->with(['user', 'song', 'likes'])
                            ->latest()
                            ->paginate(20)
                            ->appends(['feed' => 'following']);

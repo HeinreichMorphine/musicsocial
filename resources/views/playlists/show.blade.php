@@ -50,17 +50,27 @@
                             </div>
                         </div>
                         <div class="flex-1 w-full">
-                            <span class="text-indigo-500 font-bold tracking-wider text-[10px] uppercase flex items-center gap-2 mb-2 bg-indigo-500/10 w-fit px-2 py-0.5 rounded-full">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                Collaborative
-                            </span>
+                            <div class="flex items-center gap-2 mb-2">
+                                @if(str_contains($playlist->description, 'Imported'))
+                                    <span class="text-emerald-500 font-bold tracking-wider text-[10px] uppercase flex items-center gap-2 bg-emerald-500/10 w-fit px-2 py-0.5 rounded-full">
+                                        Imported
+                                    </span>
+                                @else
+                                    <span class="text-indigo-500 font-bold tracking-wider text-[10px] uppercase flex items-center gap-2 bg-indigo-500/10 w-fit px-2 py-0.5 rounded-full">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                        Playlist
+                                    </span>
+                                @endif
+                            </div>
                             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">{{ $playlist->name }}</h1>
                             <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm max-w-xl">{{ $playlist->description ?? 'Collaborate and build the perfect vibe together.' }}</p>
                             
                             <div class="mt-6 flex flex-wrap items-center gap-4">
                                 <div class="flex -space-x-2">
                                     @foreach($playlist->collaborators->where('status', 'accepted') as $collaborator)
-                                        <img class="w-9 h-9 rounded-full border-2 border-white dark:border-black object-cover shadow-sm hover:scale-110 transition-transform cursor-help" src="{{ $collaborator->user->profile_picture_url }}" title="{{ $collaborator->user->name }} ({{ ucfirst($collaborator->role) }})">
+                                        <x-user-avatar :user="$collaborator->user" 
+                                            class="w-9 h-9 border-2 border-white dark:border-black shadow-sm hover:scale-110 transition-transform cursor-help" 
+                                            title="{{ $collaborator->user->name }} ({{ ucfirst($collaborator->role) }})" />
                                     @endforeach
                                 </div>
                                 <button x-data @click="$dispatch('open-modal', 'invite-collaborator')" class="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-bold px-4 py-2 rounded-full transition border border-gray-200 dark:border-gray-700 flex items-center gap-2 shadow-sm">
@@ -73,7 +83,7 @@
                 </div>
 
                 <!-- Add Song Search Bar -->
-                <div x-data="playlistApp({{ $playlist->id }})">
+                <div x-data="playlistApp({{ $playlist->id }}, {{ $playlist->songs->sortByDesc('created_at')->values()->toJson() }})">
                     <div class="relative max-w-xl">
                         <input type="text" x-model="searchQuery" @input.debounce.500ms="performSearch"
                                class="w-full bg-white dark:bg-black border border-gray-100 dark:border-white/10 text-gray-900 dark:text-white rounded-2xl px-5 py-4 pl-12 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition placeholder-gray-500"
@@ -91,9 +101,13 @@
                                             <p class="text-gray-500 text-xs truncate" x-text="track.artists.map(a => a.name).join(', ')"></p>
                                         </div>
                                     </div>
-                                    <button @click="addSong(track)" :disabled="isAdding" class="ml-4 text-xs font-bold px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow transition shrink-0">
-                                        Add
-                                    </button>
+                                    <button @click="addSong(track)" :disabled="isAdding" class="ml-4 text-xs font-bold px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow transition shrink-0 flex items-center justify-center min-w-[64px]">
+                                         <span x-show="!isAdding">Add</span>
+                                         <svg x-show="isAdding" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                         </svg>
+                                     </button>
                                 </div>
                             </template>
                         </div>
@@ -103,35 +117,34 @@
                     <div class="mt-8 bg-white dark:bg-black rounded-3xl p-4 sm:p-6 border border-gray-100 dark:border-white/10 shadow-sm relative overflow-hidden">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Tracklist</h3>
-                            <span class="text-xs text-gray-500 font-bold uppercase tracking-widest">{{ $playlist->songs->count() }} Tracks</span>
+                            <span class="text-xs text-gray-500 font-bold uppercase tracking-widest" x-text="playlistSongs.length + ' Tracks'"></span>
                         </div>
 
-                        @if($playlist->songs->isEmpty())
-                            <div class="text-center py-16">
-                                <div class="w-16 h-16 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                                </div>
-                                <p class="text-gray-400 text-sm">Playlist is empty. Add some tracks above!</p>
+                        <div x-show="playlistSongs.length === 0" class="text-center py-16">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
                             </div>
-                        @else
-                            <div class="space-y-4">
-                                @foreach($playlist->songs->sortByDesc('created_at') as $ps)
-                                <div x-data="{ track: null }" x-init="fetch('/search/tracks/{{ $ps->song_id }}').then(r => r.json()).then(d => track = d.song || d).catch(e => console.log(e))" class="flex flex-col group p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
+                            <p class="text-gray-400 text-sm">Playlist is empty. Add some tracks above!</p>
+                        </div>
+
+                        <div class="space-y-4" x-show="playlistSongs.length > 0">
+                            <template x-for="ps in playlistSongs" :key="ps.id + '-' + ps.song_id">
+                                <div x-data="trackRow(ps.song_id)" class="flex flex-col group p-2 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
                                     <div class="flex items-center gap-4 w-full">
                                         <div class="flex-1 flex items-center gap-4 min-w-0">
-                                        <div x-show="track" class="flex-1 flex items-center gap-4 min-w-0" style="display: none;">
-                                            <img :src="track?.album_art_url || track?.album?.images[0]?.url" class="w-12 h-12 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform">
+                                            <div x-show="track" class="flex-1 flex items-center gap-4 min-w-0" style="display: none;">
+                                                <img :src="track?.album_art_url || track?.album?.images?.[0]?.url" class="w-12 h-12 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform">
                                                 <div class="flex-1 min-w-0">
                                                     <div class="flex items-center gap-2">
                                                         <div class="text-gray-900 dark:text-white font-bold truncate text-sm" x-text="track?.track_name || track?.name"></div>
                                                         <template x-if="track?.spotify_track_id || track?.id">
                                                             <button type="button" 
-                                                                @click.prevent.stop="window.toggleSpotifyPreview('ply-{{ $ps->song_id }}', (track?.spotify_track_id || track?.id))"
+                                                                @click.prevent.stop="window.toggleSpotifyPreview('ply-' + ps.song_id, (track?.spotify_track_id || track?.id))"
                                                                 class="text-green-500 hover:scale-110 transition-transform">
-                                                                <svg id="spe-icon-play-ply-{{ $ps->song_id }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                                                <svg :id="'spe-icon-play-ply-' + ps.song_id" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
                                                                     <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
                                                                 </svg>
-                                                                <svg id="spe-icon-stop-ply-{{ $ps->song_id }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" style="display:none;">
+                                                                <svg :id="'spe-icon-stop-ply-' + ps.song_id" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" style="display:none;">
                                                                     <path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clip-rule="evenodd" />
                                                                 </svg>
                                                             </button>
@@ -139,41 +152,35 @@
                                                     </div>
                                                     <div class="text-gray-500 text-xs truncate" x-text="track?.artist_name || track?.artists?.[0]?.name"></div>
                                                 </div>
-                                        </div>
-                                        <div x-show="!track" class="flex-1 flex items-center gap-4">
-                                            <div class="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-900 animate-pulse"></div>
-                                            <div class="space-y-2 flex-1">
-                                                <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded animate-pulse w-1/2"></div>
-                                                <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded animate-pulse w-1/3"></div>
+                                            </div>
+                                            <div x-show="!track" class="flex-1 flex items-center gap-4">
+                                                <div class="w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-900 animate-pulse"></div>
+                                                <div class="space-y-2 flex-1">
+                                                    <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded animate-pulse w-1/2"></div>
+                                                    <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded animate-pulse w-1/3"></div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-white/5 rounded-full border border-gray-100 dark:border-white/5 group-hover:bg-white dark:group-hover:bg-black transition-colors">
-                                        <x-user-avatar :user="$ps->addedBy" class="h-4 w-4" />
-                                        <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold truncate max-w-[80px]">{{ $ps->addedBy->name }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter whitespace-nowrap w-12 text-right">
-                                            {{ $ps->created_at->diffForHumans(null, true) }}
+                                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-white/5 rounded-full border border-gray-100 dark:border-white/5 group-hover:bg-white dark:group-hover:bg-black transition-colors">
+                                            <img :src="ps.added_by?.profile_picture_url || ps.added_by_user?.profile_picture_url || '{{ asset('icons/reso.png') }}'" class="h-5 w-5 rounded-full object-cover">
+                                            <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold truncate max-w-[80px]" x-text="ps.added_by?.name || ps.added_by_user?.name"></span>
                                         </div>
-                                        @if($ps->added_by_user_id === auth()->id() || $collab->role === 'owner')
-                                        <form action="{{ route('playlists.remove-song', [$playlist, $ps->song_id]) }}" method="POST" onsubmit="return confirm('Remove this song from the playlist?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-500 focus:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-all transform hover:scale-110" title="Remove song">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
+                                        <div class="flex items-center gap-3">
+                                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter whitespace-nowrap w-12 text-right" x-text="formatDate(ps.created_at)"></div>
+                                            <template x-if="canRemove(ps)">
+                                                <button @click="removeSong(ps.song_id)" class="p-2 text-gray-400 hover:text-red-500 focus:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-all transform hover:scale-110" title="Remove song">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </template>
+                                        </div>
                                     </div>
 
                                     {{-- Spotify Embed Container for Playlist row --}}
-                                    <div id="spe-container-ply-{{ $ps->song_id }}" 
+                                    <div :id="'spe-container-ply-' + ps.song_id" 
                                          x-show="track"
                                          style="display:none; margin-top: 0.5rem; margin-bottom: 0.5rem; margin-left: 4rem; margin-right: 1rem;"
                                          x-on:click.stop>
-                                        <iframe id="spe-frame-ply-{{ $ps->song_id }}"
+                                        <iframe :id="'spe-frame-ply-' + ps.song_id"
                                             src=""
                                             width="100%" height="80"
                                             frameborder="0"
@@ -183,9 +190,8 @@
                                         </iframe>
                                     </div>
                                 </div>
-                                @endforeach
-                            </div>
-                        @endif
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -210,18 +216,19 @@
 
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Invite Collaborator</h2>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">Add a friend to curate this playlist with you.</p>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Add a mutual follower to curate this playlist together.</p>
             </div>
             
             @if($following->isEmpty())
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 text-center">
-                    <p class="text-gray-500 dark:text-gray-400">You aren't following anyone yet! Follow some peers first to invite them.</p>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium">No mutual followers found.</p>
+                    <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">To collaborate, you must follow each other. Ask your friends to follow you back so you can curate together!</p>
                 </div>
             @else
                 <div class="space-y-4" x-data="{
                     isOpen: false,
                     selectedId: '',
-                    selectedName: 'Select a user...',
+                    selectedName: 'Select a mutual follower...',
                     selectedAvatar: '',
                     users: [
                         @foreach($following as $user)
@@ -235,7 +242,7 @@
                         this.isOpen = false;
                     }
                 }">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select a user you follow</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select a mutual friend</label>
                     
                     <input type="hidden" name="user_id" x-model="selectedId" required>
 
@@ -243,7 +250,9 @@
                         <button type="button" @click="isOpen = !isOpen" @click.away="isOpen = false"
                             class="flex items-center justify-between w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl py-3 px-4 shadow-sm transition focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <div class="flex items-center gap-3">
-                                <img x-show="selectedAvatar" :src="selectedAvatar" class="w-6 h-6 rounded-full object-cover">
+                                <img x-show="selectedAvatar" :src="selectedAvatar" 
+                                     x-on:error="$el.src = '{{ asset('icons/reso.png') }}'"
+                                     class="w-6 h-6 rounded-full object-cover">
                                 <span x-text="selectedName" :class="{'text-gray-500': !selectedId}"></span>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 transition-transform duration-200" :class="{'rotate-180': isOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -261,7 +270,9 @@
                                 <div @click="selectUser(user)" 
                                      class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                                      :class="{'bg-indigo-50 dark:bg-indigo-900/30': selectedId === user.id}">
-                                    <img :src="user.avatar" class="w-8 h-8 rounded-full object-cover">
+                                    <img :src="user.avatar" 
+                                         x-on:error="$el.src = '{{ asset('icons/reso.png') }}'"
+                                         class="w-8 h-8 rounded-full object-cover">
                                     <span class="font-medium text-gray-900 dark:text-white" x-text="user.name"></span>
                                 </div>
                             </template>
@@ -341,10 +352,13 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('playlistApp', (playlistId) => ({
+            Alpine.data('playlistApp', (playlistId, initialSongs) => ({
                 searchQuery: '',
                 searchResults: [],
                 isAdding: false,
+                playlistSongs: initialSongs,
+                currentUserId: {{ auth()->id() }},
+                isOwner: '{{ $collab->role }}' === 'owner',
 
                 async performSearch() {
                     if (this.searchQuery.length < 3) {
@@ -375,8 +389,11 @@
                         });
 
                         if (response.ok) {
-                            // Quick reload to show the new track
-                            window.location.reload();
+                            const data = await response.json();
+                            // Prepend the new song to the list
+                            this.playlistSongs.unshift(data.playlist_song);
+                            this.searchQuery = '';
+                            this.searchResults = [];
                         } else {
                             const data = await response.json();
                             this.$dispatch('playlist-error', data.error || 'Failed to add song.');
@@ -385,9 +402,44 @@
                         this.$dispatch('playlist-error', 'An error occurred.');
                     } finally {
                         this.isAdding = false;
-                        this.searchQuery = '';
-                        this.searchResults = [];
                     }
+                },
+
+                async removeSong(songId) {
+                    if (!confirm('Remove this song from the playlist?')) return;
+
+                    try {
+                        const response = await fetch(`/playlists/${playlistId}/songs/${songId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            this.playlistSongs = this.playlistSongs.filter(s => s.song_id !== songId);
+                        } else {
+                            alert('Failed to remove song.');
+                        }
+                    } catch (error) {
+                        console.error('Removal failed:', error);
+                    }
+                },
+
+                canRemove(ps) {
+                    return this.isOwner || ps.added_by_user_id === this.currentUserId;
+                },
+
+                formatDate(dateStr) {
+                    const date = new Date(dateStr);
+                    const now = new Date();
+                    const diff = Math.floor((now - date) / 1000);
+
+                    if (diff < 60) return 'Just now';
+                    if (diff < 3600) return Math.floor(diff / 60) + 'm';
+                    if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+                    return Math.floor(diff / 86400) + 'd';
                 }
             }));
         });

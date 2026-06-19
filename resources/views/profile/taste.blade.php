@@ -198,8 +198,8 @@
                                     @foreach($tasteTwins as $twin)
                                         <div class="flex items-center p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:shadow-lg transition-all duration-300 bg-white dark:bg-[#121212] group">
                                             <div class="relative">
-                                                <img src="{{ $twin->profile_picture_url }}" alt="{{ $twin->name }}" class="h-16 w-16 rounded-full object-cover border-2 border-white shadow-md">
-                                                <span class="absolute -bottom-1 -right-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">
+                                                <x-user-avatar :user="$twin" class="h-16 w-16 border-2 border-white shadow-md" />
+                                                <span class="absolute -bottom-1 -right-1 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white z-10">
                                                     {{ $twin->match_score }}%
                                                 </span>
                                             </div>

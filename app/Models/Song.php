@@ -46,4 +46,38 @@ class Song extends Model
     {
         return $this->hasMany(Share::class);
     }
+
+    /**
+     * Get the album art URL, with a fallback to the default Reso icon.
+     *
+     * @param string|null $value
+     * @return string
+     */
+    public function getAlbumArtUrlAttribute($value)
+    {
+        if (empty($value) || !filter_var($value, FILTER_VALIDATE_URL)) {
+            return asset('icons/reso.png');
+        }
+
+        return $value;
+    }
+
+    /**
+     * Normalized 11-character YouTube video ID for embeds.
+     */
+    public function embedYoutubeVideoId(): ?string
+    {
+        $raw = $this->youtube_video_id ?: $this->youtube_url;
+        if (!$raw) {
+            return null;
+        }
+
+        if (preg_match('/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/', $raw, $matches)) {
+            return $matches[1];
+        }
+
+        $raw = trim($raw);
+
+        return preg_match('/^[a-zA-Z0-9_-]{11}$/', $raw) ? $raw : null;
+    }
 }

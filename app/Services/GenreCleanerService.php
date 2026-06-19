@@ -97,7 +97,7 @@ class GenreCleanerService
             try {
                 // Fetch valid genres from MusicBrainz
                 $response = Http::withHeaders([
-                    'User-Agent' => env('MUSICBRAINZ_USER_AGENT', 'MusicSocialFYP/1.0')
+                    'User-Agent' => env('MUSICBRAINZ_USER_AGENT', 'ResoFYP/1.0')
                 ])->get('https://musicbrainz.org/ws/2/genre/all', [
                     'limit' => $limit,
                     'offset' => $offset,

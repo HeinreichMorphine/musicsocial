@@ -82,13 +82,19 @@ class ShareController extends Controller
 
                 // Ensure we have a YouTube Video ID
                 if (empty($song->youtube_video_id)) {
+                    \Log::info('Searching YouTube for: ' . $song->track_name . ' ' . $song->artist_name);
                     $youTubeData = $this->youTubeService->searchVideo($song->track_name . ' ' . $song->artist_name);
                     if ($youTubeData) {
+                        \Log::info('YouTube found for Song ID ' . $song->id . ': ' . $youTubeData['video_id']);
                         $song->update([
                             'youtube_video_id' => $youTubeData['video_id'],
                             'youtube_url' => $youTubeData['url'],
                         ]);
+                    } else {
+                        \Log::warning('YouTube search returned NO results for Song ID ' . $song->id);
                     }
+                } else {
+                    \Log::info('Song ID ' . $song->id . ' already has YouTube ID: ' . $song->youtube_video_id);
                 }
 
                 // 3. Final Fallback: YouTube Tags (Last Resort)
@@ -298,15 +304,41 @@ class ShareController extends Controller
      */
     public function destroy(Share $share)
     {
+        $userId = auth()->id();
+        \Log::info("User ID {$userId} attempting to delete share ID: {$share->id}");
+        
         /** @var \App\Models\User $user */
         $user = auth()->user();
-        if ($user->id !== $share->user_id) {
+        if (!$user || $user->id !== $share->user_id) {
+            \Log::warning("Unauthorized delete attempt by User ID {$userId} for share ID: {$share->id}");
             return response()->json(['error' => 'Unauthorized action.'], 403);
         }
 
-        $share->delete();
+        try {
+            // 1. Manually detach all pivot relationships to prevent SQL foreign key locks
+            $share->likes()->detach();
+            $share->dislikes()->detach();
+            
+            // Check if bookmarks relation exists (using DB if model relation is missing)
+            if (method_exists($share, 'bookmarks')) {
+                $share->bookmarks()->detach();
+            } else {
+                \DB::table('bookmarks')->where('share_id', $share->id)->delete();
+            }
+            
+            // 2. Delete all attached comments
+            $share->comments()->delete(); 
 
-        return response()->json(['message' => 'Share deleted successfully.']);
+            // 3. Now it is safe to delete the post
+            $share->delete();
+            
+            \Log::info("Share ID: {$share->id} deleted successfully by User ID {$userId}");
+            return response()->json(['message' => 'Share deleted successfully.']);
+            
+        } catch (\Exception $e) {
+            \Log::error("Error deleting share ID: {$share->id} (User ID {$userId}): " . $e->getMessage());
+            return response()->json(['error' => 'Database error preventing deletion.'], 500);
+        }
     }
 
     /**

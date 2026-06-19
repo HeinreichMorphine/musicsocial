@@ -40,7 +40,7 @@ class PlaylistExportController extends Controller
             // Get bookmarked shares
             $shares = $user->bookmarks()->with('song')->get();
             $songs = $shares->pluck('song')->filter();
-            $playlistName = 'MusicSocial Bookmarks';
+            $playlistName = 'Reso Bookmarks';
         } elseif ($source === 'discovery') {
             // Get recommendations
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
@@ -48,7 +48,7 @@ class PlaylistExportController extends Controller
                 $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
                 $songs = collect(Song::whereIn('id', $recommendedSongIds)->get());
             }
-            $playlistName = 'MusicSocial Discoveries';
+            $playlistName = 'Reso Discoveries';
         }
 
         if (count($songs) === 0) {

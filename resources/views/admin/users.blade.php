@@ -2,56 +2,188 @@
 
 @section('title', 'Manage Users')
 
-@section('content')
-<div class="row">
-    <div class="col-md-12 col-sm-12">
-        <div class="x_panel">
-            <div class="x_title">
-                <h2>Manage Users <small>View, Ban, or Delete</small></h2>
-                <div class="clearfix"></div>
-            </div>
-            <div class="x_content">
-                <div class="table-responsive">
-                    <table class="table table-striped jambo_table bulk_action">
-                        <thead>
-                            <tr class="headings">
-                                <th class="column-title">ID </th>
-                                <th class="column-title">Name </th>
-                                <th class="column-title">Email </th>
-                                <th class="column-title">Joined </th>
-                                <th class="column-title no-link last"><span class="nobr">Action</span></th>
-                            </tr>
-                        </thead>
+@push('styles')
+<style>
+    .search-bar-row {
+        display: flex; gap: .75rem; align-items: center;
+        margin-bottom: 1.25rem; flex-wrap: wrap;
+    }
+    .search-input-wrap { position: relative; flex: 1; min-width: 220px; }
+    .search-input-wrap i {
+        position: absolute; left: .875rem; top: 50%;
+        transform: translateY(-50%); color: #94a3b8; font-size: .85rem;
+    }
+    .search-input {
+        width: 100%; padding: .6rem .875rem .6rem 2.3rem;
+        border: 1.5px solid #e2e8f0; border-radius: 8px;
+        font-size: .85rem; color: #0f172a; background: #fff; outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .search-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.07); }
+    .btn-search {
+        padding: .6rem 1.25rem; background: #1d4ed8; color: #fff; border: none;
+        border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer;
+        transition: background .15s;
+    }
+    .btn-search:hover { background: #1e40af; }
+    .btn-clear {
+        padding: .6rem 1rem; background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0;
+        border-radius: 8px; font-size: .83rem; font-weight: 500; cursor: pointer;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .35rem;
+        transition: background .15s;
+    }
+    .btn-clear:hover { background: #e2e8f0; }
 
-                        <tbody>
-                            @foreach($users as $user)
-                            <tr class="even pointer">
-                                <td class=" ">{{ $user->id }}</td>
-                                <td class=" ">{{ $user->name }}</td>
-                                <td class=" ">{{ $user->email }}</td>
-                                <td class=" ">{{ $user->created_at->format('Y-m-d') }}</td>
-                                <td class=" last">
-                                    <form action="{{ route('admin.users.delete', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</button>
-                                    </form>
-                                    <form action="{{ route('admin.users.ban', $user->id) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-warning btn-xs">
-                                            <i class="fa fa-ban"></i> {{ $user->is_banned ? 'Unban' : 'Ban' }}
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                
-                {{ $users->links() }}
+    .panel-card {
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(15,23,42,.04); overflow: hidden;
+    }
+    .panel-head {
+        padding: .875rem 1.25rem; border-bottom: 1px solid #f1f5f9;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .panel-head h4 { font-size: .9rem; font-weight: 700; color: #0f172a; margin: 0; }
+
+    .users-table { width: 100%; border-collapse: collapse; }
+    .users-table thead tr {
+        background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+    }
+    .users-table th {
+        padding: .65rem 1rem; text-align: left;
+        font-size: .72rem; font-weight: 700; color: #64748b;
+        text-transform: uppercase; letter-spacing: .5px;
+    }
+    .users-table td {
+        padding: .7rem 1rem; font-size: .83rem; color: #374151;
+        border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+    }
+    .users-table tbody tr:last-child td { border-bottom: none; }
+    .users-table tbody tr:hover { background: #fafbff; }
+
+    .av-wrap {
+        width: 34px; height: 34px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .av-img { width: 100%; height: 100%; object-fit: cover; }
+    .av-init {
+        width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #1d4ed8;
+        font-weight: 700; font-size: .75rem;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .badge-active { background: #f0fdf4; color: #16a34a; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+    .badge-banned { background: #fef2f2; color: #dc2626; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+
+    .action-btn {
+        padding: .3rem .7rem; border-radius: 6px; font-size: .75rem;
+        font-weight: 600; border: none; cursor: pointer; display: inline-flex;
+        align-items: center; gap: .3rem; transition: opacity .15s;
+    }
+    .action-btn:hover { opacity: .85; }
+    .btn-del  { background: #fef2f2; color: #dc2626; }
+    .btn-ban  { background: #fff7ed; color: #ea580c; }
+    .btn-unban{ background: #f0fdf4; color: #16a34a; }
+
+    .results-info { font-size: .78rem; color: #94a3b8; margin-bottom: .75rem; }
+</style>
+@endpush
+
+@section('content')
+<div class="panel-card">
+    <div class="panel-head">
+        <h4><i class="fa fa-users" style="color:#1d4ed8;margin-right:6px;"></i> Manage Users</h4>
+        <small>{{ $users->total() }} total users</small>
+    </div>
+    <div style="padding: 1rem 1.25rem;">
+
+        {{-- Search Bar --}}
+        <form method="GET" action="{{ route('admin.users') }}" class="search-bar-row">
+            <div class="search-input-wrap">
+                <i class="fa fa-search"></i>
+                <input class="search-input" type="text" name="search"
+                       value="{{ $search ?? '' }}" placeholder="Search by name or email…">
             </div>
+            <button type="submit" class="btn-search"><i class="fa fa-search"></i> Search</button>
+            @if($search)
+                <a href="{{ route('admin.users') }}" class="btn-clear"><i class="fa fa-times"></i> Clear</a>
+            @endif
+        </form>
+
+        @if($search)
+            <p class="results-info">Showing results for "<strong>{{ $search }}</strong>"</p>
+        @endif
+
+        <div style="overflow-x:auto;">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Shares</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($users as $user)
+                    <tr>
+                        <td style="color:#94a3b8;font-size:.72rem;">#{{ $user->id }}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:.6rem;">
+                                @if($user->profile_picture || $user->avatar)
+                                    <img class="av-img" style="width:34px;height:34px;border-radius:8px;object-fit:cover;"
+                                         src="{{ $user->profile_picture ? Storage::url($user->profile_picture) : $user->avatar }}"
+                                         alt="{{ $user->name }}">
+                                @else
+                                    <div class="av-init">{{ strtoupper(substr($user->name, 0, 2)) }}</div>
+                                @endif
+                                <span style="font-weight:600;color:#0f172a;">{{ $user->name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ $user->email }}</td>
+                        <td style="text-align:center;font-weight:600;">{{ $user->shares_count ?? 0 }}</td>
+                        <td>
+                            @if($user->is_banned)
+                                <span class="badge-banned">Banned</span>
+                            @else
+                                <span class="badge-active">Active</span>
+                            @endif
+                        </td>
+                        <td style="color:#64748b;">{{ $user->created_at->format('d M Y') }}</td>
+                        <td>
+                            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                                <form action="{{ route('admin.users.ban', $user->id) }}" method="POST" style="display:inline;">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="action-btn {{ $user->is_banned ? 'btn-unban' : 'btn-ban' }}">
+                                        <i class="fa fa-{{ $user->is_banned ? 'check' : 'ban' }}"></i>
+                                        {{ $user->is_banned ? 'Unban' : 'Ban' }}
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.users.delete', $user->id) }}" method="POST"
+                                      onsubmit="return confirm('Delete {{ addslashes($user->name) }}? This cannot be undone.');" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="action-btn btn-del">
+                                        <i class="fa fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8;">
+                            @if($search) No users match "{{ $search }}" @else No users found. @endif
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:1rem;">
+            {{ $users->links() }}
         </div>
     </div>
 </div>

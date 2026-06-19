@@ -24,7 +24,7 @@ class OnboardingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'song_ids' => 'required|array|min:3|max:10',
+            'song_ids' => 'required|array|min:5|max:10',
             'song_ids.*' => 'string'
         ]);
 
@@ -46,11 +46,13 @@ class OnboardingController extends Controller
             // Save to the Shelf
             UserShelfSong::create([
                 'user_id' => $user->id,
-                'song_id' => $spotifyId, // Spotify ID
+                'song_id' => $spotifyId, // Spotify ID (String)
                 'position' => $index,
             ]);
 
-            // Save as a "like" for the ML model mapping (TC-02 & TC-05)
+            // Record as a song interaction for Discovery page exclusion filtering.
+            // The recommender's SVD training weight (4.0 pts) comes from the
+            // user_shelf_songs table directly, NOT from this entry.
             SongInteraction::updateOrCreate(
                 ['user_id' => $user->id, 'song_id' => $song->id],
                 ['type' => 'like', 'created_at' => now(), 'updated_at' => now()]
@@ -62,5 +64,9 @@ class OnboardingController extends Controller
         return response()->json(['message' => 'Shelf curated successfully.', 'redirect' => route('dashboard', ['feed' => 'explore'])]);
     }
 
-    // Skip logic removed to enforce TC-08 (Shelf Cold Start Resolution)
+    /**
+     * Skip has been removed — shelf curation is mandatory.
+     * Every user must select at least 5 songs to ensure the recommendation
+     * engine has enough data for personalized TF-IDF profiling (TC-07).
+     */
 }

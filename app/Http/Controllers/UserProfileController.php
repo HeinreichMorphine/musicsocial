@@ -19,15 +19,8 @@ class UserProfileController extends Controller
         $this->recommendationService = $recommendationService;
     }
 
-    public function show($user)
+    public function show(User $user)
     {
-        if (is_string($user)) {
-            $user = User::where('name', 'like', "%{$user}%")->first();
-
-            if (!$user) {
-                return redirect()->back()->withErrors(['error' => 'User not found.']);
-            }
-        }
 
         $user->load('shares.user'); // Eager load shares and their associated users
 
@@ -85,15 +78,8 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function taste($user)
+    public function taste(User $user)
     {
-        if (is_string($user)) {
-             $userModel = User::where('name', 'like', "%{$user}%")->first();
-             if (!$userModel) {
-                 return redirect()->back()->withErrors(['error' => 'User not found.']);
-             }
-             $user = $userModel;
-        }
 
         // 1. GENRE DNA & ARTIST COLLECTION
         // Collect songs from Shares, Likes, and Interaction History (Listened/Liked)
@@ -152,6 +138,8 @@ class UserProfileController extends Controller
         arsort($genreCounts);
         $topGenres = array_slice($genreCounts, 0, 5, true);
         $userArtistKeys = array_keys($artistCounts);
+        $userSongIds = $allSongs->pluck('id')->toArray();
+        $userGenreKeys = array_keys($genreCounts);
         
         // Normalize to percentages (of Songs)
         $genreDna = [];
@@ -172,58 +160,74 @@ class UserProfileController extends Controller
                     $query->whereHas('shares.song', function($q) use ($userArtistKeys) {
                         $q->whereIn('artist_name', $userArtistKeys);
                     })
-                    ->orWhereHas('likes.song', function($q) use ($userArtistKeys) {
-                         $q->whereIn('artist_name', $userArtistKeys);
-                    })
-                    ->orWhereHas('songInteractions.song', function($q) use ($userArtistKeys) {
-                         $q->whereIn('artist_name', $userArtistKeys)
-                           ->where('type', '!=', 'dislike'); // Exclude dislikes from matching
+                    ->orWhereHas('songInteractions', function($q) use ($userArtistKeys) {
+                        $q->where('type', '!=', 'dislike')
+                          ->whereHas('song', function($sq) use ($userArtistKeys) {
+                              $sq->whereIn('artist_name', $userArtistKeys);
+                          });
                     });
-                })
                 ->with(['shares.song' => function($q) {
-                    $q->select('id', 'artist_name');
+                    $q->select('id', 'artist_name', 'genres', 'track_name');
                 }, 'likes.song' => function($q) {
-                    $q->select('id', 'artist_name');
-                }, 'songInteractions' => function($q) {
-                    $q->where('type', '!=', 'dislike')->with('song:id,artist_name');
+                    $q->select('id', 'artist_name', 'genres', 'track_name');
+                }, 'songInteractions.song' => function($q) {
+                    $q->select('id', 'artist_name', 'genres', 'track_name');
                 }])
-                ->limit(50) // Optimization: limit candidate pool
+                ->limit(20)
                 ->get();
 
             $scoredTwins = [];
             foreach ($potentialTwins as $twin) {
-                // Collect twin's artists from all sources
-                $twinArtists = collect();
+                // Collect twin's data
+                $twinSongs = $twin->shares->pluck('song')->merge($twin->likes->pluck('song'))->merge($twin->songInteractions->where('type', '!=', 'dislike')->pluck('song'))->unique('id');
                 
-                // From Shares
-                $twinArtists = $twinArtists->merge($twin->shares->pluck('song.artist_name'));
+                $twinSongIds = $twinSongs->pluck('id')->toArray();
+                $twinArtists = $twinSongs->pluck('artist_name')->unique()->filter()->toArray();
                 
-                // From Likes
-                $twinArtists = $twinArtists->merge($twin->likes->pluck('song.artist_name'));
-                
-                // From Interactions
-                $twinArtists = $twinArtists->merge($twin->songInteractions->pluck('song.artist_name'));
-                
-                $twinArtists = $twinArtists->unique()->filter()->values()->toArray();
-                
-                // Calculate Intersection
+                $twinGenres = [];
+                foreach ($twinSongs as $ts) {
+                    if ($ts->genres) {
+                        $clean = str_replace(['[', ']', '"', "'"], '', $ts->genres);
+                        $gs = array_map('strtolower', array_map('trim', explode(',', $clean)));
+                        $twinGenres = array_merge($twinGenres, $gs);
+                    }
+                }
+                $twinGenres = array_unique(array_filter($twinGenres));
+
+                // --- MULTI-DIMENSIONAL INTERSECTION ---
+                $commonSongs = array_intersect($userSongIds, $twinSongIds);
                 $commonArtists = array_intersect($userArtistKeys, $twinArtists);
-                $commonCount = count($commonArtists);
-                
-                if ($commonCount > 0) {
-                     // Simple Match Score: (Common / My Total) * 100
-                     $myTotal = count($userArtistKeys);
-                     $matchScore = $myTotal > 0 ? round(($commonCount / $myTotal) * 100) : 0;
-                     
-                     if ($matchScore > 100) $matchScore = 100;
+                $commonGenres = array_intersect($userGenreKeys, $twinGenres);
 
-                     // Pick a random common artist
-                     $values = array_values($commonArtists);
-                     $commonArtistName = $values[array_rand($values)];
+                $songMatchCount = count($commonSongs);
+                $artistMatchCount = count($commonArtists);
+                $genreMatchCount = count($commonGenres);
 
-                     $twin->match_score = $matchScore;
-                     $twin->common_ground = "You both enjoy " . $commonArtistName;
-                     $scoredTwins[] = $twin;
+                if ($songMatchCount > 0 || $artistMatchCount > 0) {
+                    // WEIGHTED SCORING
+                    // Song Match: 4 pts | Artist Match: 2 pts | Genre Match: 1 pt
+                    $rawScore = ($songMatchCount * 4) + ($artistMatchCount * 2) + ($genreMatchCount * 1);
+                    
+                    // Normalization Factor (Based on user's unique footprint)
+                    $userFootprint = (count($userSongIds) * 4) + (count($userArtistKeys) * 2) + (count($userGenreKeys) * 1);
+                    
+                    $matchScore = $userFootprint > 0 ? round(($rawScore / $userFootprint) * 100) : 0;
+                    if ($matchScore > 100) $matchScore = 100;
+                    if ($matchScore < 1) $matchScore = 1; // Minimum floor for visibility
+
+                    // DYNAMIC COMMON GROUND TEXT
+                    if ($songMatchCount > 0) {
+                        $randomSong = Song::find(collect($commonSongs)->random());
+                        $commonGround = "You both enjoy " . ($randomSong->track_name ?? 'the same songs');
+                    } elseif ($artistMatchCount > 0) {
+                        $commonGround = "You both enjoy " . collect($commonArtists)->random();
+                    } else {
+                        $commonGround = "You both enjoy " . collect($commonGenres)->random();
+                    }
+
+                    $twin->match_score = $matchScore;
+                    $twin->common_ground = $commonGround;
+                    $scoredTwins[] = $twin;
                 }
             }
 
@@ -291,15 +295,8 @@ class UserProfileController extends Controller
          return array_key_first($genreCounts);
     }
 
-    public function saved($user)
+    public function saved(User $user)
     {
-        if (is_string($user)) {
-             $userModel = User::where('name', 'like', "%{$user}%")->first();
-             if (!$userModel) {
-                 return redirect()->back()->withErrors(['error' => 'User not found.']);
-             }
-             $user = $userModel;
-        }
 
         // Security Check: Only allow viewing own saved posts
         if (Auth::id() !== $user->id) {
@@ -343,17 +340,28 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function shelf($user)
+    public function shelf(User $user)
     {
-        if (is_string($user)) {
-            $userModel = User::where('name', 'like', "%{$user}%")->first();
-            if (!$userModel) {
-                return redirect()->back()->withErrors(['error' => 'User not found.']);
-            }
-            $user = $userModel;
-        }
 
-        $user->load('shelfSongs');
+        $user->load(['shelfSongs' => function($q) {
+            $q->orderBy('position');
+        }]);
+
+        // Map shelf songs to Spotify-like structure for the frontend
+        $shelfTracks = $user->shelfSongs->map(function($ss) {
+            $song = Song::where('spotify_track_id', $ss->song_id)->first();
+            if (!$song) return null;
+            
+            return [
+                'id' => $song->spotify_track_id,
+                'name' => $song->track_name,
+                'artists' => [['name' => $song->artist_name]],
+                'album' => [
+                    'images' => [['url' => $song->album_art_url]]
+                ],
+                'external_urls' => ['spotify' => $song->spotify_url]
+            ];
+        })->filter()->values();
 
         // Badge Calculation
         $topGenre = $this->getTopGenre($user);
@@ -366,6 +374,7 @@ class UserProfileController extends Controller
 
         return view('profile.shelf', [
             'user' => $user,
+            'shelfTracks' => $shelfTracks,
             'badge' => $badge,
             'usersToSuggest' => $usersToSuggest,
             'recommendedSongs' => $recommendedSongs,

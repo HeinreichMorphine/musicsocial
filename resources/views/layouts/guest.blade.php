@@ -23,15 +23,15 @@
             }
         </style>
     </head>
-    <body class="font-sans text-gray-900 antialiased bg-white">
+    <body class="font-sans text-gray-900 antialiased bg-gray-50 selection:bg-indigo-500 selection:text-white">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
-            <div class="mb-6">
+            <div class="mb-8 transform hover:scale-105 transition-transform duration-300">
                 <a href="/">
-                    <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-24 h-auto hover:opacity-80 transition-opacity">
+                    <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-24 h-auto drop-shadow-md">
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-8 py-8 bg-white shadow-xl border border-gray-100 sm:rounded-2xl">
+            <div class="w-full sm:max-w-md mt-6 px-10 py-10 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 sm:rounded-[2rem]">
                 {{ $slot }}
             </div>
         </div>

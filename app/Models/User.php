@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_id',
         'avatar',
         'email_verified_at',
+        'is_onboarded',
     ];
 
     /**
@@ -76,9 +77,15 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfilePictureUrlAttribute(): string
     {
-        return $this->profile_picture
-            ? Storage::url($this->profile_picture)
-            : asset('images/default-profile.png'); // Ensure you have a default image at public/images/default-profile.png
+        if ($this->profile_picture && $this->profile_picture !== 'profile_pictures/default_black_box.png') {
+            return Storage::url($this->profile_picture);
+        }
+
+        if ($this->avatar) {
+            return $this->avatar;
+        }
+
+        return asset('icons/reso.png');
     }
 
     /**
@@ -169,6 +176,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
     }
 
+    /**
+     * Get the users that this user follows and who also follow this user back.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function friends()
+    {
+        return $this->following()->whereIn('user_id', $this->followers()->pluck('follower_id'));
+    }
+
     // public function shelfItems()
     // {
     //     return $this->hasMany(ShelfItem::class);
@@ -201,5 +218,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function playlists()
     {
         return $this->hasMany(Playlist::class);
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\VerifyEmailCustom);
     }
 }

@@ -1,0 +1,428 @@
+=== File: 0001_01_01_000000_create_users_table.php ===
+{
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('profile_picture')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+    }
+============================================================
+
+=== File: 0001_01_01_000001_create_cache_table.php ===
+{
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration');
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration');
+        });
+    }
+============================================================
+
+=== File: 0001_01_01_000002_create_jobs_table.php ===
+{
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+
+        Schema::create('job_batches', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('name');
+            $table->integer('total_jobs');
+            $table->integer('pending_jobs');
+            $table->integer('failed_jobs');
+            $table->longText('failed_job_ids');
+            $table->mediumText('options')->nullable();
+            $table->integer('cancelled_at')->nullable();
+            $table->integer('created_at');
+            $table->integer('finished_at')->nullable();
+        });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+        });
+    }
+============================================================
+
+=== File: 2025_10_28_041840_create_songs_table.php ===
+{
+        Schema::create('songs', function (Blueprint $table) {
+            $table->id();
+            $table->string('spotify_track_id')->nullable()->unique();
+            $table->string('youtube_video_id')->nullable()->unique();
+            $table->string('track_name');
+            $table->string('artist_name');
+            $table->string('album_name')->nullable();
+            $table->string('album_art_url')->nullable();
+            $table->string('spotify_url')->nullable();
+            $table->string('youtube_url')->nullable();
+            $table->json('genres')->nullable();
+            $table->date('release_date')->nullable();
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_28_041845_create_shares_table.php ===
+{
+        Schema::create('shares', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('song_id')->constrained()->onDelete('cascade');
+            $table->text('caption')->nullable();
+            $table->string('type')->default('music');
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_28_041851_create_comments_table.php ===
+{
+        Schema::create('comments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('share_id')->constrained()->onDelete('cascade');
+            $table->text('body');
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_28_041859_create_likes_table.php ===
+{
+        Schema::create('likes', function (Blueprint $table) {
+            $table->primary(['user_id', 'share_id']); // Composite primary key
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('share_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_28_041904_create_followers_table.php ===
+{
+        Schema::create('followers', function (Blueprint $table) {
+            $table->primary(['user_id', 'follower_id']); // Composite primary key
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // The user being followed
+            $table->foreignId('follower_id')->constrained('users')->onDelete('cascade'); // The user who is following
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_29_084003_add_parent_id_to_comments_table.php ===
+{
+        Schema::table('comments', function (Blueprint $table) {
+            $table->unsignedBigInteger('parent_id')->nullable()->after('id');
+            $table->foreign('parent_id')->references('id')->on('comments')->onDelete('cascade');
+        });
+    }
+============================================================
+
+=== File: 2025_10_29_123851_create_comment_threads_table.php ===
+{
+        Schema::create('comment_threads', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('comment_id')->constrained()->onDelete('cascade');
+            $table->foreignId('parent_id')->nullable()->constrained('comment_threads')->onDelete('cascade');
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_10_29_124008_fix_parent_id_foreign_in_comment_threads_table.php ===
+{
+        Schema::table('comment_threads', function (Blueprint $table) {
+            $table->dropForeign(['parent_id']);
+            $table->foreign('parent_id')->references('id')->on('comments')->onDelete('cascade');
+        });
+    }
+============================================================
+
+=== File: 2025_11_02_102358_create_dislikes_table.php ===
+{
+        Schema::create('dislikes', function (Blueprint $table) {
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('share_id')->constrained()->onDelete('cascade');
+            $table->unique(['user_id', 'share_id']);
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_11_04_111731_drop_album_name_from_songs_table.php ===
+{
+        Schema::table('songs', function (Blueprint $table) {
+            $table->dropColumn('album_name');
+        });
+    }
+============================================================
+
+=== File: 2025_12_03_054642_add_soft_deletes_to_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
+    }
+============================================================
+
+=== File: 2025_12_03_062514_create_admins_table.php ===
+{
+        Schema::create('admins', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_12_03_064159_add_is_banned_to_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_banned')->default(false)->after('password');
+        });
+    }
+============================================================
+
+=== File: 2025_12_13_195312_add_cover_photo_to_users_table.php ===
+{
+        if (!Schema::hasColumn('users', 'cover_photo_path')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('cover_photo_path', 2048)->nullable()->after('profile_picture');
+            });
+        }
+    }
+============================================================
+
+=== File: 2025_12_14_114613_create_notifications_table.php ===
+{
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2025_12_14_175000_create_bookmarks_table.php ===
+{
+        if (!Schema::hasTable('bookmarks')) {
+            Schema::create('bookmarks', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('share_id')->constrained()->cascadeOnDelete();
+                $table->timestamps();
+                
+                // Prevent duplicate bookmarks for the same user-share pair
+                $table->unique(['user_id', 'share_id']);
+            });
+        }
+    }
+============================================================
+
+=== File: 2025_12_14_175500_fix_bookmarks_table.php ===
+{
+        Schema::dropIfExists('bookmarks');
+
+        Schema::create('bookmarks', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('share_id')->constrained()->cascadeOnDelete();
+            $table->timestamps();
+            
+            // Prevent duplicate bookmarks for the same user-share pair
+            $table->unique(['user_id', 'share_id']);
+        });
+    }
+============================================================
+
+=== File: 2025_12_14_180500_add_oauth_fields_to_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('google_id')->nullable()->after('email');
+            $table->string('spotify_id')->nullable()->after('google_id');
+            $table->text('spotify_token')->nullable()->after('spotify_id');
+            $table->text('spotify_refresh_token')->nullable()->after('spotify_token');
+            $table->string('avatar')->nullable()->after('password');
+        });
+    }
+============================================================
+
+=== File: 2025_12_15_000000_fix_dislikes_primary_key.php ===
+{
+        Schema::table('dislikes', function (Blueprint $table) {
+            // 1. Drop foreign keys first so they don't depend on the index
+            $table->dropForeign(['user_id']);
+            $table->dropForeign(['share_id']);
+
+            // 2. Drop the existing unique index
+            $table->dropUnique('dislikes_user_id_share_id_unique');
+            
+            // 3. Add the composite primary key
+            $table->primary(['user_id', 'share_id']);
+
+            // 4. Re-add the foreign keys
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('share_id')->references('id')->on('shares')->onDelete('cascade');
+        });
+    }
+============================================================
+
+=== File: 2025_12_31_174000_drop_user_feedback_table.php ===
+{
+        Schema::dropIfExists('user_feedback');
+    }
+============================================================
+
+=== File: 2026_01_03_000000_create_song_interactions_table.php ===
+{
+        Schema::create('song_interactions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('song_id')->constrained()->onDelete('cascade');
+            $table->enum('type', ['listen', 'like', 'dislike']);
+            $table->timestamps();
+
+            // Ensure a user tracks a song interaction uniquely? 
+            // A user might listen multiple times? 
+            // For "hiding" purposes, we just need to know if it exists.
+            // Let's enforce unique per type? Or just unique user_song combo?
+            // If I listen, then like, I update the type?
+            // "Listened" is weaker than "Like".
+            // If I "Like", it implies "Listened".
+            // So we can update the record.
+            $table->unique(['user_id', 'song_id']);
+        });
+    }
+============================================================
+
+=== File: 2026_01_29_034525_make_password_nullable_in_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('password')->nullable()->change();
+        });
+    }
+============================================================
+
+=== File: 2026_04_22_163414_add_is_onboarded_to_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_onboarded')->default(false)->after('password');
+        });
+    }
+============================================================
+
+=== File: 2026_04_22_172949_create_user_shelf_songs_table.php ===
+{
+        Schema::create('user_shelf_songs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('song_id'); // String because Spotify IDs are strings
+            $table->integer('position')->default(0); // For ordering on the profile
+            $table->timestamps();
+        });
+    }
+============================================================
+
+=== File: 2026_04_22_172950_create_playlists_system.php ===
+{
+        Schema::create('playlists', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('cover_image')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('playlist_collaborators', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('playlist_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('role', ['owner', 'collaborator'])->default('collaborator');
+            $table->enum('status', ['pending', 'accepted', 'declined'])->default('pending');
+            $table->timestamps();
+            
+            // Prevent duplicate invites
+            $table->unique(['playlist_id', 'user_id']);
+        });
+
+        Schema::create('playlist_songs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('playlist_id')->constrained()->onDelete('cascade');
+            $table->string('song_id'); 
+            $table->foreignId('added_by_user_id')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
+            
+            // Ensure a song is only added to a playlist once
+            $table->unique(['playlist_id', 'song_id']);
+        });
+    }
+============================================================
+
+=== File: 2026_04_30_120339_add_share_to_song_interactions_type.php ===
+{
+        Schema::table('song_interactions', function (Blueprint $table) {
+            // Using DB::statement because change() on enums is not supported by all drivers
+            DB::statement("ALTER TABLE song_interactions MODIFY COLUMN type ENUM('listen', 'like', 'dislike', 'share')");
+        });
+    }
+============================================================
+
+=== File: 2026_05_16_125902_add_taste_dna_to_users_table.php ===
+{
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
+    }
+============================================================
+
+=== File: 2026_05_16_130003_add_spotify_id_to_playlists_table.php ===
+{
+        Schema::table('playlists', function (Blueprint $table) {
+            //
+        });
+    }
+============================================================
+

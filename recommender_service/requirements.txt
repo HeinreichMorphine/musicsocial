@@ -6,3 +6,5 @@ SQLAlchemy
 PyMySQL
 numpy<2.0
 scikit-learn
+requests
+joblib

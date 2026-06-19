@@ -1,0 +1,659 @@
+<?xml version="1.0" ?>
+<mxfile host="app.diagrams.net" agent="Antigravity Agent" version="29.2.9">
+  <diagram name="Page-1" id="kCc3ngCfUE60yFG_JxJ1">
+    <mxGraphModel dx="3349" dy="1845" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="sys_boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#4A90E2;strokeWidth=3;verticalAlign=top;align=center;fontSize=18;fontStyle=1;fontColor=#1F3A60;" value="Reso : Social Music Discovery Platform" vertex="1">
+          <mxGeometry x="320" y="80" width="1840" height="2200" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Admin" vertex="1">
+          <mxGeometry x="180" y="240" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_guest" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Guest" vertex="1">
+          <mxGeometry x="2170" y="240" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="User" vertex="1">
+          <mxGeometry x="180" y="1200" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_google" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Google OAuth" vertex="1">
+          <mxGeometry x="2170" y="450" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_email" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Email Service" vertex="1">
+          <mxGeometry x="2170" y="350" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_spotify" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Spotify Service" vertex="1">
+          <mxGeometry x="2170" y="800" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_youtube" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="YouTube Service" vertex="1">
+          <mxGeometry x="2170" y="1200" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_recommender" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="Recommendation Service&#10;(Flask API)" vertex="1">
+          <mxGeometry x="2170" y="1600" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_musicbrainz" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="MusicBrainz Service" vertex="1">
+          <mxGeometry x="180" y="1850" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="service_audiodb" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" value="TheAudioDB Service" vertex="1">
+          <mxGeometry x="180" y="2050" width="30" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_admin" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EBF3FC;strokeColor=#4A90E2;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Admin Management" vertex="1">
+          <mxGeometry x="380" y="150" width="830" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_feed" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EEF7EE;strokeColor=#52BE80;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Social Feed &amp; Content Sharing" vertex="1">
+          <mxGeometry x="380" y="760" width="830" height="680" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_playlist" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FCF3CF;strokeColor=#F4D03F;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Collaborative Playlists" vertex="1">
+          <mxGeometry x="380" y="1470" width="830" height="750" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_guest" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5EEF8;strokeColor=#AF7AC5;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Guest Access &amp; Authentication" vertex="1">
+          <mxGeometry x="1260" y="150" width="830" height="360" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_settings" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FDF2E9;strokeColor=#EB984E;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Settings &amp; Account" vertex="1">
+          <mxGeometry x="1260" y="530" width="830" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_profile" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EAECEE;strokeColor=#7F8C8D;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Profiles &amp; Social Graph" vertex="1">
+          <mxGeometry x="1260" y="850" width="830" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_discovery" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F8F5;strokeColor=#48C9B0;strokeWidth=2;dashed=0;verticalAlign=top;align=left;spacingLeft=15;spacingTop=10;fontStyle=1;fontSize=15;fontColor=#333333;" value="Music Discovery &amp; Onboarding" vertex="1">
+          <mxGeometry x="1260" y="1450" width="830" height="650" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Admin Login" vertex="1">
+          <mxGeometry x="400" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_logout" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Admin Logout" vertex="1">
+          <mxGeometry x="660" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_update_profile" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Update Admin Profile&#10;&amp; Password" vertex="1">
+          <mxGeometry x="920" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_dashboard" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Admin Dashboard&#10;(Metrics &amp; Charts)" vertex="1">
+          <mxGeometry x="400" y="320" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_mark_notifications" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Mark Admin&#10;Notifications Read" vertex="1">
+          <mxGeometry x="660" y="320" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_manage_admins" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Manage Admin Accounts" vertex="1">
+          <mxGeometry x="920" y="320" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_manage_users" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Manage Users&#10;(List, Search, Ban, Delete)" vertex="1">
+          <mxGeometry x="400" y="440" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_moderate_content" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Moderate Content&#10;(Delete Shares, Comments, Playlists)" vertex="1">
+          <mxGeometry x="660" y="440" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin_retrain" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Retrain Recommendation&#10;Model" vertex="1">
+          <mxGeometry x="920" y="440" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_view_feed" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Feed&#10;(Explore / Following)" vertex="1">
+          <mxGeometry x="400" y="810" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_share_song" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Share Song&#10;(Spotify Search)" vertex="1">
+          <mxGeometry x="660" y="810" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_bookmark_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Bookmark Share" vertex="1">
+          <mxGeometry x="920" y="810" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_update_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Update Own Share" vertex="1">
+          <mxGeometry x="400" y="960" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_delete_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Delete Own Share" vertex="1">
+          <mxGeometry x="660" y="960" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_like_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Like Share" vertex="1">
+          <mxGeometry x="920" y="960" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_dislike_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Dislike Share" vertex="1">
+          <mxGeometry x="400" y="1110" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_comment_share" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Comment on Share" vertex="1">
+          <mxGeometry x="660" y="1110" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_upvote_comment" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Upvote Comment" vertex="1">
+          <mxGeometry x="920" y="1110" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_update_comment" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Update Comment" vertex="1">
+          <mxGeometry x="400" y="1260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_delete_comment" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Delete Comment" vertex="1">
+          <mxGeometry x="660" y="1260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Playlists" vertex="1">
+          <mxGeometry x="400" y="1520" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_create" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Create Playlist" vertex="1">
+          <mxGeometry x="660" y="1520" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_delete" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Delete Playlist" vertex="1">
+          <mxGeometry x="920" y="1520" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_edit" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Edit Playlist Details&#10;&amp; Cover" vertex="1">
+          <mxGeometry x="400" y="1680" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_add_song" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Add Song to Playlist" vertex="1">
+          <mxGeometry x="660" y="1680" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_remove_song" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Remove Song" vertex="1">
+          <mxGeometry x="920" y="1680" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_invite" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Invite Collaborator" vertex="1">
+          <mxGeometry x="400" y="1840" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_respond_invite" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Accept/Decline&#10;Invitation" vertex="1">
+          <mxGeometry x="660" y="1840" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_import" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Import Spotify Playlist&#10;(Preview &amp; Process)" vertex="1">
+          <mxGeometry x="400" y="2000" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="playlist_export" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Export Playlist&#10;to Spotify" vertex="1">
+          <mxGeometry x="660" y="2000" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_view_welcome" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Welcome Page" vertex="1">
+          <mxGeometry x="1280" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_register" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Register Account" vertex="1">
+          <mxGeometry x="1540" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Login (Email/Pass)" vertex="1">
+          <mxGeometry x="1800" y="200" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_social_login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Social Login&#10;(Google / Spotify)" vertex="1">
+          <mxGeometry x="1280" y="310" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_req_pass_reset" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Request Password Reset" vertex="1">
+          <mxGeometry x="1540" y="310" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="guest_reset_pass" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Reset Password" vertex="1">
+          <mxGeometry x="1800" y="310" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_verify_email" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Verify Email" vertex="1">
+          <mxGeometry x="1280" y="420" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_resend_verify" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Resend Verification&#10;Email" vertex="1">
+          <mxGeometry x="1540" y="420" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings_view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Settings" vertex="1">
+          <mxGeometry x="1280" y="580" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings_update_password" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Update Password" vertex="1">
+          <mxGeometry x="1540" y="580" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings_delete_account" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Delete Account" vertex="1">
+          <mxGeometry x="1800" y="580" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings_link_oauth" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Link Social Account&#10;(Google / Spotify)" vertex="1">
+          <mxGeometry x="1280" y="700" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings_unlink_oauth" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Unlink Social Account" vertex="1">
+          <mxGeometry x="1540" y="700" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Profile&#10;(Shelf, Taste, Saved)" vertex="1">
+          <mxGeometry x="1280" y="900" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_edit" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Edit Profile&#10;(Pic, Banner, Bio)" vertex="1">
+          <mxGeometry x="1540" y="900" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_search_users" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Search Users" vertex="1">
+          <mxGeometry x="1800" y="900" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_follow" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Follow User" vertex="1">
+          <mxGeometry x="1280" y="1020" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_unfollow" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Unfollow User" vertex="1">
+          <mxGeometry x="1540" y="1020" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_view_followers" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Followers List" vertex="1">
+          <mxGeometry x="1280" y="1140" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_view_following" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Following List" vertex="1">
+          <mxGeometry x="1540" y="1140" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_shelf_add" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Add Song to Shelf" vertex="1">
+          <mxGeometry x="1280" y="1260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_shelf_remove" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Remove Song from Shelf" vertex="1">
+          <mxGeometry x="1540" y="1260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="profile_shelf_reorder" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Reorder Shelf" vertex="1">
+          <mxGeometry x="1800" y="1260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Discovery Page" vertex="1">
+          <mxGeometry x="1280" y="1500" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="onboarding_genres" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Mandatory Onboarding&#10;(Select 5-10 Songs/Genres)" vertex="1">
+          <mxGeometry x="1565" y="1460" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_get_recs" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Get Recommendation&#10;(Flask hybrid)" vertex="1">
+          <mxGeometry x="1280" y="1630" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="song_interaction_store" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Record Song Interaction&#10;(Likes / Dislikes)" vertex="1">
+          <mxGeometry x="1540" y="1630" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_sync_spotify" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Sync to Spotify" vertex="1">
+          <mxGeometry x="1280" y="1760" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_listen_preview" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Listen to Spotify Preview" vertex="1">
+          <mxGeometry x="1540" y="1760" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_add_playlist" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Add Recommended Song&#10;to Playlist" vertex="1">
+          <mxGeometry x="1800" y="1760" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_watch_youtube" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Watch Song on YouTube" vertex="1">
+          <mxGeometry x="1280" y="1890" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_view_context" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="View Recommendation&#10;Context" vertex="1">
+          <mxGeometry x="1540" y="1890" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="discovery_follow_suggested" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#555555;strokeWidth=1.5;fontSize=12;align=center;fontColor=#333333;" value="Follow Suggested User&#10;(Who to Follow)" vertex="1">
+          <mxGeometry x="1800" y="1890" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_0" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_view_welcome">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_register">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_2" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_login">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_3" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_social_login">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_4" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_req_pass_reset">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_5" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_guest" target="guest_reset_pass">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_6" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_admin" target="admin_login">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_7" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_admin" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_8" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="user_verify_email">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_9" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="user_resend_verify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_10" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="onboarding_genres">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_11" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_12" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_13" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="profile_search_users">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_14" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_15" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="settings_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_16" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="actor_user" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_17" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="guest_social_login" target="service_google">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_18" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_link_oauth" target="service_google">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_19" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="guest_req_pass_reset" target="service_email">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_20" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_resend_verify" target="service_email">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_21" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="guest_register" target="service_email">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_22" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="guest_social_login" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_23" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_link_oauth" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_24" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_share_song" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_25" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_add_song" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_26" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_import" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_27" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_export" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_28" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_view_feed" target="service_youtube">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_29" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_view" target="service_youtube">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_30" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_get_recs" target="service_recommender">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_31" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_retrain" target="service_recommender">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_32" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="song_interaction_store" target="service_recommender">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_33" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_share_song" target="service_musicbrainz">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_34" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_add_song" target="service_musicbrainz">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_35" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_share_song" target="service_audiodb">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_36" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_add_song" target="service_audiodb">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_37" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_sync_spotify" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_38" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_listen_preview" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_39" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_add_playlist" target="service_spotify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_assoc_40" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=none;html=1;strokeColor=#4D4D4D;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_watch_youtube" target="service_youtube">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_0" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_manage_users" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_0" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_0">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_moderate_content" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_1" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_2" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_retrain" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_2" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_3" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_manage_admins" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_3" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_4" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_update_profile" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_4" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_5" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_mark_notifications" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_5" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_6" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="admin_logout" target="admin_dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_6" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_7" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_share_song" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_7" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_8" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_like_share" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_8" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_9" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_dislike_share" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_9" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_10" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_bookmark_share" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_10" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_11" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_comment_share" target="user_view_feed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_11" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_12" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_update_share" target="user_share_song">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_12" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_12">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_13" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_delete_share" target="user_share_song">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_13" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_13">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_14" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_upvote_comment" target="user_comment_share">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_14" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_14">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_15" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_update_comment" target="user_comment_share">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_15" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_16" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="user_delete_comment" target="user_comment_share">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_16" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_16">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_17" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_edit" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_17" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_17">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_18" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_follow" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_18" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_18">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_19" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_unfollow" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_19" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_19">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_20" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_view_followers" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_20" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_20">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_21" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_view_following" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_21" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_21">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_22" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_shelf_add" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_22" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_22">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_23" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_shelf_remove" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_23" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_24" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="profile_shelf_reorder" target="profile_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_24" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_24">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_25" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_create" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_25" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_25">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_26" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_edit" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_26" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_26">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_27" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_delete" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_27" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_27">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_28" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_add_song" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_28" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_28">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_29" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_remove_song" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_29" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_29">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_30" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_invite" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_30" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_30">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_31" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_respond_invite" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_31" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_31">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_32" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_import" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_32" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_32">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_33" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="playlist_export" target="playlist_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_33" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_33">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_34" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_update_password" target="settings_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_34" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_34">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_35" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_delete_account" target="settings_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_35" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_35">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_36" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_link_oauth" target="settings_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_36" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_36">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_37" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="settings_unlink_oauth" target="settings_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_37" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_37">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_38" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_view" target="discovery_get_recs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_38" value="&lt;&lt;include&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_38">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_39" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="song_interaction_store" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_39" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_39">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_40" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="onboarding_genres" target="guest_register">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_40" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_40">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_41" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_sync_spotify" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_41" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_41">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_42" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_listen_preview" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_42" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_42">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_43" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_add_playlist" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_43" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_43">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_44" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_watch_youtube" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_44" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_44">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_45" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_view_context" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_45" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_45">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rel_46" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endSize=8;dashed=1;html=1;strokeColor=#888888;strokeWidth=1.2;jumpStyle=arc;jumpSize=6;" edge="1" source="discovery_follow_suggested" target="discovery_view">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="label_edge_rel_46" value="&lt;&lt;extend&gt;&gt;" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#666666;backgroundColor=#FFFFFF;" connectable="0" vertex="1" parent="edge_rel_46">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

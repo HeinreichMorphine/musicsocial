@@ -1,4 +1,4 @@
-<x-app-layout pageTitle="Collaborative Playlists">
+<x-app-layout pageTitle="Playlists">
     <div class="py-4 sm:py-12 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
 
@@ -74,7 +74,9 @@
                 @else
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     @foreach($playlists as $playlist)
-                    <div class="relative group">
+                    <div id="playlist-card-{{ $playlist->id }}" 
+                         x-data="playlistCard({{ $playlist->id }}, '{{ route('playlists.destroy', $playlist) }}')"
+                         class="relative group">
                         <a href="{{ route('playlists.show', $playlist) }}" class="block bg-white dark:bg-black rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 dark:border-white/10 hover:border-indigo-500/50 transition-all duration-300 transform group-hover:-translate-y-1">
                             <div class="h-44 bg-gradient-to-br from-indigo-900 to-gray-900 relative">
                                 @if($playlist->cover_image_url)
@@ -96,7 +98,7 @@
                                 <div class="mt-4 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
                                     <div class="flex -space-x-2 overflow-hidden">
                                         @foreach($playlist->collaborators->where('status', 'accepted')->take(5) as $collab)
-                                            <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-black object-cover" src="{{ $collab->user->profile_picture_url }}" alt="{{ $collab->user->name }}" title="{{ $collab->user->name }}">
+                                            <x-user-avatar :user="$collab->user" class="h-8 w-8 ring-2 ring-white dark:ring-black" title="{{ $collab->user->name }}" />
                                         @endforeach
                                         @if($playlist->collaborators->where('status', 'accepted')->count() > 5)
                                             <div class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-black bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-500">
@@ -104,7 +106,12 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <span class="text-[10px] font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">{{ $playlist->songs()->count() }} tracks</span>
+                                    <div class="flex items-center gap-2">
+                                        @if(str_contains($playlist->description, 'Imported'))
+                                            <span class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Imported</span>
+                                        @endif
+                                        <span class="text-[10px] font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">{{ $playlist->songs()->count() }} tracks</span>
+                                    </div>
                                 </div>
                             </div>
                         </a>
@@ -118,13 +125,11 @@
                             <a href="{{ route('playlists.edit', $playlist) }}" class="bg-white/90 dark:bg-black/90 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-lg transition-colors border border-gray-100 dark:border-white/10" title="Edit Playlist">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </a>
-                            <form action="{{ route('playlists.destroy', $playlist) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this playlist? This action cannot be undone.')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="bg-white/90 dark:bg-black/90 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 shadow-lg transition-colors border border-gray-100 dark:border-white/10" title="Delete Playlist">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </form>
+                            <button type="button" 
+                                @click="deletePlaylist()"
+                                class="bg-white/90 dark:bg-black/90 p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 shadow-lg transition-colors border border-gray-100 dark:border-white/10" title="Delete Playlist">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                         </div>
                         @endif
                     </div>

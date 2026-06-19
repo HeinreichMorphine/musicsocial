@@ -32,7 +32,6 @@ Route::middleware('guest:admin')->group(function () {
 Route::middleware(['auth'])->name('onboarding.')->group(function () {
     Route::get('/onboarding/genres', [App\Http\Controllers\OnboardingController::class, 'genres'])->name('genres');
     Route::post('/onboarding/genres', [App\Http\Controllers\OnboardingController::class, 'store'])->name('genres.store');
-    Route::get('/onboarding/skip', [App\Http\Controllers\OnboardingController::class, 'skip'])->name('skip');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -49,7 +48,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('playlists/{id}', [AdminController::class, 'deletePlaylist'])->name('playlists.delete');
         Route::get('retrain', [AdminController::class, 'retrainPage'])->name('retrain.page');
         Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
-        Route::post('retrain', [AdminController::class, 'retrainProcess'])->name('retrain.process');
         Route::get('profile', [AdminController::class, 'profile'])->name('profile');
         Route::post('profile', [AdminController::class, 'updateProfile'])->name('profile.update');
         Route::post('profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
@@ -58,6 +56,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('admins', [AdminController::class, 'admins'])->name('admins.index');
         Route::post('admins', [AdminController::class, 'storeAdmin'])->name('admins.store');
         Route::delete('admins/{id}', [AdminController::class, 'deleteAdmin'])->name('admins.destroy');
+        Route::post('notifications/mark-all-read', [AdminController::class, 'markAllNotificationsRead'])->name('notifications.markAllRead');
     });
 });
 
@@ -94,6 +93,14 @@ Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(f
     Route::post('/playlists/{playlist}/decline', [App\Http\Controllers\PlaylistController::class, 'declineInvite'])->name('playlists.decline');
     Route::post('/playlists/{playlist}/songs', [App\Http\Controllers\PlaylistController::class, 'addSong'])->name('playlists.add-song');
     Route::post('/playlists/{playlist}/cover', [App\Http\Controllers\PlaylistController::class, 'updateCover'])->name('playlists.update-cover');
+
+    // JSON endpoint for the "Add to MusicSocial Playlist" modal
+    Route::get('/api/playlists/mine', function () {
+        $user = auth()->user();
+        return \App\Models\Playlist::whereHas('collaborators', function ($q) use ($user) {
+            $q->where('user_id', $user->id)->where('status', 'accepted');
+        })->withCount('songs')->get(['id', 'name', 'cover_image_url']);
+    })->name('api.playlists.mine');
     
     // Song Interactions (Discovery)
     Route::post('/song-interactions', [App\Http\Controllers\SongInteractionController::class, 'store'])->name('song-interactions.store');
@@ -143,10 +150,10 @@ Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(f
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
     // User profile routes
-    Route::get('/profile/{user}', [UserProfileController::class, 'show'])->name('user.profile');
-    Route::get('/profile/{user}/shelf', [UserProfileController::class, 'shelf'])->name('profile.shelf');
-    Route::get('/profile/{user}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
-    Route::get('/profile/{user}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
+    Route::get('/profile/{user:name}', [UserProfileController::class, 'show'])->name('user.profile');
+    Route::get('/profile/{user:name}/shelf', [UserProfileController::class, 'shelf'])->name('profile.shelf');
+    Route::get('/profile/{user:name}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
+    Route::get('/profile/{user:name}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
 
     // Song Shelf CRUD
     Route::post('/shelf/add', [App\Http\Controllers\UserShelfController::class, 'add'])->name('shelf.add');

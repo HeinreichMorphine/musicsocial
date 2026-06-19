@@ -1,4 +1,4 @@
-<x-app-layout pageTitle="Import Spotify Playlist">
+<x-app-layout pageTitle="Import Your Spotify Playlist">
     <div class="py-4 sm:py-12 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 md:gap-8">
             
@@ -29,14 +29,14 @@
                                 <svg class="w-8 h-8 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm5.508 17.302c-.216.354-.675.465-1.028.249-2.815-1.722-6.36-2.112-10.537-1.157-.403.093-.811-.158-.905-.562-.093-.404.159-.812.562-.905 4.577-1.047 8.508-.602 11.659 1.326.354.216.465.675.249 1.028zm1.474-3.264c-.273.443-.852.583-1.295.31-3.222-1.98-8.136-2.557-11.947-1.4c-.5.152-1.025-.13-1.177-.63-.153-.5.13-1.025.63-1.177 4.357-1.322 9.774-.678 13.482 1.6 0 .001.442.274.707.697zm.128-3.413C15.111 8.217 8.513 7.994 4.697 9.151c-.604.183-1.246-.164-1.428-.767-.183-.604.164-1.246.767-1.428 4.38-1.328 11.666-1.066 16.326 1.7 0 .001 1.107.657.828 1.488-.28.831-1.08 1.141-1.08 1.141z"/></svg>
                             </div>
                             <div>
-                                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Import Spotify Playlist</h2>
-                                <p class="text-gray-500 dark:text-gray-400">Bring your favorite vibes to MusicSocial.</p>
+                                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Import Your Spotify Playlist</h2>
+                                <p class="text-gray-500 dark:text-gray-400">Bring your favorite vibes to Reso.</p>
                             </div>
                         </div>
 
                         <div class="bg-gray-50 dark:bg-white/5 rounded-3xl p-6 mb-8 border border-gray-100 dark:border-white/5">
                             <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
-                                Paste the link to your Spotify playlist below. We'll fetch the tracks and let you curate <strong>up to 15</strong> of your absolute favorites to create a new collaborative playlist here.
+                                Paste the link to your Spotify playlist below. We'll fetch the tracks and let you curate <strong>up to 15</strong> of your absolute favorites to create a new playlist here.
                             </p>
                         </div>
 
