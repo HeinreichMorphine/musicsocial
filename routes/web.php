@@ -129,6 +129,7 @@ Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(f
 
     // Public profiles
     Route::get('/users/{user:name}', [UserProfileController::class, 'show'])->name('profile.show');
+    Route::get('/users/{user:name}/shelf', [UserProfileController::class, 'shelf'])->name('profile.shelf');
     Route::get('/users/{user:name}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
     Route::get('/users/{user:name}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
     Route::post('/users/{user}/follow', [FollowController::class, 'toggle'])->name('users.follow');
@@ -151,20 +152,14 @@ Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(f
     // Settings route
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
-    // User profile routes
-    Route::get('/profile/{user:name}', [UserProfileController::class, 'show'])->name('user.profile');
-    Route::get('/profile/{user:name}/shelf', [UserProfileController::class, 'shelf'])->name('profile.shelf');
-    Route::get('/profile/{user:name}/taste', [UserProfileController::class, 'taste'])->name('profile.taste');
-    Route::get('/profile/{user:name}/saved', [UserProfileController::class, 'saved'])->name('profile.saved');
-
     // Song Shelf CRUD
     Route::post('/shelf/add', [App\Http\Controllers\UserShelfController::class, 'add'])->name('shelf.add');
     Route::delete('/shelf/{songId}', [App\Http\Controllers\UserShelfController::class, 'remove'])->name('shelf.remove');
     Route::post('/shelf/reorder', [App\Http\Controllers\UserShelfController::class, 'reorder'])->name('shelf.reorder');
 
     // Followers and Following routes
-    Route::get('/profile/{user}/followers', [FollowerController::class, 'followers'])->name('profile.followers');
-    Route::get('/profile/{user}/following', [FollowerController::class, 'following'])->name('profile.following');
+    Route::get('/users/{user}/followers', [FollowerController::class, 'followers'])->name('profile.followers');
+    Route::get('/users/{user}/following', [FollowerController::class, 'following'])->name('profile.following');
 });
 
 // Social Auth Routes
