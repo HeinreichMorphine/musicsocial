@@ -179,22 +179,4 @@ Route::get('/debug-auth', function () {
     ];
 });
 
-Route::get('/reset-admin', function () {
-    $admin = \App\Models\Admin::updateOrCreate(
-        ['email' => 'admin@musicsocial.com'],
-        [
-            'name' => 'MusicSocial Admin',
-            'password' => bcrypt('AdminPassword123!'),
-        ]
-    );
-    $admin2 = \App\Models\Admin::updateOrCreate(
-        ['email' => 'admin@reso.local'],
-        [
-            'name' => 'Reso Admin',
-            'password' => bcrypt('AdminPassword123!'),
-        ]
-    );
-    return "Admin accounts successfully created/reset! Email: admin@musicsocial.com, Password: AdminPassword123!";
-});
-
 require __DIR__.'/auth.php';
