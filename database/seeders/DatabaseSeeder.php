@@ -15,22 +15,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ensure default admin users exist specifically by email
-        if (\App\Models\Admin::where('email', 'admin@reso.local')->count() === 0) {
-            \App\Models\Admin::create([
+        // Force seed/reset admin credentials specifically by email
+        \App\Models\Admin::updateOrCreate(
+            ['email' => 'admin@reso.local'],
+            [
                 'name' => 'Reso Admin',
-                'email' => 'admin@reso.local',
                 'password' => bcrypt('AdminPassword123!'),
-            ]);
-        }
+            ]
+        );
 
-        if (\App\Models\Admin::where('email', 'admin@musicsocial.com')->count() === 0) {
-            \App\Models\Admin::create([
+        \App\Models\Admin::updateOrCreate(
+            ['email' => 'admin@musicsocial.com'],
+            [
                 'name' => 'MusicSocial Admin',
-                'email' => 'admin@musicsocial.com',
                 'password' => bcrypt('AdminPassword123!'),
-            ]);
-        }
+            ]
+        );
 
         // Only seed test users if we're not in production
         if (!app()->environment('production')) {
