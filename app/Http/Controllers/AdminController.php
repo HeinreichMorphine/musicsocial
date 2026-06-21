@@ -295,4 +295,28 @@ class AdminController extends Controller
         return response(file_get_contents($filePath), 200)
             ->header('Content-Type', 'text/html');
     }
+
+    public function algoTestSuiteApi(Request $request, $endpoint = '')
+    {
+        $url = 'http://127.0.0.1:5000/' . $endpoint;
+        $query = $request->getQueryString();
+        if ($query) {
+            $url .= '?' . $query;
+        }
+
+        try {
+            $method = strtolower($request->method());
+            
+            if ($method === 'post') {
+                $response = \Illuminate\Support\Facades\Http::timeout(15)->post($url, $request->json()->all());
+            } else {
+                $response = \Illuminate\Support\Facades\Http::timeout(15)->get($url);
+            }
+
+            return response($response->body(), $response->status())
+                ->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Recommender Connection failed: ' . $e->getMessage()], 500);
+        }
+    }
 }
