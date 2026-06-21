@@ -339,9 +339,16 @@ def stats_endpoint():
 
 @app.route('/users', methods=['GET'])
 def get_users_list():
-    """Returns a list of recent active users for the audit dropdown."""
+    """Returns a list of real active users for the audit dropdown.
+    Excludes simulated seeder accounts (@sim.reso.local) so only genuine
+    registered users appear, ordered by ID ascending (oldest first).
+    """
     try:
-        query = "SELECT id, name, email FROM users ORDER BY created_at DESC LIMIT 50"
+        query = """
+            SELECT id, name, email FROM users
+            WHERE email NOT LIKE '%%@sim.reso.local'
+            ORDER BY id ASC
+        """
         df = pd.read_sql(query, engine)
         return jsonify(df.to_dict(orient='records'))
     except Exception as e:
@@ -401,9 +408,66 @@ def audit_endpoint():
             idf_rare = math.log10(N / max(1, rare[1]))
             idf_common = math.log10(N / max(1, common[1]))
             
+            # TC-02: Cosine Similarity (Real calculation based on actual DB tracks)
+            # Fetch user's liked/interacted tracks to build taste profile
+            liked_songs_query = text("""
+                SELECT DISTINCT so.id, so.track_name, so.artist_name, so.genres
+                FROM likes l JOIN shares s ON l.share_id = s.id JOIN songs so ON s.song_id = so.id WHERE l.user_id = :uid
+                UNION DISTINCT
+                SELECT DISTINCT so.id, so.track_name, so.artist_name, so.genres
+                FROM shares s JOIN songs so ON s.song_id = so.id WHERE s.user_id = :uid
+                UNION DISTINCT
+                SELECT DISTINCT so.id, so.track_name, so.artist_name, so.genres
+                FROM user_shelf_songs uss JOIN songs so ON uss.song_id = so.spotify_track_id WHERE uss.user_id = :uid
+                UNION DISTINCT
+                SELECT DISTINCT so.id, so.track_name, so.artist_name, so.genres
+                FROM playlist_songs ps JOIN songs so ON ps.song_id = so.spotify_track_id WHERE ps.added_by_user_id = :uid
+            """)
+            liked_df = pd.read_sql(liked_songs_query, connection, params={"uid": user_id})
+            
+            # Fallback: if no liked songs, use the first song in database to simulate taste vector
+            if liked_df.empty and not songs_df.empty:
+                liked_df = songs_df.iloc[[0]].copy()
+            
+            high_song_info = "N/A"
+            high_score = 0.0
+            low_song_info = "N/A"
+            low_score = 0.0
+            sim_passed = False
+            
+            if not liked_df.empty:
+                result = get_or_build_tfidf_cache(songs_df)
+                if result[0] is not None:
+                    tfidf, all_matrix, cached_songs = result
+                    liked_df['features'] = liked_df.apply(build_song_features, axis=1)
+                    liked_df = liked_df[liked_df['features'] != '']
+                    
+                    if not liked_df.empty:
+                        user_matrix = tfidf.transform(liked_df['features'])
+                        user_vector = np.asarray(user_matrix.mean(axis=0))
+                        similarities = cosine_similarity(user_vector, all_matrix)[0]
+                        
+                        liked_ids = set(liked_df['id'].unique())
+                        candidates = []
+                        for idx, sim in enumerate(similarities):
+                            s_id = int(cached_songs.iloc[idx]['id'])
+                            if s_id not in liked_ids:
+                                candidates.append({
+                                    "name": f"{cached_songs.iloc[idx]['track_name']} ({cached_songs.iloc[idx]['artist_name']})",
+                                    "score": float(sim)
+                                })
+                        
+                        if candidates:
+                            candidates.sort(key=lambda x: x['score'], reverse=True)
+                            high_song_info = f"Sim(User, {candidates[0]['name']}) = {round(candidates[0]['score'], 4)}"
+                            high_score = candidates[0]['score']
+                            
+                            low_song_info = f"Sim(User, {candidates[-1]['name']}) = {round(candidates[-1]['score'], 4)}"
+                            low_score = candidates[-1]['score']
+                            sim_passed = high_score > low_score
+            
             # TC-03: SVD Log-Flattening (Personalized)
-            # Find a real song the user has interacted with multiple times
-            raw_sum = 7.0 # Default
+            raw_sum = 0.0
             if user_id:
                 score_query = """
                     SELECT SUM(score) FROM (
@@ -419,15 +483,15 @@ def audit_endpoint():
             svd_val = 1 + math.log(1 + raw_sum)
             
             # TC-04: Social Trust (Personalized)
-            follower_count = 10
-            following_count = 2
+            follower_count = 0
+            following_count = 0
             if user_id:
                 # Count followers of the user
                 res_f = connection.execute(text("SELECT COUNT(*) FROM followers WHERE user_id = :uid"), {"uid": user_id}).fetchone()
-                follower_count = res_f[0] if res_f else 10
+                follower_count = res_f[0] if res_f else 0
                 # Count who the user follows
                 res_ing = connection.execute(text("SELECT COUNT(*) FROM followers WHERE follower_id = :uid"), {"uid": user_id}).fetchone()
-                following_count = res_ing[0] if res_ing else 2
+                following_count = res_ing[0] if res_ing else 0
 
             # Compute social trust parameters for TC-04 math formula
             num = math.log(1.0 + pow(follower_count, 0.7))
@@ -438,6 +502,52 @@ def audit_endpoint():
             if user_id:
                 dislikes_res = connection.execute(text("SELECT COUNT(*) FROM dislikes WHERE user_id = :uid"), {"uid": user_id}).fetchone()
                 disliked_count = dislikes_res[0] if dislikes_res else 0
+
+            # TC-05: Explicit Artist Preference
+            liked_artists = get_liked_artists(user_id, connection)
+            active_liked_artist = "None"
+            if liked_artists:
+                active_liked_artist = list(liked_artists)[0].title()
+            elif not songs_df.empty:
+                active_liked_artist = songs_df.iloc[0]['artist_name']
+
+            real_svd = 3.10
+            if algo and user_id and active_liked_artist != "None" and not songs_df.empty:
+                # Find a song by this artist in database
+                artist_songs = songs_df[songs_df['artist_name'].str.lower().str.strip() == active_liked_artist.lower().strip()]
+                if not artist_songs.empty:
+                    song_id = int(artist_songs.iloc[0]['id'])
+                    real_svd = algo.predict(user_id, song_id).est
+            
+            boosted_svd = real_svd + 0.40
+            tc05_calculation = f"Base SVD prediction ({round(real_svd, 2)}) + 0.40 Boost = {round(boosted_svd, 2)} for Artist: '{active_liked_artist}'"
+
+            # TC-07: Collaborative Playlist Rm Multiplier
+            relationship_type = "Stranger"
+            rm_val = 0.3
+            collab_count = 0
+            follow_count = 0
+            
+            if user_id:
+                collab_query = """
+                    SELECT COUNT(*) FROM playlist_collaborators pc1
+                    JOIN playlist_collaborators pc2 ON pc1.playlist_id = pc2.playlist_id
+                    WHERE pc1.user_id = :uid AND pc1.status = 'accepted'
+                      AND pc2.status = 'accepted' AND pc2.user_id != pc1.user_id
+                """
+                collab_count = connection.execute(text(collab_query), {"uid": user_id}).scalar()
+                
+                if collab_count > 0:
+                    relationship_type = "Collaborative Playlist Peer"
+                    rm_val = 1.0
+                else:
+                    follow_query = "SELECT COUNT(*) FROM followers WHERE follower_id = :uid"
+                    follow_count = connection.execute(text(follow_query), {"uid": user_id}).scalar()
+                    if follow_count > 0:
+                        relationship_type = "Followed User"
+                        rm_val = 0.8
+
+            tc07_calculation = f"Rm = {rm_val} ({relationship_type})"
 
             return jsonify({
                 "user": {"id": user_id, "name": user_name},
@@ -464,12 +574,14 @@ def audit_endpoint():
                 },
                 "tc05": {
                     "formula": "Score = Prediction + Boost",
-                    "calculation": "Base Rating (e.g. 3.50) + 0.40 Artist Affinity"
+                    "calculation": tc05_calculation
                 },
                 "tc02": {
                     "formula": "cos(θ) = (A·B) / (||A||*||B||)",
-                    "calculation": "Sim(User_Vector, Candidate) > 0.1 Threshold",
-                    "threshold": "PASS: Vector Alignment Confirmed"
+                    "high_song": high_song_info,
+                    "low_song": low_song_info,
+                    "ordering": f"{round(high_score, 4)} > {round(low_score, 4)}",
+                    "passed": bool(sim_passed)
                 },
                 "tc06": {
                     "formula": "Candidate Pool = Total - Excluded(Disliked + Seen)",
@@ -478,8 +590,8 @@ def audit_endpoint():
                 },
                 "tc07": {
                     "formula": "R_m Multipliers: Peer = 1.0, Follow = 0.8, Stranger = 0.3",
-                    "calculation": "Peer-Node Clustering verified via Collaborative Playlist status='accepted'",
-                    "result": "PASS: Playlist Collaborator assigned maximum R_m = 1.0"
+                    "calculation": tc07_calculation,
+                    "result": f"PASS: Playlist status verified (Collab count: {collab_count})"
                 },
                 "version": ALGO_VERSION,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")

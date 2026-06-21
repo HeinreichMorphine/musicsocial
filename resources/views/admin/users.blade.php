@@ -5,30 +5,30 @@
 @push('styles')
 <style>
     .search-bar-row {
-        display: flex; gap: .75rem; align-items: center;
-        margin-bottom: 1.25rem; flex-wrap: wrap;
+        display: flex; gap: 1rem; align-items: center;
+        margin-bottom: 1.5rem; flex-wrap: wrap;
     }
     .search-input-wrap { position: relative; flex: 1; min-width: 220px; }
     .search-input-wrap i {
-        position: absolute; left: .875rem; top: 50%;
-        transform: translateY(-50%); color: #94a3b8; font-size: .85rem;
+        position: absolute; left: 1rem; top: 50%;
+        transform: translateY(-50%); color: #94a3b8; font-size: 0.95rem;
     }
     .search-input {
-        width: 100%; padding: .6rem .875rem .6rem 2.3rem;
+        width: 100%; padding: .75rem 1rem .75rem 2.6rem;
         border: 1.5px solid #e2e8f0; border-radius: 8px;
-        font-size: .85rem; color: #0f172a; background: #fff; outline: none;
+        font-size: 0.95rem; color: #0f172a; background: #fff; outline: none;
         transition: border-color .2s, box-shadow .2s;
     }
     .search-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.07); }
     .btn-search {
-        padding: .6rem 1.25rem; background: #1d4ed8; color: #fff; border: none;
-        border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer;
+        padding: .75rem 1.5rem; background: #1d4ed8; color: #fff; border: none;
+        border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
         transition: background .15s;
     }
     .btn-search:hover { background: #1e40af; }
     .btn-clear {
-        padding: .6rem 1rem; background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0;
-        border-radius: 8px; font-size: .83rem; font-weight: 500; cursor: pointer;
+        padding: .75rem 1.25rem; background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0;
+        border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer;
         text-decoration: none; display: inline-flex; align-items: center; gap: .35rem;
         transition: background .15s;
     }
@@ -39,52 +39,52 @@
         box-shadow: 0 1px 4px rgba(15,23,42,.04); overflow: hidden;
     }
     .panel-head {
-        padding: .875rem 1.25rem; border-bottom: 1px solid #f1f5f9;
+        padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;
         display: flex; justify-content: space-between; align-items: center;
     }
-    .panel-head h4 { font-size: .9rem; font-weight: 700; color: #0f172a; margin: 0; }
+    .panel-head h4 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
 
     .users-table { width: 100%; border-collapse: collapse; }
     .users-table thead tr {
         background: #f8fafc; border-bottom: 1px solid #e2e8f0;
     }
     .users-table th {
-        padding: .65rem 1rem; text-align: left;
-        font-size: .72rem; font-weight: 700; color: #64748b;
+        padding: 1rem 1.25rem; text-align: left;
+        font-size: 0.85rem; font-weight: 700; color: #64748b;
         text-transform: uppercase; letter-spacing: .5px;
     }
     .users-table td {
-        padding: .7rem 1rem; font-size: .83rem; color: #374151;
+        padding: 1rem 1.25rem; font-size: 0.95rem; color: #374151;
         border-bottom: 1px solid #f1f5f9; vertical-align: middle;
     }
     .users-table tbody tr:last-child td { border-bottom: none; }
     .users-table tbody tr:hover { background: #fafbff; }
 
     .av-wrap {
-        width: 34px; height: 34px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+        width: 42px; height: 42px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
         display: inline-flex; align-items: center; justify-content: center;
     }
     .av-img { width: 100%; height: 100%; object-fit: cover; }
     .av-init {
-        width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #1d4ed8;
-        font-weight: 700; font-size: .75rem;
+        width: 42px; height: 42px; border-radius: 8px; background: #eff6ff; color: #1d4ed8;
+        font-weight: 700; font-size: 0.9rem;
         display: inline-flex; align-items: center; justify-content: center;
     }
 
-    .badge-active { background: #f0fdf4; color: #16a34a; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; }
-    .badge-banned { background: #fef2f2; color: #dc2626; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+    .badge-active { background: #f0fdf4; color: #16a34a; padding: .25rem .65rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+    .badge-banned { background: #fef2f2; color: #dc2626; padding: .25rem .65rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
 
     .action-btn {
-        padding: .3rem .7rem; border-radius: 6px; font-size: .75rem;
+        padding: .45rem .85rem; border-radius: 6px; font-size: 0.85rem;
         font-weight: 600; border: none; cursor: pointer; display: inline-flex;
-        align-items: center; gap: .3rem; transition: opacity .15s;
+        align-items: center; gap: .4rem; transition: opacity .15s;
     }
     .action-btn:hover { opacity: .85; }
     .btn-del  { background: #fef2f2; color: #dc2626; }
     .btn-ban  { background: #fff7ed; color: #ea580c; }
     .btn-unban{ background: #f0fdf4; color: #16a34a; }
 
-    .results-info { font-size: .78rem; color: #94a3b8; margin-bottom: .75rem; }
+    .results-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem; }
 </style>
 @endpush
 

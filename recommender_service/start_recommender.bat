@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 
 echo ===================================================
-echo   Starting MusicSocial Recommender Service
+echo   Starting Reso RecSys Service
 echo ===================================================
 
 :: Check if Python is available

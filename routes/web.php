@@ -57,6 +57,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('admins', [AdminController::class, 'storeAdmin'])->name('admins.store');
         Route::delete('admins/{id}', [AdminController::class, 'deleteAdmin'])->name('admins.destroy');
         Route::post('notifications/mark-all-read', [AdminController::class, 'markAllNotificationsRead'])->name('notifications.markAllRead');
+        Route::get('algo-test-suite', [AdminController::class, 'algoTestSuite'])->name('algo-test-suite');
+        Route::get('algo-test-suite/frame', [AdminController::class, 'algoTestSuiteFrame'])->name('algo-test-suite.frame');
     });
 });
 

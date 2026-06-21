@@ -15,11 +15,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Ensure a default admin user exists
+        if (\App\Models\Admin::count() === 0) {
+            \App\Models\Admin::create([
+                'name' => 'Reso Admin',
+                'email' => 'admin@reso.local',
+                'password' => bcrypt('AdminPassword123!'),
+            ]);
+        }
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Only seed test users if we're not in production
+        if (!app()->environment('production')) {
+            if (User::where('email', 'test@example.com')->count() === 0) {
+                User::factory()->create([
+                    'name' => 'Test User',
+                    'email' => 'test@example.com',
+                ]);
+            }
+        }
     }
 }

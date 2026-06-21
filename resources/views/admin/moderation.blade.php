@@ -4,7 +4,7 @@
 
 @push('styles')
 <style>
-    .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     @media (max-width: 900px) { .mod-grid { grid-template-columns: 1fr; } }
 
     .panel-card {
@@ -12,53 +12,53 @@
         box-shadow: 0 1px 4px rgba(15,23,42,.04); overflow: hidden;
     }
     .panel-head {
-        padding: .875rem 1.25rem; border-bottom: 1px solid #f1f5f9;
-        display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap;
+        padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;
+        display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
     }
-    .panel-head h4 { font-size: .88rem; font-weight: 700; color: #0f172a; margin: 0; }
+    .panel-head h4 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
 
-    .search-mini { display: flex; gap: .5rem; flex: 1; min-width: 160px; max-width: 280px; }
+    .search-mini { display: flex; gap: .65rem; flex: 1; min-width: 160px; max-width: 320px; }
     .search-mini input {
-        flex: 1; padding: .4rem .75rem; border: 1.5px solid #e2e8f0; border-radius: 7px;
-        font-size: .78rem; outline: none; color: #374151;
+        flex: 1; padding: .55rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 8px;
+        font-size: 0.9rem; outline: none; color: #374151;
         transition: border-color .2s;
     }
     .search-mini input:focus { border-color: #1d4ed8; }
     .search-mini button {
-        padding: .4rem .75rem; background: #1d4ed8; color: #fff;
-        border: none; border-radius: 7px; font-size: .78rem; cursor: pointer;
+        padding: .55rem 1rem; background: #1d4ed8; color: #fff;
+        border: none; border-radius: 8px; font-size: 0.9rem; cursor: pointer;
     }
 
     .mod-table { width: 100%; border-collapse: collapse; }
     .mod-table thead tr { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
     .mod-table th {
-        padding: .55rem .875rem; text-align: left;
-        font-size: .68rem; font-weight: 700; color: #64748b;
+        padding: 0.9rem 1.1rem; text-align: left;
+        font-size: 0.82rem; font-weight: 700; color: #64748b;
         text-transform: uppercase; letter-spacing: .5px;
     }
     .mod-table td {
-        padding: .65rem .875rem; font-size: .8rem; color: #374151;
+        padding: 0.9rem 1.1rem; font-size: 0.95rem; color: #374151;
         border-bottom: 1px solid #f8fafc; vertical-align: middle;
     }
     .mod-table tbody tr:last-child td { border-bottom: none; }
     .mod-table tbody tr:hover { background: #fafbff; }
 
-    .author-chip { font-weight: 600; color: #0f172a; font-size: .8rem; }
-    .time-chip  { font-size: .7rem; color: #94a3b8; display: block; margin-top: 1px; }
-    .content-preview { color: #64748b; font-size: .77rem; max-width: 220px; }
+    .author-chip { font-weight: 600; color: #0f172a; font-size: 0.95rem; }
+    .time-chip  { font-size: 0.82rem; color: #94a3b8; display: block; margin-top: 2px; }
+    .content-preview { color: #64748b; font-size: 0.92rem; max-width: 250px; }
     .likes-pill {
-        display: inline-flex; align-items: center; gap: .3rem;
+        display: inline-flex; align-items: center; gap: .4rem;
         background: #fff7ed; color: #ea580c;
-        font-size: .7rem; font-weight: 700; padding: .15rem .45rem; border-radius: 20px;
+        font-size: 0.82rem; font-weight: 700; padding: .2rem .6rem; border-radius: 20px;
     }
     .btn-del-sm {
-        padding: .28rem .65rem; background: #fef2f2; color: #dc2626;
-        border: none; border-radius: 6px; font-size: .73rem; font-weight: 600;
+        padding: .4rem .8rem; background: #fef2f2; color: #dc2626;
+        border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
         cursor: pointer; transition: opacity .15s; white-space: nowrap;
     }
     .btn-del-sm:hover { opacity: .8; }
 
-    .pagination-wrap { padding: .75rem .875rem; border-top: 1px solid #f1f5f9; }
+    .pagination-wrap { padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
 </style>
 @endpush
 

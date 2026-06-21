@@ -32,10 +32,54 @@
             background: #f1f5f9 !important;
             font-family: 'Inter', 'Figtree', sans-serif;
             color: #1a202c !important;
-            font-size: 15px !important;
+            font-size: 16px !important;
             line-height: 1.65 !important;
         }
         
+        /* Modern Sidebar Width Scaling (Expanded / nav-md) */
+        .nav-md .container.body .col-md-3.left_col {
+            width: 280px !important;
+        }
+        .nav-md .container.body .right_col {
+            margin-left: 280px !important;
+        }
+        .nav-md .nav_title {
+            width: 280px !important;
+        }
+        .nav-md .main_container .top_nav {
+            margin-left: 280px !important;
+        }
+        .nav-md .sidebar-footer {
+            width: 280px !important;
+        }
+        @media (min-width: 992px) {
+            .nav-md footer {
+                margin-left: 280px !important;
+            }
+        }
+
+        /* Collapsed Sidebar (nav-sm) Width Scaling */
+        .nav-sm .container.body .col-md-3.left_col {
+            width: 70px !important;
+        }
+        .nav-sm .container.body .right_col {
+            margin-left: 70px !important;
+        }
+        .nav-sm .nav_title {
+            width: 70px !important;
+        }
+        .nav-sm .main_container .top_nav {
+            margin-left: 70px !important;
+        }
+        .nav-sm .sidebar-footer {
+            display: none !important;
+        }
+        @media (min-width: 992px) {
+            .nav-sm footer {
+                margin-left: 70px !important;
+            }
+        }
+
         /* Sidebar container styling */
         .left_col {
             background: #ffffff !important; /* White sidebar */
@@ -48,33 +92,46 @@
             border-bottom: 1px solid #e2e8f0;
             color: #1a202c !important;
             box-shadow: none !important;
-            height: 65px !important;
+            height: 72px !important;
             display: flex;
             align-items: center;
         }
         
-        .site_title {
+        .nav-md .site_title {
             color: #1a202c !important;
             font-weight: 700;
-            font-size: 18.5px !important;
+            font-size: 20px !important;
             height: auto !important;
             line-height: 1 !important;
             display: flex;
             align-items: center;
-            padding-left: 20px !important;
+            padding-left: 24px !important;
         }
 
-        .site_title img {
-            height: 32px !important;
-            margin-right: 10px !important;
+        .nav-md .site_title img {
+            height: 36px !important;
+            margin-right: 12px !important;
+        }
+
+        /* Collapsed Sidebar Logo overrides */
+        .nav-sm .site_title {
+            padding-left: 0 !important;
+            justify-content: center !important;
+        }
+        .nav-sm .site_title span {
+            display: none !important;
+        }
+        .nav-sm .site_title img {
+            margin-right: 0 !important;
+            height: 28px !important;
         }
         
-        /* Sidebar Links & Spacing */
-        .nav.side-menu > li > a, .nav.child_menu > li > a {
+        /* Sidebar Links & Spacing (Expanded / nav-md) */
+        .nav-md .nav.side-menu > li > a, .nav-md .nav.child_menu > li > a {
             color: #4a5568 !important; /* Dark grey text */
             font-weight: 600;
-            font-size: 14.5px !important;
-            padding: 14px 20px 14px 24px !important;
+            font-size: 16.5px !important;
+            padding: 16px 20px 16px 28px !important;
         }
         
         .nav.side-menu > li > a:hover, .nav.side-menu > li.current-page, .nav.side-menu > li.active > a {
@@ -84,32 +141,56 @@
         }
 
         /* Override the default green right-border on active items */
-        .nav.side-menu > li.current-page, .nav.side-menu > li.active {
-            border-right: 5px solid #3182ce !important; /* Reso Blue border */
+        .nav-md .nav.side-menu > li.current-page, .nav-md .nav.side-menu > li.active {
+            border-right: 6px solid #3182ce !important; /* Reso Blue border */
         }
         
-        /* Sidebar Icons */
-        .nav.side-menu > li > a > i {
+        /* Sidebar Icons (Expanded / nav-md) */
+        .nav-md .nav.side-menu > li > a > i {
             color: #718096 !important;
-            font-size: 16px !important;
-            margin-right: 12px !important;
-            width: 20px !important;
+            font-size: 18px !important;
+            margin-right: 14px !important;
+            width: 22px !important;
             text-align: center !important;
         }
         .nav.side-menu > li > a:hover > i, .nav.side-menu > li.active > a > i {
             color: #3182ce !important; /* Blue icons on active */
         }
 
-        /* Sidebar Section Headers (General, System) */
-        .menu_section h3 {
+        /* Sidebar Section Headers (Expanded / nav-md) */
+        .nav-md .menu_section h3 {
             color: #1a202c !important; /* Black text for section headers */
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin-top: 25px !important;
-            margin-bottom: 8px !important;
-            padding-left: 24px !important;
-            font-size: 11.5px !important;
+            margin-top: 30px !important;
+            margin-bottom: 10px !important;
+            padding-left: 28px !important;
+            font-size: 13px !important;
             font-weight: 800;
+        }
+
+        /* Collapsed Sidebar (nav-sm) Link, Icon, and Header Styling */
+        .nav-sm .nav.side-menu > li > a {
+            text-align: center !important;
+            padding: 12px 5px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            color: #4a5568 !important;
+        }
+        .nav-sm .nav.side-menu > li > a > i {
+            color: #718096 !important;
+            font-size: 20px !important;
+            margin-right: 0 !important;
+            margin-bottom: 6px !important;
+            display: block !important;
+            width: 100% !important;
+            text-align: center !important;
+        }
+        .nav-sm .menu_section h3 {
+            display: none !important;
+        }
+        .nav-sm .nav.side-menu > li.current-page, .nav-sm .nav.side-menu > li.active {
+            border-right: 4px solid #3182ce !important;
         }
 
         /* Top Navigation Bar Resizing */
@@ -117,11 +198,11 @@
             background: #ebf8ff !important; /* Light blue top bar */
             border-bottom: 1px solid #bee3f8;
             box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-            height: 65px !important;
+            height: 72px !important;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px !important;
+            padding: 0 28px !important;
         }
         
         .toggle {
@@ -133,55 +214,85 @@
         }
 
         .toggle a {
-            padding: 10px !important;
+            padding: 12px !important;
             margin: 0 !important;
         }
 
         .toggle a i {
             color: #1a202c !important;
-            font-size: 18px !important;
+            font-size: 20px !important;
         }
 
-        nav.navbar-nav {
+        .top_nav nav {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav.navbar-nav {
             margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+            list-style: none !important;
+            padding: 0 !important;
+        }
+
+        .nav.navbar-nav > li {
+            display: flex !important;
+            align-items: center !important;
+            height: 100% !important;
+            float: none !important;
+            position: relative !important;
         }
 
         .nav.navbar-nav > li > a {
             color: #1a202c !important;
-            font-size: 14.5px !important;
+            font-size: 16px !important;
             font-weight: 600 !important;
-            padding: 20px 15px !important;
+            padding: 0 20px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
         }
         
         .user-profile {
             color: #1a202c !important;
         }
 
+        /* Adjust the notification badge position inside the flex link */
+        .info-number .badge {
+            right: 6px !important;
+            top: 14px !important;
+        }
+
         /* Spacing for Main Page Content Area */
         .right_col {
-            padding: 30px 40px !important;
+            padding: 40px 50px !important;
         }
 
         /* Standardize Buttons globally */
         .btn {
-            font-size: 14px !important;
-            padding: 9px 18px !important;
+            font-size: 15px !important;
+            padding: 10px 20px !important;
             border-radius: 8px !important;
             font-weight: 600 !important;
         }
 
         /* Standardize Forms & Form Inputs globally */
         .form-control, select, input {
-            font-size: 14.5px !important;
-            padding: 10px 14px !important;
+            font-size: 15.5px !important;
+            padding: 11px 15px !important;
             border-radius: 8px !important;
             height: auto !important;
         }
 
         label {
-            font-size: 14px !important;
+            font-size: 15px !important;
             font-weight: 600 !important;
-            margin-bottom: 6px !important;
+            margin-bottom: 8px !important;
             color: #374151 !important;
         }
 
@@ -189,8 +300,8 @@
         footer {
             background: #f7f9fc !important;
             color: #718096 !important;
-            padding: 18px 20px !important;
-            font-size: 13.5px !important;
+            padding: 22px 28px !important;
+            font-size: 14.5px !important;
         }
     </style>
   </head>
@@ -251,16 +362,11 @@
                 </ul>
               </div>
               <div class="menu_section">
-                <h3>Audit Reports</h3>
+                <h3>Audit Report</h3>
                 <ul class="nav side-menu">
-                    <li>
-                        <a href="http://localhost/musicsocial-main/accuracy_suite_screenshot.html" target="_blank">
-                            <i class="fa fa-bar-chart"></i> User Audit Report
-                        </a>
-                    </li>
-                    <li>
-                        <a href="http://localhost/musicsocial-main/algo_test_suite.html" target="_blank">
-                            <i class="fa fa-flask"></i> Algo Test Suite
+                    <li class="{{ request()->routeIs('admin.algo-test-suite') ? 'active' : '' }}">
+                        <a href="{{ route('admin.algo-test-suite') }}">
+                            <i class="fa fa-flask"></i> Reso RecSys Test Suite
                         </a>
                     </li>
                 </ul>

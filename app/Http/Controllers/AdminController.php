@@ -280,4 +280,19 @@ class AdminController extends Controller
         }
         return redirect()->back()->with('success', 'All notifications marked as read.');
     }
+
+    public function algoTestSuite()
+    {
+        return view('admin.algo_test_suite');
+    }
+
+    public function algoTestSuiteFrame()
+    {
+        $filePath = base_path('algo_test_suite.html');
+        if (!file_exists($filePath)) {
+            abort(404, 'Test suite file not found.');
+        }
+        return response(file_get_contents($filePath), 200)
+            ->header('Content-Type', 'text/html');
+    }
 }

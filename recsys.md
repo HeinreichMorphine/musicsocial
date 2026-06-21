@@ -70,8 +70,9 @@ package "3. Social Boosting" {
   
   [Calculate Trust] --> [Social Boost] : Apply Weight
   note right
-    Friend: 100% Trust (1.0x)
-    Community: 30% Trust (0.3x)
+    Collaborative Peer: Rm = 1.0
+    Followed User: Rm = 0.8
+    Stranger/Community: Rm = 0.3
   end note
 }
 
@@ -145,8 +146,9 @@ This is the system's "Network Theory" component. It dynamically calculates how m
 
 ### Logic Explained
 1.  **Relationship Multiplier ($R_m$)**:
-    *   **Direct Friend**: **$R_m$ = 1.0 (100% Impact)**
-    *   **Community**: **$R_m$ = 0.3 (30% Impact)**
+    *   **Collaborative Playlist Peer**: **$R_m$ = 1.0** (Highest trust, overrides standard follow)
+    *   **Followed User**: **$R_m$ = 0.8** (Standard follower/friend trust)
+    *   **Stranger/Community**: **$R_m$ = 0.3** (Stranger recommendation trust)
 
 2.  **Mitigating Influence (Power Log)**: `ln(1 + |Them|^0.7)`
     *   The `^0.7` exponent dampens the value *before* the log is taken.
@@ -179,7 +181,7 @@ Alice's friend **Bob** shared this song.
 *   **Bob's Influence**: He has 500 followers. `ln(1 + 500^0.7)` ≈ **4.35**
 *   **Alice's Selectivity**: She follows 50 people. `1 + 0.5 × ln(1 + 50)` ≈ **2.97**
 *   **Trust Score**: 4.35 / 2.97 ≈ **1.46**
-*   **Relationship**: Bob is a direct friend ($R_m$ = 1.0) -> Score stays **1.46**.
+*   **Relationship**: Bob is a Collaborative Playlist Peer ($R_m$ = 1.0) -> Score stays **1.46**.
 
 ### Step 4: The Master Equation
 *   **Weighted Base**: 4.6 × 0.7 = **3.22**

@@ -4,7 +4,7 @@
 
 @push('styles')
 <style>
-    .retrain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .retrain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
     @media (max-width: 900px) { .retrain-grid { grid-template-columns: 1fr; } }
 
     .panel-card {
@@ -12,19 +12,19 @@
         box-shadow: 0 1px 4px rgba(15,23,42,.04);
     }
     .panel-head {
-        padding: .875rem 1.25rem; border-bottom: 1px solid #f1f5f9;
+        padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9;
         display: flex; justify-content: space-between; align-items: center;
     }
-    .panel-head h4 { font-size: .9rem; font-weight: 700; color: #0f172a; margin: 0; }
-    .panel-body { padding: 1.25rem; }
+    .panel-head h4 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
+    .panel-body { padding: 1.5rem; }
 
     /* Status badge */
     .api-status {
-        display: inline-flex; align-items: center; gap: .45rem;
-        padding: .3rem .75rem; border-radius: 20px; font-size: .75rem; font-weight: 700;
+        display: inline-flex; align-items: center; gap: .6rem;
+        padding: .45rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
     }
     .api-status .dot {
-        width: 8px; height: 8px; border-radius: 50%;
+        width: 10px; height: 10px; border-radius: 50%;
     }
     .api-status.online  { background: #f0fdf4; color: #16a34a; }
     .api-status.online .dot  { background: #16a34a; animation: pulse 1.5s infinite; }
@@ -37,35 +37,35 @@
     }
 
     /* Audit shortcut cards */
-    .audit-cards { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .audit-cards { display: grid; grid-template-columns: 1fr; gap: 1rem; }
     .audit-card {
-        padding: 1rem 1.25rem; border-radius: 10px; border: 1.5px solid #e2e8f0;
-        text-decoration: none; display: flex; flex-direction: column; gap: .3rem;
+        padding: 1.25rem 1.5rem; border-radius: 12px; border: 1.5px solid #e2e8f0;
+        text-decoration: none; display: flex; flex-direction: column; gap: .4rem;
         transition: border-color .2s, box-shadow .2s;
     }
     .audit-card:hover { border-color: #1d4ed8; box-shadow: 0 4px 16px rgba(29,78,216,.08); text-decoration: none; }
-    .audit-card-title { font-size: .83rem; font-weight: 700; color: #0f172a; }
-    .audit-card-desc { font-size: .73rem; color: #64748b; }
-    .audit-card-icon { font-size: 1.2rem; margin-bottom: .25rem; }
+    .audit-card-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; }
+    .audit-card-desc { font-size: 0.82rem; color: #64748b; }
+    .audit-card-icon { font-size: 1.5rem; margin-bottom: .4rem; }
 
     /* User selector form */
-    .selector-row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .selector-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
     .user-select {
-        flex: 1; min-width: 200px; padding: .6rem .875rem;
+        flex: 1; min-width: 200px; padding: .75rem 1.25rem;
         border: 1.5px solid #e2e8f0; border-radius: 8px;
-        font-size: .85rem; color: #374151; outline: none;
+        font-size: 0.95rem; color: #374151; outline: none;
         transition: border-color .2s;
     }
     .user-select:focus { border-color: #1d4ed8; }
     .btn-primary-sm {
-        padding: .6rem 1.25rem; background: #1d4ed8; color: #fff; border: none;
-        border-radius: 8px; font-size: .83rem; font-weight: 600; cursor: pointer;
+        padding: .75rem 1.5rem; background: #1d4ed8; color: #fff; border: none;
+        border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
         transition: background .15s;
     }
     .btn-primary-sm:hover { background: #1e40af; }
     .btn-warning-sm {
-        padding: .6rem 1.25rem; background: #fff7ed; color: #ea580c;
-        border: 1.5px solid #fed7aa; border-radius: 8px; font-size: .83rem;
+        padding: .75rem 1.5rem; background: #fff7ed; color: #ea580c;
+        border: 1.5px solid #fed7aa; border-radius: 8px; font-size: 0.95rem;
         font-weight: 600; cursor: pointer; transition: background .15s;
     }
     .btn-warning-sm:hover { background: #ffedd5; }
@@ -74,35 +74,35 @@
     .recs-table { width: 100%; border-collapse: collapse; }
     .recs-table thead tr { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
     .recs-table th {
-        padding: .55rem .875rem; text-align: left;
-        font-size: .68rem; font-weight: 700; color: #64748b;
+        padding: 0.9rem 1.1rem; text-align: left;
+        font-size: 0.82rem; font-weight: 700; color: #64748b;
         text-transform: uppercase; letter-spacing: .5px;
     }
     .recs-table td {
-        padding: .65rem .875rem; font-size: .8rem; color: #374151;
+        padding: 0.9rem 1.1rem; font-size: 0.95rem; color: #374151;
         border-bottom: 1px solid #f8fafc; vertical-align: middle;
     }
     .recs-table tbody tr:last-child td { border-bottom: none; }
     .recs-table tbody tr:hover { background: #fafbff; }
 
     /* Score bar */
-    .score-bar-wrap { display: flex; align-items: center; gap: .6rem; min-width: 120px; }
+    .score-bar-wrap { display: flex; align-items: center; gap: .75rem; min-width: 140px; }
     .score-bar-track {
-        flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;
+        flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;
     }
     .score-bar-fill {
         height: 100%; background: linear-gradient(90deg, #1d4ed8, #06b6d4);
-        border-radius: 3px; transition: width .4s;
+        border-radius: 4px; transition: width .4s;
     }
-    .score-val { font-size: .75rem; font-weight: 700; color: #1d4ed8; white-space: nowrap; }
+    .score-val { font-size: 0.85rem; font-weight: 700; color: #1d4ed8; white-space: nowrap; }
 
     .debug-breakdown {
-        font-size: .7rem; color: #94a3b8; line-height: 1.6;
+        font-size: 0.82rem; color: #94a3b8; line-height: 1.6;
     }
     .debug-breakdown strong { color: #374151; }
     .rank-badge {
-        display: inline-flex; width: 24px; height: 24px; border-radius: 6px;
-        align-items: center; justify-content: center; font-size: .7rem; font-weight: 800;
+        display: inline-flex; width: 30px; height: 30px; border-radius: 6px;
+        align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;
         background: #eff6ff; color: #1d4ed8;
     }
     .rank-badge.gold   { background: #fefce8; color: #ca8a04; }
@@ -143,21 +143,16 @@
     {{-- Audit Dashboard Shortcuts --}}
     <div class="panel-card">
         <div class="panel-head">
-            <h4><i class="fa fa-bar-chart" style="color:#7c3aed;margin-right:6px;"></i> Audit Dashboards</h4>
+            <h4><i class="fa fa-bar-chart" style="color:#7c3aed;margin-right:6px;"></i> Audit Dashboard</h4>
         </div>
         <div class="panel-body">
             <p style="font-size:.8rem;color:#64748b;margin-bottom:.875rem;">
-                Open the full accuracy testing and algorithm validation dashboards in a new tab.
+                Open the algorithm validation and benchmarking dashboard.
             </p>
             <div class="audit-cards">
-                <a href="http://localhost/musicsocial-main/accuracy_suite_screenshot.html" target="_blank" class="audit-card">
-                    <div class="audit-card-icon">🎯</div>
-                    <div class="audit-card-title">User Accuracy Audit</div>
-                    <div class="audit-card-desc">TF-IDF, SVD, Social Trust & Dislikes per user</div>
-                </a>
-                <a href="http://localhost/musicsocial-main/algo_test_suite.html" target="_blank" class="audit-card">
+                <a href="{{ route('admin.algo-test-suite') }}" class="audit-card">
                     <div class="audit-card-icon">🧪</div>
-                    <div class="audit-card-title">Algo Test Suite</div>
+                    <div class="audit-card-title">Reso RecSys Test Suite</div>
                     <div class="audit-card-desc">Global RMSE, NDCG@12, Precision@12 benchmarks</div>
                 </a>
             </div>
