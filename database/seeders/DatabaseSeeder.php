@@ -15,11 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ensure a default admin user exists
-        if (\App\Models\Admin::count() === 0) {
+        // Ensure default admin users exist specifically by email
+        if (\App\Models\Admin::where('email', 'admin@reso.local')->count() === 0) {
             \App\Models\Admin::create([
                 'name' => 'Reso Admin',
                 'email' => 'admin@reso.local',
+                'password' => bcrypt('AdminPassword123!'),
+            ]);
+        }
+
+        if (\App\Models\Admin::where('email', 'admin@musicsocial.com')->count() === 0) {
+            \App\Models\Admin::create([
+                'name' => 'MusicSocial Admin',
+                'email' => 'admin@musicsocial.com',
                 'password' => bcrypt('AdminPassword123!'),
             ]);
         }
