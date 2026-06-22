@@ -61,6 +61,105 @@
                     </div>
                 </div>
 
+                <!-- Onboarding Explainer Banner Container -->
+                <div x-data="{ isCollapsed: localStorage.getItem('playlistOnboardingCollapsed') === 'true' }" class="space-y-4">
+                    <!-- Collapsed State Header -->
+                    <div x-show="isCollapsed" 
+                         @click="isCollapsed = false; localStorage.setItem('playlistOnboardingCollapsed', 'false')"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="relative bg-[#111113] border border-zinc-800 rounded-2xl px-5 py-3.5 cursor-pointer hover:border-zinc-700 hover:bg-zinc-900/40 transition-all duration-300 flex items-center justify-between shadow-md group/collapsed"
+                    >
+                        <div class="flex items-center gap-3 text-zinc-300 text-sm">
+                            <span class="text-indigo-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                            </span>
+                            <span class="font-medium group-hover/collapsed:text-white transition-colors">How Playlists Work: Curation, Recommendations & Spotify Syncing</span>
+                        </div>
+                        <span class="text-zinc-500 group-hover/collapsed:text-zinc-300 transition-colors flex items-center gap-1.5 text-xs font-semibold">
+                            Expand
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Expanded State (Full Banner) -->
+                    <div x-show="!isCollapsed"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform -translate-y-4 scale-95"
+                         x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 transform -translate-y-4 scale-95"
+                         class="relative bg-[#111113] border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xl overflow-hidden group/banner"
+                    >
+                        <!-- Background ambient glow -->
+                        <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none transition-all duration-700 group-hover/banner:bg-indigo-500/20"></div>
+                        <div class="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none transition-all duration-700 group-hover/banner:bg-emerald-500/10"></div>
+
+                        <!-- Collapse button in top right -->
+                        <button @click="isCollapsed = true; localStorage.setItem('playlistOnboardingCollapsed', 'true')" 
+                                class="absolute top-4 right-4 text-zinc-400 hover:text-white hover:bg-zinc-800/50 p-1.5 rounded-lg transition-all duration-200 z-10 flex items-center gap-1.5 text-xs font-semibold"
+                                title="Collapse Overview"
+                        >
+                            Collapse
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7-7 7 7" />
+                            </svg>
+                        </button>
+
+                        <div class="relative z-10">
+                            <h3 class="text-xl font-bold text-white mb-2">Get the most out of Playlists</h3>
+                            <p class="text-sm text-zinc-300 mb-6 max-w-2xl">Collaborate, shape your recommendation DNA, and take your music anywhere with Reso and Spotify synchronization.</p>
+
+                            <!-- Pillars Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Pillar 1: Curate Shared Vibes -->
+                                <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-indigo-500/30 hover:bg-zinc-900 transition-all duration-300 flex flex-col items-start">
+                                    <div class="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-white mb-2">Curate Shared Vibes</h4>
+                                    <p class="text-xs text-zinc-300 leading-relaxed">Easily build and organize soundtracks with your friends. Invite mutual followers to collaborate and curate the perfect playlist together in real time.</p>
+                                </div>
+
+                                <!-- Pillar 2: Shape Your Recommendations -->
+                                <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 hover:bg-zinc-900 transition-all duration-300 flex flex-col items-start">
+                                    <div class="bg-zinc-800 border border-zinc-700 text-zinc-200 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                                            <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"></path>
+                                            <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"></path>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-white mb-2">Shape Your Recommendations</h4>
+                                    <p class="text-xs text-zinc-300 leading-relaxed">The music you add to your playlists teaches the platform what you love. It automatically refines your personal music taste to recommend better matches on your Discovery feed.</p>
+                                </div>
+
+                                <!-- Pillar 3: Sync with Spotify -->
+                                <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-emerald-500/30 hover:bg-zinc-900 transition-all duration-300 flex flex-col items-start">
+                                    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm5.508 17.302c-.216.354-.675.465-1.028.249-2.815-1.722-6.36-2.112-10.537-1.157-.403.093-.811-.158-.905-.562-.093-.404.159-.812.562-.905 4.577-1.047 8.508-.602 11.659 1.326.354.216.465.675.249 1.028zm1.474-3.264c-.273.443-.852.583-1.295.31-3.222-1.98-8.136-2.557-11.947-1.4c-.5.152-1.025-.13-1.177-.63-.153-.5.13-1.025.63-1.177 4.357-1.322 9.774-.678 13.482 1.6 0 .001.442.274.707.697zm.128-3.413C15.111 8.217 8.513 7.994 4.697 9.151c-.604.183-1.246-.164-1.428-.767-.183-.604.164-1.246.767-1.428 4.38-1.328 11.666-1.066 16.326 1.7 0 .001 1.107.657.828 1.488-.28.831-1.08 1.141-1.08 1.141z"/>
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-white mb-2">Sync with Spotify</h4>
+                                    <p class="text-xs text-zinc-300 leading-relaxed">Seamlessly import your playlists from Spotify, or export your curated Reso playlists back to your Spotify library to take your music anywhere.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 @if($playlists->isEmpty())
                 <div class="text-center py-16 bg-gray-50 dark:bg-gray-800/30 rounded-3xl border border-gray-200 dark:border-gray-700/50 border-dashed backdrop-blur-sm">
                     <div class="bg-gray-100 dark:bg-gray-800/50 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
