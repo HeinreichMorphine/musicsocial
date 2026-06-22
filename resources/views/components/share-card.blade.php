@@ -105,27 +105,6 @@
                     </div>
                 </div>
 
-                {{-- Inline Spotify Embed Player (Feed Context Only) --}}
-                <div x-show="playerOpen"
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-2"
-                     x-on:click.stop
-                     class="mt-3 rounded-2xl overflow-hidden"
-                     style="display:none;">
-                    <iframe class="share-spotify-frame"
-                        src=""
-                        width="100%"
-                        height="152"
-                        frameborder="0"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                        style="border-radius:16px; display:block;">
-                    </iframe>
-                </div>
             </div>
 
             <!-- Desktop Avatar (Hidden on Mobile) -->
@@ -317,6 +296,27 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {{-- Inline Spotify Embed Player — expands below song card on the Feed --}}
+                <div x-show="playerOpen"
+                     x-on:click.stop
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-2"
+                     class="mt-3"
+                     style="display:none;">
+                    <iframe class="share-spotify-frame"
+                        src=""
+                        width="100%" height="152"
+                        frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        style="border-radius:16px; display:block;">
+                    </iframe>
                 </div>
 
                 <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
