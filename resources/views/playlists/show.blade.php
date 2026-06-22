@@ -352,6 +352,18 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
+            Alpine.data('trackRow', (songId) => ({
+                track: null,
+                init() {
+                    fetch('/search/tracks/' + songId)
+                        .then(r => r.json())
+                        .then(d => {
+                            this.track = d.song || d;
+                        })
+                        .catch(e => console.error(e));
+                }
+            }));
+
             Alpine.data('playlistApp', (playlistId, initialSongs) => ({
                 searchQuery: '',
                 searchResults: [],

@@ -137,6 +137,7 @@
         <x-mobile-bottom-nav />
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
+        <x-add-to-reso-playlist-modal />
 
         {{-- =====================================================
              Global Playback Chooser Modal
