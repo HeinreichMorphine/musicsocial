@@ -50,6 +50,10 @@ class CommentController extends Controller
             'parent_id' => 'nullable|exists:comments,id',
         ]);
 
+        // Neutralize manual system tag injections to prevent spoofing
+        $validated['body'] = str_ireplace('[UPVOTES:', '(UPVOTES:', $validated['body']);
+        $validated['body'] = str_ireplace('[SONG:', '(SONG:', $validated['body']);
+
         // Auto-Detect Spotify Track in Comment Body
         $songId = null;
         if (preg_match('/https:\/\/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/', $validated['body'], $trackMatches)) {
@@ -148,6 +152,10 @@ class CommentController extends Controller
         $validated = $request->validate([
             'body' => 'required|string|max:1000',
         ]);
+
+        // Neutralize manual system tag injections to prevent spoofing
+        $validated['body'] = str_ireplace('[UPVOTES:', '(UPVOTES:', $validated['body']);
+        $validated['body'] = str_ireplace('[SONG:', '(SONG:', $validated['body']);
 
         // 3. Update the comment
         $comment->update($validated);
