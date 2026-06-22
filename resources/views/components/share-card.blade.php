@@ -1,10 +1,12 @@
 @props(['share', 'paginatedComments' => null, 'totalCount' => null, 'previewComments' => null])
 
-<a href="{{ route('shares.show', $share) }}" class="block text-current no-underline">
-    <div id="share-{{ $share->id }}" class="bg-white/60 dark:bg-black backdrop-blur-md rounded-3xl shadow-sm border border-white/50 dark:border-white/10 p-4 shrink md:p-6 mb-4 md:mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20" 
+<div id="share-{{ $share->id }}" class="bg-white/60 dark:bg-black backdrop-blur-md rounded-3xl shadow-sm border border-white/50 dark:border-white/10 p-4 shrink md:p-6 mb-4 md:mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20"
+    @click="window.location.href='{{ route('shares.show', $share) }}'" style="cursor:pointer;"
+    
          x-data="{ 
             commentsOpen: false, 
             editing: false, 
+            playerOpen: false,
             editCaption: @js($share->caption),
             originalCaption: @js($share->caption),
             liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
@@ -101,6 +103,28 @@
                             </button>
                         @endif
                     </div>
+                </div>
+
+                {{-- Inline Spotify Embed Player (Feed Context Only) --}}
+                <div x-show="playerOpen"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-2"
+                     x-on:click.stop
+                     class="mt-3 rounded-2xl overflow-hidden"
+                     style="display:none;">
+                    <iframe class="share-spotify-frame"
+                        src=""
+                        width="100%"
+                        height="152"
+                        frameborder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        style="border-radius:16px; display:block;">
+                    </iframe>
                 </div>
             </div>
 
@@ -252,9 +276,24 @@
                             <p class="text-base md:text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
                             
                             <div class="flex items-center space-x-3 mt-2 md:mt-3">
-                                <a href="{{ $share->song->spotify_url }}" x-on:click.stop target="_blank" title="Listen on Spotify" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)]">
+                                {{-- Inline player toggle button instead of external link --}}
+                                <button type="button"
+                                    x-on:click.stop.prevent="
+                                        playerOpen = !playerOpen;
+                                        const frame = $el.closest('[x-data]').querySelector('.share-spotify-frame');
+                                        if (frame) {
+                                            frame.src = playerOpen
+                                                ? 'https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0'
+                                                : '';
+                                        }
+                                    "
+                                    title="Play inline preview"
+                                    class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                    {{-- Spotify logo --}}
                                     <svg class="w-8 h-8 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-                                </a>
+                                    {{-- Active pill indicator --}}
+                                    <span x-show="playerOpen" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white dark:border-black animate-pulse"></span>
+                                </button>
 
                                 <!-- Add to Playlist Button -->
                                 <button type="button" 
@@ -516,4 +555,4 @@
             </div>
         </div>
     </div>
-</a>
+</div>

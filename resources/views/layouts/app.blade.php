@@ -137,6 +137,98 @@
         <x-mobile-bottom-nav />
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
+
+        {{-- =====================================================
+             Global Playback Chooser Modal
+             Triggered by: $dispatch('open-playback-chooser', { spotifyUrl, youtubeUrl, trackName, artistName })
+             Used by: sidebar-right, discovery pages
+        ===================================================== --}}
+        <div x-data="{
+                show: false,
+                spotifyUrl: '',
+                youtubeUrl: '',
+                trackName: '',
+                artistName: ''
+             }"
+             x-on:open-playback-chooser.window="
+                spotifyUrl  = $event.detail.spotifyUrl  || '';
+                youtubeUrl  = $event.detail.youtubeUrl  || '';
+                trackName   = $event.detail.trackName   || '';
+                artistName  = $event.detail.artistName  || '';
+                show = true;
+             "
+             x-on:keydown.escape.window="show = false"
+             x-show="show"
+             style="display:none;"
+             class="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
+
+            {{-- Backdrop --}}
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="show = false"></div>
+
+            {{-- Panel --}}
+            <div class="relative w-full max-w-sm bg-white dark:bg-[#141414] rounded-3xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-6 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-6 sm:scale-95">
+
+                {{-- Header --}}
+                <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/5">
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">Play track</p>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate" x-text="trackName"></h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate" x-text="artistName"></p>
+                </div>
+
+                {{-- Options --}}
+                <div class="p-4 space-y-3">
+                    {{-- Spotify --}}
+                    <a :href="spotifyUrl" target="_blank" rel="noopener noreferrer"
+                       @click="show = false"
+                       class="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-[#1DB954]/10 hover:bg-[#1DB954]/20 dark:bg-[#1DB954]/10 dark:hover:bg-[#1DB954]/20 border border-[#1DB954]/20 dark:border-[#1DB954]/20 transition-all group">
+                        <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#1DB954] shadow-lg shadow-[#1DB954]/30 group-hover:scale-110 transition-transform shrink-0">
+                            <svg class="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        </span>
+                        <div class="text-left">
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">Open in Spotify</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Full track · Spotify Web or App</p>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+
+                    {{-- YouTube --}}
+                    <a :href="youtubeUrl" target="_blank" rel="noopener noreferrer"
+                       @click="show = false"
+                       class="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 border border-red-100 dark:border-red-500/20 transition-all group">
+                        <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-[#FF0000] shadow-lg shadow-red-500/30 group-hover:scale-110 transition-transform shrink-0">
+                            <svg class="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </span>
+                        <div class="text-left">
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">Open in YouTube</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Music video · YouTube Web or App</p>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                {{-- Cancel --}}
+                <div class="px-4 pb-5">
+                    <button @click="show = false"
+                            class="w-full py-3 rounded-2xl text-sm font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
         @livewireScripts
     </body>
 </html>
