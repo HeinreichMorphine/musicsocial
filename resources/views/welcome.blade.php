@@ -103,7 +103,6 @@
                     <span class="font-display font-bold text-2xl tracking-tight text-gray-900">Reso</span>
                 </div>
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#community" class="text-sm font-bold text-gray-600 hover:text-custom-mid-blue transition tracking-wider uppercase">Network</a>
                     @if (Route::has('login'))
                         @auth
                             <a href="{{ url('/dashboard') }}" class="text-sm font-bold text-custom-mid-blue hover:text-custom-dark-blue">Dashboard</a>

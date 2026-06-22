@@ -122,6 +122,26 @@
                         </header>
                     </div>
 
+                    <!-- Log Out Section (Mobile Only) -->
+                    <div class="sm:hidden p-4 bg-white dark:bg-black shadow rounded-lg border border-gray-200 dark:border-white/10">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                    {{ __('Session') }}
+                                </h2>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ __("Log out of your account") }}
+                                </p>
+                            </div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 font-bold rounded-lg transition duration-150 ease-in-out shadow-sm text-sm uppercase tracking-wider">
+                                    {{ __('Log Out') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="p-4 sm:p-8 bg-white dark:bg-black shadow sm:rounded-lg border border-gray-200 dark:border-white/10">
                         @include('profile.partials.connect-social-accounts')
                     </div>
