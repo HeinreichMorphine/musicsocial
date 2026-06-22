@@ -32,5 +32,6 @@
         </div>
         <x-music-share-modal />
     </div>
+    </div>
 </x-app-layout>
 

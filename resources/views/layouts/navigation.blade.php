@@ -163,8 +163,9 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                     </x-slot>
                 </x-dropdown>
             </div>
+        </div>
 
-            <div class="flex items-center justify-end flex-1 sm:hidden space-x-3 pr-1">
+        <div class="flex items-center justify-end flex-1 sm:hidden space-x-3 pr-1">
                 <!-- Existing Mobile Hamburger Button (Only used for settings dropdown when using bottom nav) -->
                 <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
