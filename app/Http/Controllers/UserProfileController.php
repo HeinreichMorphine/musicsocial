@@ -166,6 +166,7 @@ class UserProfileController extends Controller
                               $sq->whereIn('artist_name', $userArtistKeys);
                           });
                     });
+                })
                 ->with(['shares.song' => function($q) {
                     $q->select('id', 'artist_name', 'genres', 'track_name');
                 }, 'likes.song' => function($q) {

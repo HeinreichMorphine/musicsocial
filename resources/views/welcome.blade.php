@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
     <title>{{ config('app.name', 'Reso') }} - Connect Through Sound</title>
 
     <!-- Fonts -->
@@ -91,9 +92,9 @@
 <body class="font-sans antialiased text-gray-900 bg-gray-50 selection:bg-blue-100 selection:text-blue-900">
 
     <!-- Navbar -->
-    <nav x-data="{ scrolled: false }" 
+    <nav x-data="{ scrolled: false, mobileMenuOpen: false }" 
          @scroll.window="scrolled = (window.pageYOffset > 20)"
-         :class="{ 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100': scrolled, 'bg-transparent': !scrolled }"
+         :class="{ 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100': scrolled || mobileMenuOpen, 'bg-transparent': !scrolled && !mobileMenuOpen }"
          class="fixed w-full z-50 transition-all duration-300 top-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
@@ -116,7 +117,39 @@
                         @endauth
                     @endif
                 </div>
+                <!-- Mobile hamburger menu button -->
+                <div class="flex items-center md:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900 transition duration-150 ease-in-out">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path :class="{'hidden': mobileMenuOpen, 'inline-flex': !mobileMenuOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': !mobileMenuOpen, 'inline-flex': mobileMenuOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
+        </div>
+        <!-- Mobile Menu panel -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="md:hidden bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg px-4 pt-2 pb-6 space-y-3 flex flex-col">
+            <a href="#community" @click="mobileMenuOpen = false" class="block py-2 text-base font-bold text-gray-600 hover:text-custom-mid-blue transition tracking-wider uppercase">Network</a>
+            @if (Route::has('login'))
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="block py-2 text-base font-bold text-custom-mid-blue hover:text-custom-dark-blue">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}" class="block py-2 text-base font-semibold text-gray-900 hover:text-custom-mid-blue">Log in</a>
+                    @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="block text-center py-3 rounded-full bg-gray-900 text-white text-base font-semibold hover:bg-gray-800 transition shadow-md">
+                            Join Now
+                        </a>
+                    @endif
+                @endauth
+            @endif
         </div>
     </nav>
 
