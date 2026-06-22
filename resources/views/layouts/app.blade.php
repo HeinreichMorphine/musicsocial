@@ -43,6 +43,57 @@
                     sessionStorage.removeItem('scrollPosition');
                 }
             });
+
+            /**
+             * Global Spotify iframe preview toggle.
+             * Used by sidebar-right.blade.php and playlists/show.blade.php.
+             *
+             * @param {string} key         - Unique key e.g. 'sid-42' or 'ply-99'
+             * @param {string} trackId     - Spotify track ID (not full URL)
+             */
+            window._activeSpotifyKey = null;
+
+            window.toggleSpotifyPreview = function(key, trackId) {
+                if (!trackId) return;
+
+                const container = document.getElementById('spe-container-' + key);
+                const frame     = document.getElementById('spe-frame-' + key);
+                const playIcon  = document.getElementById('spe-icon-play-' + key);
+                const stopIcon  = document.getElementById('spe-icon-stop-' + key);
+
+                if (!container || !frame) return;
+
+                const embedUrl = 'https://open.spotify.com/embed/track/' + trackId + '?utm_source=generator&theme=0';
+                const isOpen   = container.style.display !== 'none';
+
+                // Close any other open preview first
+                if (window._activeSpotifyKey && window._activeSpotifyKey !== key) {
+                    const prevContainer = document.getElementById('spe-container-' + window._activeSpotifyKey);
+                    const prevFrame     = document.getElementById('spe-frame-'     + window._activeSpotifyKey);
+                    const prevPlay      = document.getElementById('spe-icon-play-' + window._activeSpotifyKey);
+                    const prevStop      = document.getElementById('spe-icon-stop-' + window._activeSpotifyKey);
+                    if (prevContainer) prevContainer.style.display = 'none';
+                    if (prevFrame)     prevFrame.src = '';
+                    if (prevPlay)      prevPlay.style.display  = '';
+                    if (prevStop)      prevStop.style.display  = 'none';
+                }
+
+                if (isOpen) {
+                    // Close this one
+                    container.style.display = 'none';
+                    frame.src = '';
+                    if (playIcon) playIcon.style.display = '';
+                    if (stopIcon) stopIcon.style.display = 'none';
+                    window._activeSpotifyKey = null;
+                } else {
+                    // Open this one
+                    frame.src = embedUrl;
+                    container.style.display = 'block';
+                    if (playIcon) playIcon.style.display = 'none';
+                    if (stopIcon) stopIcon.style.display = '';
+                    window._activeSpotifyKey = key;
+                }
+            };
         </script>
         <style>
             /* Scale the entire UI down dynamically on small mobile devices to prevent element overlapping */
