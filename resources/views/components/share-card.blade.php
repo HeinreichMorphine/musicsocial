@@ -245,10 +245,13 @@
                     </div>
                 </div>
 
-                <div class="mt-3 md:mt-4 relative overflow-hidden rounded-2xl md:rounded-3xl p-4 md:p-6 group">
-                     <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover:scale-125" style="background-image: url('{{ $share->song->album_art_url }}');"></div>
-                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    <div class="relative flex items-center space-x-4 md:space-x-6">
+                <div class="mt-3 md:mt-4 relative rounded-2xl md:rounded-3xl p-4 md:p-6 group">
+                     {{-- Background blur/gradient wrapper to allow child elements (like the playlist dropdown) to overflow --}}
+                     <div class="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden pointer-events-none">
+                         <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover:scale-125" style="background-image: url('{{ $share->song->album_art_url }}');"></div>
+                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                     </div>
+                     <div class="relative flex items-center space-x-4 md:space-x-6 z-10">
                         <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl md:rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105 shrink-0">
                         <div class="flex-1 min-w-0">
                             <p class="text-xl md:text-2xl font-bold text-white truncate drop-shadow-md">{{ $share->song->track_name }}</p>
@@ -292,7 +295,7 @@
                                          x-transition:leave="transition ease-in duration-75"
                                          x-transition:leave-start="opacity-100 scale-100"
                                          x-transition:leave-end="opacity-0 scale-95"
-                                         class="absolute right-0 mt-2 w-48 bg-white dark:bg-[#141414] rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50 py-1"
+                                         class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 bg-white dark:bg-[#141414] rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50 py-1"
                                          style="display: none;">
                                          
                                          <!-- Add to Reso Playlist -->
