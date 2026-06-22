@@ -173,13 +173,6 @@ Route::post('auth/{provider}/unlink', [App\Http\Controllers\SocialAuthController
 
 Route::get('/discovery', [App\Http\Controllers\DiscoveryController::class, 'index'])->middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->name('discovery');
 
-// Debug Route (Temporary)
-Route::get('/debug-auth', function () {
-    return [
-        'spotify' => config('services.spotify'),
-        'google' => config('services.google'),
-        'audiodb' => config('services.audiodb'),
-    ];
-});
+// Debug route removed (was exposing API credentials publicly)
 
 require __DIR__.'/auth.php';
