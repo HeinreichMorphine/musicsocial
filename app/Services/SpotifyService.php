@@ -279,8 +279,13 @@ class SpotifyService
                     $musicBrainzService = new MusicBrainzService();
                     $mbGenres = $musicBrainzService->getArtistGenres($artistName);
                     if (is_array($mbGenres) && !isset($mbGenres['error'])) {
-                        $debugSources['musicbrainz_fallback'] = $mbGenres;
-                        $allGenres = array_merge($allGenres, $mbGenres);
+                        // MusicBrainz tags are community-driven and very noisy (often returning artist names)
+                        // We must clean them strictly before allowing them in.
+                        $mbCleaned = $cleaner->clean($mbGenres, true);
+                        if (!empty($mbCleaned)) {
+                            $debugSources['musicbrainz_fallback'] = $mbCleaned;
+                            $allGenres = array_merge($allGenres, $mbCleaned);
+                        }
                     }
                 } catch (\Exception $e) {
                     Log::error('SpotifyService: MusicBrainz Error: ' . $e->getMessage());
@@ -292,7 +297,8 @@ class SpotifyService
             
             // 4. INTERNAL HEURISTIC FALLBACK (iTunes/Apple Music API)
             // Highly structured secondary source before resorting to user-generated tags
-            if (count(array_unique($allGenres)) === 0) {
+            // Run this if we have less than 3 genres to supplement our highly-accurate primary tags
+            if (count(array_unique($allGenres)) < 3) {
                 try {
                     $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
                     $heuristicResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])->timeout(10)->get($endpoint, [
