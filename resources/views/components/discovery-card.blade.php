@@ -139,16 +139,7 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
 
         <!-- Interaction Zone (Fixed height bottom footprint) -->
         <div class="mt-auto pt-4 relative min-h-[44px]">
-            <div x-show="!listened" class="flex justify-start absolute inset-0 pt-4" style="z-index: 10;">
-                <button @click="markInteraction('listen')" class="group/btn flex items-center space-x-1 px-3 py-1.5 h-[34px] rounded-lg text-gray-400 dark:text-gray-500 hover:text-custom-mid-blue dark:hover:text-blue-400 hover:bg-custom-mid-blue/10 dark:hover:bg-blue-400/10 transition-colors border border-transparent hover:border-custom-mid-blue/20 dark:hover:border-blue-400/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 transition-transform group-hover/btn:scale-110">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                    </svg>
-                    <span class="text-[11px] font-bold uppercase tracking-wider">Listened</span>
-                </button>
-            </div>
-            
-            <div x-show="listened" style="display: none; z-index: 10;" class="flex justify-between items-center absolute inset-0 pt-4  rounded-lg">
+            <div class="flex justify-between items-center absolute inset-0 pt-4 rounded-lg">
                 <div class="flex justify-between items-center w-full bg-gray-50 dark:bg-gray-800/80 p-0.5 rounded-lg border border-gray-100 dark:border-gray-700/50 shadow-sm">
                     <button @click="markInteraction('dislike')" class="flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-white dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-gray-700 shadow-sm transition-all duration-200" title="Pass">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
