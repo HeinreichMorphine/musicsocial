@@ -115,8 +115,9 @@
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
                 {{-- ── SECTION 1: Trending ── --}}
-                <div class="px-5 pt-5 pb-1">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                {{-- Fix 5: inner padding px-6 matches search bar internal rhythm --}}
+                <div class="px-6 pt-5 pb-1">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                         Trending — tap to add
                     </p>
                     <ul class="divide-y divide-slate-50">
@@ -137,44 +138,48 @@
                                         }
                                     }'
                                     @click="toggleTrack(track)"
-                                    class="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50/80 transition-colors -mx-5 px-5 group"
+                                    {{-- Fix 1: py-3 → py-3.5 for breathing room --}}
+                                    class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 transition-colors -mx-6 px-6 group"
                                     :class="isSelected({{ json_encode($stId) }}) && 'bg-indigo-50/50'">
                                     <img src="{{ $stArt }}"
                                          alt="{{ $stName }}"
                                          class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
                                     <div class="flex-1 min-w-0">
                                         <div class="text-sm font-semibold text-slate-800 truncate">{{ $stName }}</div>
-                                        <div class="text-xs text-slate-400 truncate">{{ $stArtist }}</div>
+                                        <div class="text-xs text-slate-400 truncate mt-0.5">{{ $stArtist }}</div>
                                     </div>
-                                    {{-- Circle check --}}
-                                    <div class="flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-                                         :class="isSelected({{ json_encode($stId) }}) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200 group-hover:border-slate-300'">
-                                        <svg x-show="isSelected({{ json_encode($stId) }})" class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    {{-- Fix 2: Circle 20→24px, solid purple fill + check on selected, hover ring --}}
+                                    <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
+                                         :class="isSelected({{ json_encode($stId) }})
+                                             ? 'bg-indigo-600 border-indigo-600 scale-110'
+                                             : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
+                                        <svg x-show="isSelected({{ json_encode($stId) }})" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                         </svg>
                                     </div>
                                 </li>
                             @endif
                         @empty
-                            <li class="py-4 text-xs text-slate-300 text-center">No trending tracks available right now.</li>
+                            <li class="py-5 text-xs text-slate-300 text-center">No trending tracks available right now.</li>
                         @endforelse
                     </ul>
                 </div>
 
                 {{-- Thin divider --}}
-                <div class="mx-5 my-3 border-t border-slate-100"></div>
+                <div class="mx-6 my-3 border-t border-slate-100"></div>
 
                 {{-- ── SECTION 2: Shelf ── --}}
-                <div class="px-5 pb-5">
-                    {{-- Single header line --}}
-                    <div class="flex items-center gap-1.5 mb-3">
+                {{-- Fix 5: inner padding px-6 --}}
+                <div class="px-6 pb-6">
+                    {{-- Fix 4: single header line, equal dot spacing --}}
+                    <div class="flex items-center mb-4">
                         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Shelf</span>
-                        <span class="text-slate-300 text-xs">·</span>
+                        <span class="mx-1.5 text-slate-300 text-xs leading-none">·</span>
                         <span class="text-[10px] font-bold uppercase tracking-widest transition-colors duration-300"
                               :class="selectedTracks.length >= 5 ? 'text-emerald-500' : 'text-slate-400'"
                               x-text="selectedTracks.length + '/10'">
                         </span>
-                        <span class="text-slate-200 text-xs mx-0.5">—</span>
+                        <span class="mx-1.5 text-slate-200 text-xs leading-none">·</span>
                         <span class="text-[10px] text-slate-400 transition-all duration-300"
                               x-show="selectedTracks.length < 5"
                               x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock your feed'">
@@ -185,48 +190,50 @@
                         </span>
                     </div>
 
-                    {{-- 10 small stamp-sized shelf slots --}}
-                    <div class="flex gap-1.5">
-                        <template x-for="i in 10" :key="i">
-                            <div class="relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group">
+                    {{-- Fix 3 (Option A): Dynamic shelf — only filled slots + one ghost "+" badge --}}
+                    {{-- The row grows as the user picks tracks; no pre-rendered empty boxes --}}
+                    <div class="flex items-center gap-2 flex-wrap">
 
-                                {{-- Filled: album art with hover-remove --}}
-                                <div x-show="selectedTracks[i - 1]"
-                                     x-transition:enter="transition ease-out duration-300"
-                                     x-transition:enter-start="opacity-0 scale-50"
-                                     x-transition:enter-end="opacity-100 scale-100"
-                                     class="w-full h-full slot-pop">
-                                    <img :src="selectedTracks[i - 1]?.album?.images[0]?.url"
-                                         :alt="selectedTracks[i - 1]?.name"
-                                         class="w-10 h-10 object-cover">
-                                    <button type="button"
-                                            @click.stop="removeTrack(selectedTracks[i - 1]?.id)"
-                                            class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-150">
-                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                {{-- Empty: soft muted fill + music note --}}
-                                <div x-show="!selectedTracks[i - 1]"
-                                     class="w-full h-full flex items-center justify-center transition-colors duration-300"
-                                     :class="i <= 5 ? 'bg-indigo-50' : 'bg-slate-100'">
-                                    <svg class="w-4 h-4" :class="i <= 5 ? 'text-indigo-200' : 'text-slate-300'"
-                                         fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M9 19V6l12-2v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-2"/>
+                        {{-- Filled slots: appear as tracks are picked, animate in --}}
+                        <template x-for="(track, idx) in selectedTracks" :key="track.id">
+                            <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 group"
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0 scale-50"
+                                 x-transition:enter-end="opacity-100 scale-100">
+                                <img :src="track.album?.images[0]?.url"
+                                     :alt="track.name"
+                                     class="w-12 h-12 object-cover">
+                                <button type="button"
+                                        @click.stop="removeTrack(track.id)"
+                                        class="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-150">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
-                                </div>
-
+                                </button>
                             </div>
                         </template>
+
+                        {{-- Ghost "+" badge — shows remaining needed, disappears at 10 --}}
+                        <div x-show="selectedTracks.length < 10"
+                             class="flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
+                             :class="selectedTracks.length >= 5
+                                 ? 'border-emerald-200 bg-emerald-50'
+                                 : 'border-indigo-200 bg-indigo-50'">
+                            <div class="text-center leading-tight">
+                                <span class="text-xs font-bold block"
+                                      :class="selectedTracks.length >= 5 ? 'text-emerald-400' : 'text-indigo-400'"
+                                      x-text="selectedTracks.length < 5 ? '+' + (5 - selectedTracks.length) : '+'">
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
             </div>{{-- end unified card --}}
 
-            {{-- CTA: progressive indigo fill --}}
-            <div class="pt-2">
+            {{-- Fix 6: CTA gap pt-2 → pt-8 so it reads as a clear separate action --}}
+            <div class="pt-8">
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
