@@ -42,7 +42,7 @@
     </div>
 
     {{-- Page container --}}
-    <div class="min-h-screen w-full flex flex-col items-center pt-4 md:pt-10 pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
+    <div class="min-h-screen w-full flex flex-col items-center pt-2 md:pt-10 pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
          x-data="onboardingApp()">
 
         {{-- Subtle hero backdrop gradient fading out --}}
@@ -51,7 +51,7 @@
         <div class="w-full max-w-lg space-y-4 md:space-y-6 relative z-10">
 
             {{-- Headline --}}
-            <div class="text-center pt-4 md:pt-8 pb-0.5 md:pb-1 mt-2 md:mt-4 mb-2 md:mb-4">
+            <div class="text-center pt-2 md:pt-8 pb-0 md:pb-1 mt-1 md:mt-4 mb-1 md:mb-4">
                 <h1 class="text-[2rem] md:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
                     Let's build your <span class="text-custom-dark-blue">taste profile</span>
                 </h1>
@@ -61,7 +61,7 @@
             </div>
 
             {{-- Search bar container --}}
-            <div class="relative z-30 space-y-4 px-4 md:px-0">
+            <div class="relative z-30 space-y-3 px-4 md:px-0">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-300 transition-colors"
@@ -88,7 +88,7 @@
                 </div>
 
                 {{-- Two-Tier Assistive Genre tags --}}
-                <div class="text-center space-y-2 md:space-y-3 pt-1 md:pt-2 pb-4 md:pb-0">
+                <div class="text-center space-y-1.5 md:space-y-3 pt-0.5 md:pt-2 pb-3 md:pb-0">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
                     <div class="flex flex-wrap gap-1.5 md:gap-2 justify-center w-full max-w-md mx-auto items-center">
                         <!-- Broad genres -->
@@ -140,7 +140,7 @@
             <div class="bg-white md:rounded-2xl border-t-4 border-t-custom-dark-blue border-0 md:border md:border-custom-periwinkle/25 shadow-none md:shadow-[0_15px_50px_rgba(22,42,114,0.04)] overflow-hidden">
 
                 {{-- ── SECTION 1: Suggestions ── --}}
-                <div class="px-4 pt-4 md:px-6 md:pt-5 pb-1">
+                <div class="px-4 pt-3 md:px-6 md:pt-5 pb-1">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-[13px] font-bold text-custom-slate-blue uppercase tracking-widest"
                            x-text="suggestionsHeader">
@@ -218,11 +218,11 @@
                 </div>
 
                 {{-- Thin divider --}}
-                <div class="mx-0 md:mx-6 my-3 border-t border-slate-100"></div>
+                <div class="mx-0 md:mx-6 my-2 md:my-3 border-t border-slate-100"></div>
 
                 {{-- ── SECTION 2: Shelf ── --}}
-                <div class="px-4 pb-4 md:px-6 md:pb-6">
-                    <div class="flex flex-col md:flex-row md:items-baseline md:justify-between mb-4 gap-1.5 md:gap-0">
+                <div class="px-4 pb-3 md:px-6 md:pb-6">
+                    <div class="flex flex-col md:flex-row md:items-baseline md:justify-between mb-3 md:mb-4 gap-1 md:gap-0">
                         <div class="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-2">
                             {{-- Counter dynamically pops out --}}
                             <span class="text-2xl font-black text-custom-dark-blue leading-none transition-colors duration-300"
@@ -287,7 +287,7 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-4 relative bg-custom-periwinkle/15 rounded-xl p-3.5 flex items-start gap-3 border-none shadow-none">
+                         class="mt-3 md:mt-4 relative bg-custom-periwinkle/15 rounded-xl p-3 md:p-3.5 flex items-start gap-2.5 md:gap-3 border-none shadow-none">
                         <div class="absolute bg-custom-periwinkle/15 w-2.5 h-2.5 -top-[5px] left-6 rotate-45"></div>
                         <svg class="text-custom-dark-blue mt-0.5 animate-bounce flex-shrink-0 w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -306,11 +306,11 @@
                 </div>
             </div>{{-- end unified card --}}
 
-            <div class="pt-4 md:pt-8 px-4 md:px-0">
+            <div class="pt-3 md:pt-8 px-4 md:px-0">
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
-                        class="w-full py-5 rounded-2xl font-bold text-base md:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
+                        class="w-full py-4 md:py-5 rounded-2xl font-bold text-base md:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
                         :class="selectedTracks.length >= 5
                             ? 'bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue hover:from-custom-mid-blue hover:to-custom-dark-blue border-transparent text-white shadow-lg shadow-custom-dark-blue/25 hover:shadow-xl hover:shadow-custom-dark-blue/35 active:scale-[0.99] cursor-pointer'
                             : (selectedTracks.length > 0
@@ -343,7 +343,7 @@
                 </button>
 
                 {{-- Actionable guidance helper text directly below --}}
-                <p class="mt-3 text-center text-sm font-semibold transition-colors duration-300"
+                <p class="mt-2 md:mt-3 text-center text-sm font-semibold transition-colors duration-300"
                    :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-bold' : 'text-slate-500'"
                    x-text="selectedTracks.length >= 5 
                        ? 'Ready to unlock your personalized feed!' 
