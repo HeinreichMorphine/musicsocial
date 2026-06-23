@@ -55,7 +55,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
                             <div class="text-sm text-gray-600 dark:text-gray-300 leading-snug">
-                                <strong class="text-gray-900 dark:text-white font-semibold">Not on the allowlist?</strong> Your Spotify login will be rejected with a 403 error. Please use Google or Email instead.
+                                <strong class="text-gray-900 dark:text-white font-semibold">Not on the allowlist?</strong> Your attempt to link Spotify will be rejected with a 403 error. You can still use most of Reso's features without linking!
                             </div>
                         </div>
 
@@ -71,14 +71,8 @@
                     </div>
 
                     <div class="space-y-4">
-                        <!-- Google button -->
-                        <a href="{{ route('social.redirect', 'google') }}" class="flex items-center justify-center gap-3 w-full bg-[#0F1419] dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-black px-6 py-4 rounded-[1rem] font-bold shadow-md transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-                            Continue with Google instead
-                        </a>
-                        
-                        <button type="button" @click="show = false" class="block w-full text-center text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white font-bold text-[15px] py-2 transition-colors">
-                            Go back
+                        <button type="button" @click="show = false" class="block w-full bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-black px-6 py-4 rounded-[1rem] font-bold shadow-md transition-colors">
+                            Got it, close this
                         </button>
                     </div>
 
