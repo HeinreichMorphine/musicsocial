@@ -42,7 +42,7 @@
     </div>
 
     {{-- Page container --}}
-    <div class="min-h-screen w-full flex flex-col items-center pt-2 md:pt-10 pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
+    <div class="min-h-screen w-full flex flex-col items-center pt-2 md:pt-10 pb-32 md:pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
          x-data="onboardingApp()">
 
         {{-- Subtle hero backdrop gradient fading out --}}
@@ -306,49 +306,52 @@
                 </div>
             </div>{{-- end unified card --}}
 
-            <div class="pt-3 md:pt-8 px-4 md:px-0">
-                <button @click="submitShelf"
-                        :disabled="selectedTracks.length < 5 || isSubmitting"
-                        type="button"
-                        class="w-full py-4 md:py-5 rounded-2xl font-bold text-base md:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
-                        :class="selectedTracks.length >= 5
-                            ? 'bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue hover:from-custom-mid-blue hover:to-custom-dark-blue border-transparent text-white shadow-lg shadow-custom-dark-blue/25 hover:shadow-xl hover:shadow-custom-dark-blue/35 active:scale-[0.99] cursor-pointer'
-                            : (selectedTracks.length > 0
-                                ? 'bg-custom-periwinkle/15 border-custom-periwinkle/25 text-custom-dark-blue/50 cursor-not-allowed'
-                                : 'bg-custom-periwinkle/10 border-custom-periwinkle/20 text-custom-slate-blue/60 cursor-not-allowed')">
+            {{-- Sticky bottom CTA bar on mobile --}}
+            <div class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 px-4 py-4 shadow-[0_-8px_30px_rgba(22,42,114,0.05)] md:relative md:bottom-auto md:inset-x-auto md:bg-transparent md:border-t-0 md:px-0 md:py-0 md:shadow-none z-40">
+                <div class="w-full max-w-lg mx-auto">
+                    <button @click="submitShelf"
+                            :disabled="selectedTracks.length < 5 || isSubmitting"
+                            type="button"
+                            class="w-full py-4 md:py-5 rounded-2xl font-bold text-base md:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
+                            :class="selectedTracks.length >= 5
+                                ? 'bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue hover:from-custom-mid-blue hover:to-custom-dark-blue border-transparent text-white shadow-lg shadow-custom-dark-blue/25 hover:shadow-xl hover:shadow-custom-dark-blue/35 active:scale-[0.99] cursor-pointer'
+                                : (selectedTracks.length > 0
+                                    ? 'bg-custom-periwinkle/15 border-custom-periwinkle/25 text-custom-dark-blue/50 cursor-not-allowed'
+                                    : 'bg-custom-periwinkle/10 border-custom-periwinkle/20 text-custom-slate-blue/60 cursor-not-allowed')">
 
-                    <span class="flex items-center justify-center gap-2">
-                        <span x-show="!isSubmitting">
-                            <template x-if="selectedTracks.length === 0">
-                                <span>Pick 5 tracks to get started</span>
-                            </template>
-                            <template x-if="selectedTracks.length > 0 && selectedTracks.length < 5">
-                                <span x-text="'Pick ' + (5 - selectedTracks.length) + ' more ' + (5 - selectedTracks.length === 1 ? 'track' : 'tracks')"></span>
-                            </template>
-                            <template x-if="selectedTracks.length >= 5">
-                                <span>Complete Onboarding</span>
-                            </template>
-                        </span>
-                        <svg x-show="!isSubmitting && selectedTracks.length >= 5" class="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                        <span x-show="isSubmitting" class="flex items-center gap-2">
-                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        <span class="flex items-center justify-center gap-2">
+                            <span x-show="!isSubmitting">
+                                <template x-if="selectedTracks.length === 0">
+                                    <span>Pick 5 tracks to get started</span>
+                                </template>
+                                <template x-if="selectedTracks.length > 0 && selectedTracks.length < 5">
+                                    <span x-text="'Pick ' + (5 - selectedTracks.length) + ' more ' + (5 - selectedTracks.length === 1 ? 'track' : 'tracks')"></span>
+                                </template>
+                                <template x-if="selectedTracks.length >= 5">
+                                    <span>Complete Onboarding</span>
+                                </template>
+                            </span>
+                            <svg x-show="!isSubmitting && selectedTracks.length >= 5" class="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                             </svg>
-                            Building your taste profile…
+                            <span x-show="isSubmitting" class="flex items-center gap-2">
+                                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                </svg>
+                                Building your taste profile…
+                            </span>
                         </span>
-                    </span>
-                </button>
+                    </button>
 
-                {{-- Actionable guidance helper text directly below --}}
-                <p class="mt-2 md:mt-3 text-center text-sm font-semibold transition-colors duration-300"
-                   :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-bold' : 'text-slate-500'"
-                   x-text="selectedTracks.length >= 5 
-                       ? 'Ready to unlock your personalized feed!' 
-                       : (5 - selectedTracks.length) + ' more song' + (5 - selectedTracks.length === 1 ? '' : 's') + ' to unlock your personalized feed'">
-                </p>
+                    {{-- Actionable guidance helper text directly below --}}
+                    <p class="mt-2 md:mt-3 text-center text-sm font-semibold transition-colors duration-300"
+                       :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-bold' : 'text-slate-500'"
+                       x-text="selectedTracks.length >= 5 
+                           ? 'Ready to unlock your personalized feed!' 
+                           : (5 - selectedTracks.length) + ' more song' + (5 - selectedTracks.length === 1 ? '' : 's') + ' to unlock your personalized feed'">
+                    </p>
+                </div>
             </div>
 
         </div>
