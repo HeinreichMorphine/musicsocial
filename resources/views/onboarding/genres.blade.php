@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Curate Your Shelf - {{ config('app.name', 'Reso') }}</title>
+    <title>Curate Your Taste Profile - {{ config('app.name', 'Reso') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -36,37 +36,34 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
 
-    {{-- Single top strip — one sentence only --}}
+    {{-- Single top strip --}}
     <div class="sticky top-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-b border-indigo-100 py-2 px-4 text-center text-xs font-medium text-indigo-600 tracking-wide">
         Builds your taste profile for better recommendations & matches.
     </div>
 
-    <div class="min-h-screen flex flex-col items-center pt-16 sm:pt-24 pb-28 px-4 sm:px-6"
+    <div class="min-h-screen flex flex-col items-center pt-8 sm:pt-12 pb-28 px-4 sm:px-6"
          x-data="onboardingApp()">
 
         <div class="w-full max-w-lg space-y-6">
 
-            {{-- Headline: clear chapter heading, unmistakably first read --}}
-            <div class="text-center pt-8 pb-1" style="margin-top: 3.5rem; margin-bottom: 2.5rem;">
-                {{-- 32px font-black — wins the page, nothing else comes close --}}
+            {{-- Headline --}}
+            <div class="text-center pt-8 pb-1" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
                 <h1 class="text-[2.25rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
-                    Curate Your <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Song Shelf</span>
+                    Let's build your <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">taste profile</span>
                 </h1>
-                {{-- Subtext does double duty: guidance for first-timers, no extra block needed --}}
-                <p class="mt-4 text-[13px] text-slate-500 font-normal leading-relaxed max-w-sm mx-auto">
-                    New here? Tap a trending track, or search for your own
-                    — pick 5 to 10 to get started.
+                <p class="mt-3 text-[14px] text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">
+                    Search for a few songs you love.
                 </p>
             </div>
 
-            {{-- Search bar (above unified card, separate) --}}
-            <div class="relative z-30">
+            {{-- Search bar container --}}
+            <div class="relative z-30 space-y-4">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-300 transition-colors"
                              :class="searchQuery.length > 0 && 'text-indigo-400'"
                              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
                     <input type="text"
@@ -75,7 +72,7 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border-0 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
+                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
                            :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -86,7 +83,55 @@
                     </div>
                 </div>
 
-                {{-- Search results: absolute overlay (only when actively searching) --}}
+                {{-- Two-Tier Assistive Genre tags --}}
+                <div class="text-center space-y-2.5 pt-2">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
+                    <div class="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
+                        <!-- Broad genres -->
+                        <template x-for="genre in broadGenres" :key="genre">
+                            <button type="button"
+                                    @click="selectTag(genre)"
+                                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm border focus:outline-none flex items-center gap-1.5 active:scale-95"
+                                    :class="activeTag === genre 
+                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
+                                        : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                <span class="w-1.5 h-1.5 rounded-full" 
+                                      :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
+                                <span x-text="genre"></span>
+                            </button>
+                        </template>
+                        
+                        <!-- Niche genres -->
+                        <template x-for="genre in nicheGenres" :key="genre">
+                            <button type="button"
+                                    x-show="showAllGenres"
+                                    x-transition:enter="transition ease-out duration-200 transform"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    @click="selectTag(genre)"
+                                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm border focus:outline-none flex items-center gap-1.5 active:scale-95"
+                                    :class="activeTag === genre 
+                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
+                                        : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                <span class="w-1.5 h-1.5 rounded-full" 
+                                      :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
+                                <span x-text="genre"></span>
+                            </button>
+                        </template>
+
+                        <!-- Expander Button -->
+                        <button type="button"
+                                @click="showAllGenres = !showAllGenres"
+                                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 shadow-sm border border-indigo-100 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-50 focus:outline-none flex items-center gap-1">
+                            <span x-text="showAllGenres ? 'Less genres' : 'More genres'"></span>
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Search results overlay --}}
                 <div x-show="searchQuery.length >= 3 && (searchResults.length > 0 || (!isSearching && searchQuery.length >= 3))"
                      x-cloak
                      x-transition:enter="transition ease-out duration-150"
@@ -108,7 +153,7 @@
                                      class="w-9 h-9 rounded-lg object-cover flex-shrink-0 shadow-sm">
                                 <div class="flex-1 min-w-0">
                                     <div class="text-sm font-semibold text-slate-800 truncate" x-text="track.name"></div>
-                                    <div class="text-xs text-slate-400 truncate" x-text="track.artists?.map(a => a.name).join(', ')"></div>
+                                    <div class="text-xs text-slate-400 truncate" x-text="getArtistName(track)"></div>
                                 </div>
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
                                      :class="isSelected(track.id) ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
@@ -122,95 +167,100 @@
                 </div>
             </div>
 
-            {{-- ONE unified card: Trending + Shelf, single container --}}
+            {{-- Unified card --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
-                {{-- ── SECTION 1: Trending ── --}}
-                {{-- Fix 4: section label to text-xs 12px — same weight and size as "YOUR SHELF" --}}
+                {{-- ── SECTION 1: Suggestions ── --}}
                 <div class="px-6 pt-5 pb-1">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        Trending this week — tap to add
-                    </p>
-                    <ul class="divide-y divide-slate-50">
-                        @forelse($suggestedTracks ?? [] as $st)
-                            @php
-                                $stId     = $st['id'] ?? '';
-                                $stName   = $st['name'] ?? 'Unknown';
-                                $stArt    = $st['album']['images'][0]['url'] ?? '';
-                                $stArtist = collect($st['artists'] ?? [])->pluck('name')->join(', ');
-                            @endphp
-                            @if($stId)
-                                <li x-data='{
-                                        track: {
-                                            id:      {{ json_encode($stId) }},
-                                            name:    {{ json_encode($stName) }},
-                                            artists: [{ name: {{ json_encode($stArtist) }} }],
-                                            album:   { images: [{ url: {{ json_encode($stArt) }} }] }
-                                        }
-                                    }'
-                                    @click="toggleTrack(track)"
-                                    {{-- Fix 1: py-3 → py-3.5 for breathing room --}}
-                                    class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
-                                    :class="isSelected({{ json_encode($stId) }}) && 'bg-indigo-50/50'">
-                                    <img src="{{ $stArt }}"
-                                         alt="{{ $stName }}"
-                                         class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
-                                    <div class="flex-1 min-w-0">
-                                        {{-- Fix 2: title 15px semibold, artist 12px regular lighter --}}
-                                        <div class="text-[15px] font-semibold text-slate-800 truncate">{{ $stName }}</div>
-                                        <div class="text-[12px] font-normal text-slate-400 truncate mt-0.5">{{ $stArtist }}</div>
-                                    </div>
-                                    {{-- Fix 2: Circle 20→24px, solid purple fill + check on selected, hover ring --}}
-                                    <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-                                         :class="isSelected({{ json_encode($stId) }})
-                                             ? 'bg-indigo-600 border-indigo-600 scale-110'
-                                             : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
-                                        <svg x-show="isSelected({{ json_encode($stId) }})" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                </li>
-                            @endif
-                        @empty
-                            <li class="py-5 text-xs text-slate-300 text-center">No trending tracks available right now.</li>
-                        @endforelse
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                           x-text="activeTag ? 'Trending in ' + activeTag + ' — tap to add' : 'Trending this week — tap to add'">
+                        </p>
+                        <!-- Loading spinner for genre fetch -->
+                        <div x-show="isLoadingGenre" x-cloak class="flex items-center gap-1.5">
+                            <svg class="animate-spin h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            </svg>
+                            <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Suggestions list -->
+                    <ul class="divide-y divide-slate-50" x-show="!isLoadingGenre">
+                        <template x-for="track in displayedSuggestions" :key="track.id">
+                            <li @click="toggleTrack(track)"
+                                class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
+                                :class="isSelected(track.id) && 'bg-indigo-50/50'">
+                                <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
+                                     :alt="track.name"
+                                     class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-[15px] font-semibold text-slate-800 truncate" x-text="track.name"></div>
+                                    <div class="text-[12px] font-normal text-slate-400 truncate mt-0.5" x-text="getArtistName(track)"></div>
+                                </div>
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
+                                     :class="isSelected(track.id)
+                                         ? 'bg-indigo-600 border-indigo-600 scale-110'
+                                         : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
+                                    <svg x-show="isSelected(track.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            </li>
+                        </template>
+                        <li x-show="displayedSuggestions.length === 0" class="py-5 text-xs text-slate-400 text-center">
+                            No tracks available right now.
+                        </li>
                     </ul>
+                    <!-- Loading Skeletons -->
+                    <div class="space-y-3 py-3" x-show="isLoadingGenre" x-cloak>
+                        <template x-for="i in [1, 2, 3]" :key="i">
+                            <div class="flex items-center gap-3 py-1 px-6 -mx-6">
+                                <div class="w-10 h-10 bg-slate-100 animate-pulse rounded-xl flex-shrink-0"></div>
+                                <div class="flex-1 space-y-2 min-w-0">
+                                    <div class="h-3.5 bg-slate-100 animate-pulse rounded-md w-3/4"></div>
+                                    <div class="h-2.5 bg-slate-100 animate-pulse rounded-md w-1/2"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Thin divider --}}
                 <div class="mx-6 my-3 border-t border-slate-100"></div>
 
                 {{-- ── SECTION 2: Shelf ── --}}
-                {{-- Fix 5: inner padding px-6 --}}
                 <div class="px-6 pb-6">
-                    {{-- Fix 4: "YOUR SHELF" matches trending label: text-xs 12px uppercase --}}
                     <div class="flex items-center mb-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Your Shelf</span>
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest"
+                              x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'">
+                        </span>
                         <span class="mx-1.5 text-slate-300 text-xs leading-none">·</span>
-                        {{-- 0/10 counter: slightly more prominent since it's the actionable info --}}
+                        {{-- Counter dynamically scales limit visual --}}
                         <span class="text-xs font-bold uppercase tracking-widest transition-colors duration-300"
                               :class="selectedTracks.length >= 5 ? 'text-emerald-500' : 'text-slate-500'"
-                              x-text="selectedTracks.length + '/10'">
+                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
                         </span>
-                        <span class="mx-1.5 text-slate-200 text-xs leading-none">·</span>
+                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length < 5">·</span>
                         <span class="text-xs text-slate-400 transition-all duration-300"
                               x-show="selectedTracks.length < 5"
                               x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
                         </span>
+                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length >= 5">·</span>
                         <span class="text-xs text-emerald-500 font-semibold"
                               x-show="selectedTracks.length >= 5">
                             ready to continue
                         </span>
                     </div>
 
-                    {{-- Fix 3 (Option A): Dynamic shelf — only filled slots + one ghost "+" badge --}}
-                    {{-- The row grows as the user picks tracks; no pre-rendered empty boxes --}}
+                    {{-- Shelf row with snappy animation (<400ms) --}}
                     <div class="flex items-center gap-2 flex-wrap">
 
-                        {{-- Filled slots: appear as tracks are picked, animate in --}}
+                        {{-- Filled slots --}}
                         <template x-for="(track, idx) in selectedTracks" :key="track.id">
                             <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 group"
-                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-50"
                                  x-transition:enter-end="opacity-100 scale-100">
                                 <img :src="track.album?.images[0]?.url"
@@ -226,7 +276,7 @@
                             </div>
                         </template>
 
-                        {{-- Fix 5: ghost badge = same 48px as album art slots, larger text --}}
+                        {{-- Ghost badge --}}
                         <div x-show="selectedTracks.length < 10"
                              class="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
                              :class="selectedTracks.length === 0
@@ -240,7 +290,7 @@
 
                     </div>
 
-                    {{-- First-time shelf hint: inline below strip, localStorage-gated, dismissable --}}
+                    {{-- First-time shelf hint --}}
                     <div x-show="showShelfTip && selectedTracks.length === 0"
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
@@ -254,7 +304,7 @@
                         </svg>
                         <div style="flex: 1 1 0%; min-width: 0;">
                             <p class="font-bold text-indigo-800" style="margin: 0 0 2px 0; font-size: 12px;">Quick Tip</p>
-                            <p class="text-indigo-600/90" style="margin: 0; font-size: 11px; line-height: 1.4;">Your picks will appear here. Tap any trending track below, or search to add your favorites!</p>
+                            <p class="text-indigo-600/90" style="margin: 0; font-size: 11px; line-height: 1.4;">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
                         </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
@@ -262,6 +312,49 @@
                                 style="font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: -4px; margin-right: -4px; padding: 4px; cursor: pointer; border: none; background: transparent;">
                             &times;
                         </button>
+                    </div>
+
+                    {{-- Live Taste Profile Strip (only appears after first track selection) --}}
+                    <div x-show="selectedTracks.length > 0"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="bg-indigo-50/40 border border-indigo-100/50 rounded-xl p-4 mt-5">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Live Taste Profile</span>
+                            <span class="text-[10px] font-bold text-slate-400" x-text="selectedTracks.length + ' / 10 Songs Chosen'"></span>
+                        </div>
+                        <!-- Stacked percentage bar -->
+                        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex mb-3">
+                            <template x-for="(genre, idx) in tasteProfile" :key="genre.name">
+                                <div :style="'width: ' + genre.percentage + '%'"
+                                     :class="[
+                                         'h-full transition-all duration-500',
+                                         idx === 0 ? 'bg-indigo-600' : 
+                                         (idx === 1 ? 'bg-violet-500' : 
+                                         (idx === 2 ? 'bg-emerald-500' : 
+                                         (idx === 3 ? 'bg-amber-500' : 'bg-slate-400')))
+                                     ]">
+                                </div>
+                            </template>
+                        </div>
+                        <!-- Genre Pills with percentage -->
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(genre, idx) in tasteProfile" :key="genre.name">
+                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white shadow-sm border border-slate-100">
+                                    <span class="w-1.5 h-1.5 rounded-full"
+                                          :class="[
+                                              idx === 0 ? 'bg-indigo-600' : 
+                                              (idx === 1 ? 'bg-violet-500' : 
+                                              (idx === 2 ? 'bg-emerald-500' : 
+                                              (idx === 3 ? 'bg-amber-500' : 'bg-slate-400')))
+                                          ]"></span>
+                                    <span class="text-slate-700" x-text="genre.name"></span>
+                                    <span class="text-slate-400 font-bold" x-text="genre.percentage + '%'"></span>
+                                </div>
+                            </template>
+                        </div>
                     </div>
 
                 </div>
@@ -273,7 +366,7 @@
                         type="button"
                         class="relative w-full py-5 rounded-2xl font-bold text-base tracking-wide overflow-hidden transition-all duration-500 shadow-sm border"
                         :class="selectedTracks.length >= 5
-                            ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer bg-slate-200 border-transparent'
+                            ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer bg-slate-200 border-transparent animate-pulse-glow'
                             : (selectedTracks.length > 0
                                 ? 'bg-indigo-50/80 border-indigo-100/50 cursor-not-allowed'
                                 : 'bg-slate-100 border-slate-100 cursor-not-allowed')">
@@ -308,6 +401,14 @@
                         </span>
                     </span>
                 </button>
+
+                {{-- Actionable guidance helper text directly below --}}
+                <p class="mt-3 text-center text-xs transition-colors duration-300"
+                   :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-semibold' : 'text-slate-400'"
+                   x-text="selectedTracks.length >= 5 
+                       ? 'Ready to unlock your personalized feed!' 
+                       : (5 - selectedTracks.length) + ' more song' + (5 - selectedTracks.length === 1 ? '' : 's') + ' to unlock your personalized feed'">
+                </p>
             </div>
 
         </div>
@@ -337,11 +438,13 @@
             'jazz':'jazz','rock':'rock','indie':'indie','electronic':'electronic',
             'edm':'EDM','classical':'classical','country':'country','metal':'metal',
             'punk':'punk','latin':'latin','afrobeats':'afrobeats','kpop':'K-pop',
-            'reggae':'reggae','blues':'blues','folk':'folk',
+            'reggae':'reggae','blues':'blues','folk':'folk','lo-fi':'lo-fi','math-rock':'math-rock','funk':'funk'
         };
 
         function guessGenre(track) {
-            const hay = [track.name, ...(track.artists || []).map(a => a.name), track.album?.name || '']
+            const artistsList = track.artists || [];
+            const artistsStr = artistsList.map(a => typeof a === 'string' ? a : (a.name || '')).join(' ');
+            const hay = [track.name || '', artistsStr, track.album?.name || '']
                 .join(' ').toLowerCase();
             for (const [kw, lbl] of Object.entries(GENRE_HINTS)) {
                 if (hay.includes(kw)) return lbl;
@@ -358,12 +461,38 @@
                 isSubmitting:   false,
                 errorMessage:   '',
 
-                // Rotating search placeholder
+                // Suggested Tracks
+                defaultSuggestedTracks: @json($suggestedTracks),
+                genreTracks: [],
+                activeTag: null,
+                showAllGenres: false,
+                isLoadingGenre: false,
+
+                broadGenres: ['Pop', 'Hip-hop', 'R&B', 'Rock', 'Latin', 'Electronic', 'Country'],
+                nicheGenres: ['Jazz', 'Funk', 'Punk', 'Reggae', 'Metal', 'Afrobeats', 'Lo-Fi', 'Math-Rock'],
+
+                // Rotating search placeholders
                 placeholders: [
-                    'Search artist, album, or track…',
-                    "Try 'Taylor Swift' or 'Anti-Hero'…",
-                    "Try 'The Weeknd' or 'Blinding Lights'…",
-                    "Try 'Kendrick Lamar' or 'HUMBLE.'…",
+                    "Try: an artist from your local scene",
+                    "Try: a track with less than 10k plays",
+                    "Try: the weirdest genre you actually love",
+                    "Try: a song you discovered completely by accident",
+                    "Try: the best B-side track you know",
+                    "Try: the first song you ever downloaded",
+                    "Try: your ultimate middle school anthem",
+                    "Try: the best song you discovered in a video game",
+                    "Try: a track that reminds you of a specific summer",
+                    "Try: the first band you saw live",
+                    "Try: your go-to late-night drive track",
+                    "Try: the song that always resets your mood",
+                    "Try: a flawless album opener",
+                    "Try: your ultimate rainy day comfort song",
+                    "Try: the hardest gym hype track you know",
+                    "Try: your undisputed karaoke weapon",
+                    "Try: the song you always force your friends to hear",
+                    "Try: a track you would play to introduce yourself",
+                    "Try: the last song you sent to a friend",
+                    "Try: the track you have on repeat right now"
                 ],
                 placeholderIdx:  0,
                 _phTimer:        null,
@@ -381,14 +510,78 @@
                     setTimeout(() => { this.errorMessage = ''; }, 4000);
                 },
 
-
                 init() {
-                    // Rotate placeholder every 3.5s when user isn't typing
+                    // Rotate placeholder every 3s when user isn't typing
                     this._phTimer = setInterval(() => {
                         if (this.searchQuery.length === 0) {
                             this.placeholderIdx = (this.placeholderIdx + 1) % this.placeholders.length;
                         }
-                    }, 3500);
+                    }, 3000);
+                },
+
+                get displayedSuggestions() {
+                    return this.activeTag ? this.genreTracks : this.defaultSuggestedTracks;
+                },
+
+                getArtistName(track) {
+                    if (!track.artists) return 'Unknown Artist';
+                    if (typeof track.artists === 'string') return track.artists;
+                    if (Array.isArray(track.artists)) {
+                        return track.artists.map(a => typeof a === 'string' ? a : a.name).join(', ');
+                    }
+                    return 'Unknown Artist';
+                },
+
+                get tasteProfile() {
+                    if (this.selectedTracks.length === 0) return [];
+                    let counts = {};
+                    let total = 0;
+                    this.selectedTracks.forEach(track => {
+                        let g = guessGenre(track) || 'Other';
+                        counts[g] = (counts[g] || 0) + 1;
+                        total++;
+                    });
+                    
+                    let profile = Object.entries(counts).map(([name, count]) => {
+                        return {
+                            name: name.charAt(0).toUpperCase() + name.slice(1),
+                            percentage: Math.round((count / total) * 100)
+                        };
+                    });
+                    
+                    profile.sort((a, b) => b.percentage - a.percentage);
+                    return profile;
+                },
+
+                async selectTag(genre) {
+                    if (this.activeTag === genre) {
+                        this.activeTag = null;
+                        this.genreTracks = [];
+                        return;
+                    }
+                    this.activeTag = genre;
+                    this.isLoadingGenre = true;
+                    try {
+                        let queryTag = genre.toLowerCase().replace(' ', '-');
+                        let r = await fetch(`/search/tracks?query=${encodeURIComponent('genre:' + queryTag)}`);
+                        if (r.ok) {
+                            let data = await r.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                this.genreTracks = data.slice(0, 6);
+                            } else {
+                                // Try direct term query
+                                let r2 = await fetch(`/search/tracks?query=${encodeURIComponent(genre)}`);
+                                if (r2.ok) {
+                                    let data2 = await r2.json();
+                                    this.genreTracks = Array.isArray(data2) ? data2.slice(0, 6) : [];
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch genre tracks:', e);
+                    } finally {
+                        this.isLoadingGenre = false;
+                    }
                 },
 
                 async performSearch() {
@@ -419,7 +612,14 @@
                         this.removeTrack(track.id);
                     } else {
                         if (this.selectedTracks.length < 10) {
-                            this.selectedTracks.push(track);
+                            // Ensure structure is correct
+                            const formattedTrack = {
+                                id: track.id,
+                                name: track.name,
+                                artists: track.artists,
+                                album: track.album
+                            };
+                            this.selectedTracks.push(formattedTrack);
                         } else {
                             this.showError('Maximum 10 tracks — remove one to swap.');
                         }

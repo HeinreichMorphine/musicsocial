@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         Schema::table('song_interactions', function (Blueprint $table) {
             // Using DB::statement because change() on enums is not supported by all drivers
             DB::statement("ALTER TABLE song_interactions MODIFY COLUMN type ENUM('listen', 'like', 'dislike', 'share')");
@@ -23,6 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         Schema::table('song_interactions', function (Blueprint $table) {
             DB::statement("ALTER TABLE song_interactions MODIFY COLUMN type ENUM('listen', 'like', 'dislike')");
         });
