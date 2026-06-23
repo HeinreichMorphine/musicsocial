@@ -38,14 +38,16 @@
 
         <div class="w-full max-w-lg space-y-6">
 
-            {{-- Headline: unmistakably largest text on the page --}}
-            <div class="text-center space-y-2.5 pt-2">
-                {{-- Fix 1: explicit 28px font-black — must beat all other text by a wide margin --}}
-                <h1 class="text-[1.75rem] leading-snug font-black text-slate-900 tracking-tight">
+            {{-- Headline: clear chapter heading, unmistakably first read --}}
+            <div class="text-center pt-8 pb-1">
+                {{-- 32px font-black — wins the page, nothing else comes close --}}
+                <h1 class="text-[2rem] leading-snug font-black text-slate-900 tracking-tight">
                     Curate Your Song Shelf
                 </h1>
-                <p class="text-sm text-slate-400 font-normal">
-                    Tap a trending track or search for your own.
+                {{-- Subtext does double duty: guidance for first-timers, no extra block needed --}}
+                <p class="mt-4 text-[13px] text-slate-500 font-normal leading-relaxed max-w-sm mx-auto">
+                    New here? Tap a trending track, or search for your own
+                    — pick 5 to 10 to get started.
                 </p>
             </div>
 
@@ -65,9 +67,8 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           {{-- Fix 3: text-base (16px) so placeholder fills the bar's visual weight --}}
                            class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border-0 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
-                           placeholder="Search artist, album, or track…">
+                           :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                         <svg class="animate-spin h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24">
@@ -230,8 +231,25 @@
                         </div>
 
                     </div>
-                </div>
 
+                    {{-- First-time shelf hint: inline below strip, localStorage-gated, dismissable --}}
+                    <div x-show="showShelfTip && selectedTracks.length === 0"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="mt-3 flex items-center gap-2 text-xs text-indigo-500/70">
+                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        <span>Your picks will appear here — tap any track to add it.</span>
+                        <button @click="dismissShelfTip()"
+                                type="button"
+                                class="ml-auto text-slate-300 hover:text-slate-500 transition-colors text-base leading-none shrink-0">
+                            &times;
+                        </button>
+                    </div>
+
+                </div>
             </div>{{-- end unified card --}}
 
             {{-- Fix 6: CTA gap pt-2 → pt-8 so it reads as a clear separate action --}}
@@ -333,6 +351,24 @@
                 nicePickMsg:    '',
                 _pickTimer:     null,
 
+                // Rotating search placeholder
+                placeholders: [
+                    'Search artist, album, or track…',
+                    "Try 'Taylor Swift' or 'Anti-Hero'…",
+                    "Try 'The Weeknd' or 'Blinding Lights'…",
+                    "Try 'Kendrick Lamar' or 'HUMBLE.'…",
+                ],
+                placeholderIdx:  0,
+                _phTimer:        null,
+
+                // First-time shelf hint
+                showShelfTip: !localStorage.getItem('hasSeenShelfTip'),
+
+                dismissShelfTip() {
+                    this.showShelfTip = false;
+                    localStorage.setItem('hasSeenShelfTip', 'true');
+                },
+
                 showError(msg) {
                     this.errorMessage = msg;
                     setTimeout(() => { this.errorMessage = ''; }, 4000);
@@ -343,6 +379,15 @@
                     this.nicePickMsg = genre ? `Added — you're into ${genre}` : `Added to your shelf`;
                     clearTimeout(this._pickTimer);
                     this._pickTimer = setTimeout(() => { this.nicePickMsg = ''; }, 1800);
+                },
+
+                init() {
+                    // Rotate placeholder every 3.5s when user isn't typing
+                    this._phTimer = setInterval(() => {
+                        if (this.searchQuery.length === 0) {
+                            this.placeholderIdx = (this.placeholderIdx + 1) % this.placeholders.length;
+                        }
+                    }, 3500);
                 },
 
                 async performSearch() {
