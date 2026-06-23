@@ -289,7 +289,7 @@
                          x-transition:enter-end="opacity-100 translate-y-0"
                          class="mt-3 md:mt-4 relative bg-custom-periwinkle/15 rounded-xl p-3 md:p-3.5 flex items-start gap-2.5 md:gap-3 border-none shadow-none">
                         <div class="absolute bg-custom-periwinkle/15 w-2.5 h-2.5 -top-[5px] left-6 rotate-45"></div>
-                        <svg class="text-custom-dark-blue mt-0.5 animate-bounce flex-shrink-0 w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="text-custom-dark-blue mt-0.5 flex-shrink-0 w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div class="flex-1 min-w-0">
