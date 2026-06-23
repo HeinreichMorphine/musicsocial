@@ -173,7 +173,7 @@
 
             @if (Route::has('password.request'))
                 <div class="text-sm">
-                    <a href="{{ route('password.request') }}" class="font-bold text-custom-mid-blue hover:text-custom-dark-blue transition-colors">
+                    <a href="{{ route('password.request') }}" class="font-bold text-custom-mid-blue dark:text-white hover:text-custom-dark-blue dark:hover:text-gray-300 transition-colors">
                         {{ __('Forgot password?') }}
                     </a>
                 </div>
@@ -189,7 +189,7 @@
         <div class="text-center mt-4">
              <p class="text-sm text-slate-600 dark:text-slate-400">
                 Don't have an account?
-                <a href="{{ route('register') }}" class="font-bold text-custom-mid-blue hover:text-custom-dark-blue transition-colors">
+                <a href="{{ route('register') }}" class="font-bold text-custom-mid-blue dark:text-white hover:text-custom-dark-blue dark:hover:text-gray-300 transition-colors">
                     {{ __('Register now') }}
                 </a>
              </p>
