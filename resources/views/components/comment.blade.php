@@ -7,6 +7,8 @@
     upvoteCount: {{ $comment->getUpvoteCount() }},
     songId: '{{ $comment->getEmbeddedSongId() }}',
     songData: null,
+    playerOpen: false,
+    isPlayingPreview: false,
     
     init() {
         if (this.songId) {
@@ -64,8 +66,9 @@
                 
                 {{-- Mini Song Card for Recommendations (Dynamic) --}}
                 <template x-if="songData">
-                    <div class="mt-3 relative rounded-2xl p-4 group/card overflow-hidden">
-                        {{-- Background blur/gradient --}}
+                    <div class="mt-3">
+                        <div class="relative rounded-2xl p-4 group/card overflow-hidden">
+                            {{-- Background blur/gradient --}}
                         <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover/card:scale-125" :style="`background-image: url('${songData.album_art_url || '/images/default-album-art.png'}');`"></div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                         
@@ -77,10 +80,31 @@
                                 
                                 <div class="flex items-center space-x-3 mt-2">
                                     {{-- Spotify Link --}}
+                                    @php
+                                        $isLinked = auth()->check() && auth()->user()->spotify_token;
+                                        $isPremium = auth()->check() && auth()->user()->isSpotifyPremium();
+                                    @endphp
                                     @if(auth()->check() && auth()->user()->spotify_id)
-                                        <a :href="songData.spotify_url" target="_blank" title="Play on Spotify" class="shrink-0 hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                        <button type="button" 
+                                            @click.prevent.stop="
+                                                @if($isPremium)
+                                                    if(window.playSpotifyTrack) {
+                                                        window.playSpotifyTrack('spotify:track:' + songData.spotify_track_id);
+                                                    } else {
+                                                        console.error('Spotify Web Player not ready');
+                                                    }
+                                                @else
+                                                    playerOpen = !playerOpen;
+                                                    if(!playerOpen) {
+                                                        const audio = $el.closest('[x-data]').querySelector('audio');
+                                                        if(audio) audio.pause();
+                                                    }
+                                                @endif
+                                            "
+                                            title="Play on Spotify" 
+                                            class="shrink-0 hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
                                             <svg class="w-7 h-7 shrink-0 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-                                        </a>
+                                        </button>
                                     @else
                                         <button type="button" @click.prevent.stop="$dispatch('open-spotify-link-modal')" title="Link Spotify" class="shrink-0 hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
                                             <svg class="w-7 h-7 shrink-0 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -149,6 +173,55 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Inline Spotify Embed Player --}}
+                        @if(!$isPremium)
+                        <div x-show="playerOpen"
+                             x-on:click.stop
+                             x-transition
+                             class="mt-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-[16px] p-4 flex flex-col gap-3 relative overflow-hidden"
+                             style="display:none;">
+                            
+                            <template x-if="songData.preview_url">
+                                <div class="flex flex-col gap-3 z-10">
+                                    <div class="flex items-center gap-3">
+                                        <button @click="const a = $refs.audio; if(a.paused){a.play(); isPlayingPreview=true;}else{a.pause(); isPlayingPreview=false;}" class="w-10 h-10 shrink-0 rounded-full bg-[#1DB954] flex items-center justify-center text-black hover:scale-105 transition-transform">
+                                            <svg x-show="!isPlayingPreview" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 ml-1"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" /></svg>
+                                            <svg x-show="isPlayingPreview" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                        <div class="flex-1">
+                                            <div class="text-sm text-white font-medium">30s Preview</div>
+                                            <div class="text-xs text-gray-400">Full playback requires a Premium subscription.</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 flex gap-2">
+                                        @if(!$isLinked)
+                                            <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-white text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
+                                        @else
+                                            <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="songData.preview_url">
+                                <audio x-ref="audio" :src="songData.preview_url" @play="isPlayingPreview = true" @pause="isPlayingPreview = false" @ended="isPlayingPreview = false"></audio>
+                            </template>
+                            <template x-if="!songData.preview_url">
+                                <div>
+                                    <div class="text-sm text-gray-400 p-2 text-center">No preview available for this track.</div>
+                                    <div class="mt-2 text-center">
+                                        @if(!$isLinked)
+                                            <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
+                                        @else
+                                            <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        @endif
+
                     </div>
                 </template>
             </div>
