@@ -85,13 +85,13 @@
 
                 {{-- Two-Tier Assistive Genre tags --}}
                 <div class="text-center space-y-3 pt-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block">Or tap a vibe to get started</span>
-                    <div class="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
+                    <span class="text-[13px] font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
+                    <div class="flex flex-wrap gap-2 justify-center max-w-md mx-auto items-center">
                         <!-- Broad genres -->
                         <template x-for="genre in broadGenres" :key="genre">
                             <button type="button"
                                     @click="selectTag(genre)"
-                                    class="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
+                                    class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
                                         : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
@@ -109,7 +109,7 @@
                                     x-transition:enter-start="opacity-0 scale-95"
                                     x-transition:enter-end="opacity-100 scale-100"
                                     @click="selectTag(genre)"
-                                    class="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
+                                    class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
                                         : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
@@ -119,12 +119,12 @@
                             </button>
                         </template>
 
-                        <!-- Expander Button -->
+                        <!-- Expander Button: styled matching regular tags for inline consistency -->
                         <button type="button"
                                 @click="showAllGenres = !showAllGenres"
-                                class="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 shadow-sm border border-indigo-100 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-50 focus:outline-none inline-flex items-center justify-center gap-1.5">
+                                class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 focus:outline-none inline-flex items-center justify-center gap-1.5 active:scale-95">
                             <span x-text="showAllGenres ? 'Less genres' : 'More genres'"></span>
-                            <svg class="w-4 h-4 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -173,8 +173,8 @@
                 {{-- ── SECTION 1: Suggestions ── --}}
                 <div class="px-6 pt-5 pb-1">
                     <div class="flex items-center justify-between mb-3">
-                        <p class="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-widest"
-                           x-text="activeTag ? 'Trending in ' + activeTag + ' — tap to add' : 'Trending this week — tap to add'">
+                        <p class="text-[13px] font-bold text-slate-400 uppercase tracking-widest"
+                           x-text="activeTag ? 'Trending in ' + activeTag + ' — tap to add' : 'A bit of everything — tap to add'">
                         </p>
                         <!-- Loading spinner for genre fetch -->
                         <div x-show="isLoadingGenre" x-cloak class="flex items-center gap-1.5">
@@ -232,26 +232,17 @@
 
                 {{-- ── SECTION 2: Shelf ── --}}
                 <div class="px-6 pb-6">
-                    <div class="flex items-center mb-4">
-                        <span class="text-sm font-bold text-slate-600 uppercase tracking-widest"
-                              x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'">
-                        </span>
-                        <span class="mx-1.5 text-slate-300 text-xs leading-none">·</span>
-                        {{-- Counter dynamically scales limit visual --}}
-                        <span class="text-sm font-bold uppercase tracking-widest transition-colors duration-300"
-                              :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
-                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
-                        </span>
-                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length < 5">·</span>
-                        <span class="text-sm text-slate-500 transition-all duration-300"
+                    <div class="flex items-center mb-4 text-sm sm:text-base font-semibold text-slate-800">
+                        <span x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'"></span>
+                        <span class="mx-1.5 text-slate-300 font-normal">·</span>
+                        <span :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-600'"
+                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'"></span>
+                        <span class="mx-1.5 text-slate-300 font-normal" x-show="selectedTracks.length < 5">·</span>
+                        <span class="text-sm font-medium text-slate-500"
                               x-show="selectedTracks.length < 5"
-                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
-                        </span>
-                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length >= 5">·</span>
-                        <span class="text-sm text-emerald-600 font-bold"
-                              x-show="selectedTracks.length >= 5">
-                            ready to continue
-                        </span>
+                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'"></span>
+                        <span class="mx-1.5 text-slate-300 font-normal" x-show="selectedTracks.length >= 5">·</span>
+                        <span class="text-sm font-bold text-emerald-600" x-show="selectedTracks.length >= 5">ready to continue</span>
                     </div>
 
                     {{-- Shelf row with snappy animation (<400ms) --}}
@@ -377,7 +368,7 @@
                     </span>
 
                     <span class="relative z-10 flex items-center justify-center gap-2 transition-colors duration-300"
-                          :class="selectedTracks.length >= 5 ? 'text-white' : (selectedTracks.length > 0 ? 'text-indigo-600' : 'text-slate-400')">
+                          :class="selectedTracks.length >= 5 ? 'text-white' : (selectedTracks.length > 0 ? 'text-indigo-600/70' : 'text-slate-500')">
                         <span x-show="!isSubmitting">
                             <template x-if="selectedTracks.length === 0">
                                 <span>Pick 5 tracks to get started</span>
@@ -403,8 +394,8 @@
                 </button>
 
                 {{-- Actionable guidance helper text directly below --}}
-                <p class="mt-3 text-center text-sm transition-colors duration-300"
-                   :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-semibold' : 'text-slate-400'"
+                <p class="mt-3 text-center text-sm font-semibold transition-colors duration-300"
+                   :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
                    x-text="selectedTracks.length >= 5 
                        ? 'Ready to unlock your personalized feed!' 
                        : (5 - selectedTracks.length) + ' more song' + (5 - selectedTracks.length === 1 ? '' : 's') + ' to unlock your personalized feed'">
@@ -567,13 +558,14 @@
                         if (r.ok) {
                             let data = await r.json();
                             if (Array.isArray(data) && data.length > 0) {
-                                this.genreTracks = data.slice(0, 6);
+                                // Slice to 5 maximum suggestions
+                                this.genreTracks = data.slice(0, 5);
                             } else {
                                 // Try direct term query
                                 let r2 = await fetch(`/search/tracks?query=${encodeURIComponent(genre)}`);
                                 if (r2.ok) {
                                     let data2 = await r2.json();
-                                    this.genreTracks = Array.isArray(data2) ? data2.slice(0, 6) : [];
+                                    this.genreTracks = Array.isArray(data2) ? data2.slice(0, 5) : [];
                                 }
                             }
                         }

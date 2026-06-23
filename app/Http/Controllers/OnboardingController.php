@@ -19,13 +19,25 @@ class OnboardingController extends Controller
 
     public function genres()
     {
-        // Fetch 6 actual trending starter tracks from Spotify Global Top 50 playlist, cached for 24 hours
-        $suggestedTracks = Cache::remember('onboarding_suggested_tracks', 60 * 60 * 24, function () {
+        // Fetch 4 diverse editor's picks (Pop, Rock, Jazz, Afrobeats) to prevent popularity bias, cached for 24 hours
+        $suggestedTracks = Cache::remember('onboarding_diverse_suggested_tracks', 60 * 60 * 24, function () {
             try {
-                $results = $this->spotifyService->getPlaylistTrackItems('37i9dQZEVXbMDoIb9hqKuo', 6);
-                return is_array($results) ? array_slice($results, 0, 6) : [];
+                $ids = [
+                    '4D7t7g2jsYii9v173y506G', // Pop: Harry Styles - As It Was
+                    '5uCaxm20t3865UpVJb0GgC', // Rock: Nirvana - Smells Like Teen Spirit
+                    '7y620WfXhU1g0Z42L6zG2k', // Jazz: Frank Sinatra - Fly Me To The Moon
+                    '5GDAWNs8t162gJV61PWqyW', // Afrobeats: Burna Boy - Last Last
+                ];
+                $tracks = [];
+                foreach ($ids as $id) {
+                    $track = $this->spotifyService->getRawTrack($id);
+                    if ($track && !isset($track['error'])) {
+                        $tracks[] = $track;
+                    }
+                }
+                return $tracks;
             } catch (\Exception $e) {
-                \Log::warning('Onboarding: Could not fetch suggested tracks — ' . $e->getMessage());
+                \Log::warning('Onboarding: Could not fetch suggested diverse tracks — ' . $e->getMessage());
                 return [];
             }
         });
