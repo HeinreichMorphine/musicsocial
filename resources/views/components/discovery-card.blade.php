@@ -124,48 +124,10 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
         @if(isset($song->reason))
             <!-- Reasoning Zone -->
             <div class="mt-1 relative flex-1 flex flex-col">
-                
                 <!-- 2. Humanized Reason Text -->
                 <div class="text-[12px] text-gray-500 dark:text-gray-400 font-medium leading-snug mb-2 flex-1 line-clamp-2">
-                    <?php $displayedGenres = []; // Keep track if we want to hide genres. For rules: friends = no hide. ?>
-                    @if($isSharedByFriend || $sharingFriends->count() > 0)
-                        <?php 
-                            $friendName = $sharingFriends->count() > 0 ? $sharingFriends->first()->name : 'a friend';
-                        ?>
-                        @if($isArtistMatch)
-                            Top pick for <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ $artistMatchName ?: $song->artist_name }}</span> fans.
-                        @elseif(count($genres) > 0)
-                            Recommended by <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ $friendName }}</span>.
-                        @else
-                            From <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ $friendName }}'s</span> heavy rotation.
-                        @endif
-                    @else
-                        @if($isArtistMatch)
-                             Top pick for <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ $artistMatchName ?: $song->artist_name }}</span> fans.
-                        @elseif(count($genres) > 0)
-                            <?php 
-                                $displayedGenres = array_slice($genres, 0, 2);
-                                $genreText = implode(', ', $displayedGenres);
-                            ?>
-                            Fits your <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ $genreText }}</span> vibe.
-                        @else
-                             Similar to your recent plays.
-                        @endif
-                    @endif
+                    {{ $song->reason }}
                 </div>
-
-                <!-- 3. Simplified Tags (Bottom of reason box) -->
-                <?php $remainingGenres = array_diff($genres, $displayedGenres); ?>
-                @if(count($remainingGenres) > 0)
-                    <div class="flex flex-wrap gap-1.5 mt-auto">
-                        @foreach(array_slice($remainingGenres, 0, 2) as $genre)
-                            <span class="px-2 py-[3px] bg-gray-50/80 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-[9px] font-bold rounded-md uppercase tracking-wide border border-gray-200/50 dark:border-white/5">{{ $genre }}</span>
-                        @endforeach
-                    </div>
-                @endif
-                
-
-                <!-- Tooltip removed per request -->
             </div>
         @endif
 
