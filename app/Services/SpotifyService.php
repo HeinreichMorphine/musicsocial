@@ -353,7 +353,7 @@ class SpotifyService
             if (empty($finalGenres)) {
                 try {
                     $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
-                    $heuristicResponse = Http::timeout(10)->get($endpoint, [
+                    $heuristicResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])->timeout(10)->get($endpoint, [
                         'term' => $artistName . ' ' . $trackName,
                         'entity' => 'song',
                         'limit' => 1
