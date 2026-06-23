@@ -135,7 +135,7 @@
                                     <p class="text-xs md:text-sm text-gray-500 truncate">{{ $track['artist'] }}</p>
                                 </div>
 
-                                <input type="checkbox" name="selected_tracks[]" value="{{ $track['id'] }}" class="hidden" :checked="selectedTracks.includes('{{ $track['id'] }}')">
+                                <input type="checkbox" name="selected_tracks[]" value="{{ json_encode(['id' => $track['id'], 'name' => $track['name'], 'artist' => $track['artist'], 'album_art' => $track['album_art']]) }}" class="hidden" :checked="selectedTracks.includes('{{ $track['id'] }}')">
                                 
                                 <div class="absolute right-4 top-1/2 -translate-y-1/2">
                                     <div class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-white/10 flex items-center justify-center transition-colors"

@@ -151,20 +151,36 @@ class SpotifyImportController extends Controller
 
         // 3. Process Tracks
         $addedCount = 0;
-        foreach ($request->input('selected_tracks') as $spotifyTrackId) {
-            // First fetch/create the song locally via SpotifyService to get metadata
-            $trackData = $this->spotifyService->getTrack($spotifyTrackId);
-            
-            if (isset($trackData['song'])) {
+        
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            foreach ($request->input('selected_tracks') as $trackJson) {
+                $trackData = json_decode($trackJson, true);
+                if (!$trackData || !isset($trackData['id'])) continue;
+
+                // First fetch/create the song locally via basic metadata
+                $song = Song::firstOrCreate([
+                    'spotify_track_id' => $trackData['id'],
+                ], [
+                    'track_name' => $trackData['name'],
+                    'artist_name' => $trackData['artist'],
+                    'album_art_url' => $trackData['album_art'],
+                    'spotify_url' => 'https://open.spotify.com/track/' . $trackData['id']
+                ]);
+                
                 // Add to playlist_songs
                 PlaylistSong::firstOrCreate([
                     'playlist_id' => $playlist->id,
-                    'song_id' => $spotifyTrackId,
+                    'song_id' => $song->spotify_track_id,
                 ], [
                     'added_by_user_id' => $user->id
                 ]);
                 $addedCount++;
             }
+            \Illuminate\Support\Facades\DB::commit();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
 
         return redirect()->route('profile.show', $user->name)
