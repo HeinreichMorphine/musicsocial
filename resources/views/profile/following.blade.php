@@ -4,7 +4,7 @@
 
             <div class="hidden md:block md:col-span-4 lg:col-span-3 xl:col-span-2">
                 <div class="sticky top-0 pt-4">
-                    <div class="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-white/40 dark:border-zinc-800/50 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+                    <div class="bg-white/60 dark:bg-black border border-white/40 dark:border-white/5 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
                         @php
                             $isHome = Route::is('dashboard');
                             $isProfile = false;

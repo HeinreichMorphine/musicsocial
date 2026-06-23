@@ -4,7 +4,7 @@
 
             <div class="hidden md:block md:col-span-4 lg:col-span-3 xl:col-span-2">
                 <div class="sticky top-0 pt-4">
-                    <div class="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-white/40 dark:border-zinc-800/50 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+                    <div class="bg-white/60 dark:bg-black border border-white/40 dark:border-white/5 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
                         <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 text-gray-600 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white transition-colors mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

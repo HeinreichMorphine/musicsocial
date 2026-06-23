@@ -1,4 +1,4 @@
-<div class="w-full bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/10 shadow-lg p-6 md:p-8 rounded-3xl" x-data="{
+<div class="w-full bg-white dark:bg-black border border-gray-100 dark:border-white/5 shadow-lg p-6 md:p-8 rounded-3xl" x-data="{
     postType: 'music',
     isSeekingRecommendations: false,
     searchQuery: '',

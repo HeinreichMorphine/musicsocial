@@ -179,6 +179,13 @@ class SpotifyService
             $song->update(['preview_url' => $track['preview_url']]);
         }
 
+        // Ensure youtube_url is always set — use stored value or build a search fallback
+        $youtubeUrl = $song->youtube_url
+            ?: 'https://www.youtube.com/results?search_query=' . urlencode($song->track_name . ' ' . $song->artist_name);
+
+        // Attach the resolved youtube_url to the model so API consumers always get it
+        $song->youtube_url = $youtubeUrl;
+
         return ['song' => $song, 'album_art_url' => $track['album']['images'][0]['url'] ?? null];
     }
 
