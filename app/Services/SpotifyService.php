@@ -296,8 +296,15 @@ class SpotifyService
                     if ($ytVideo && isset($ytVideo['video_id'])) {
                         $ytDetails = $youtubeService->getVideo($ytVideo['video_id']);
                         if (!empty($ytDetails['tags'])) {
-                            $debugSources['youtube_fallback'] = $ytDetails['tags'];
-                            $allGenres = array_merge($allGenres, $ytDetails['tags']);
+                            // YouTube tags are extremely noisy (artists, song names, "official video")
+                            // Clean them strictly against our known genre whitelist FIRST
+                            $cleaner = new GenreCleanerService();
+                            $strictYtTags = $cleaner->clean($ytDetails['tags'], true);
+                            
+                            if (!empty($strictYtTags)) {
+                                $debugSources['youtube_fallback'] = $strictYtTags;
+                                $allGenres = array_merge($allGenres, $strictYtTags);
+                            }
                         }
                     }
                 } catch (\Exception $e) {

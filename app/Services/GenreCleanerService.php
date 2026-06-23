@@ -133,10 +133,11 @@ class GenreCleanerService
 
     /**
      * Clean a list of genres.
-     * * @param array $genres
+     * @param array $genres
+     * @param bool $strict If true, drops any genre not in the whitelist
      * @return array
      */
-    public function clean(array $genres): array
+    public function clean(array $genres, bool $strict = false): array
     {
         $cleaned = [];
 
@@ -155,11 +156,12 @@ class GenreCleanerService
             }
 
             // 4. (NEW) Beets Whitelist Normalization
-            // If the genre exists in the beets list, use that canonical version
-            // This is useful if the beets list has specific casing or standard variants
-            // Note: genres.txt provided is lowercase, so this acts mainly as a validator/pass-through
-            if (isset($this->beetsWhitelist[$g])) {
+            $inWhitelist = isset($this->beetsWhitelist[$g]);
+            if ($inWhitelist) {
                $g = $this->beetsWhitelist[$g];
+            } elseif ($strict) {
+                // Drop if strict mode and not in whitelist
+                continue;
             }
 
             // Remove tags that are too short to be real genres (e.g. "pop" is 3, "rb" is 2)
