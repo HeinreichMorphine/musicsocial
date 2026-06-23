@@ -137,15 +137,18 @@ class UserProfileController extends Controller
 
         arsort($genreCounts);
         $topGenres = array_slice($genreCounts, 0, 5, true);
+        
+        $totalTopGenreCount = array_sum($topGenres);
+        
         $userArtistKeys = array_keys($artistCounts);
         $userSongIds = $allSongs->pluck('id')->toArray();
         $userGenreKeys = array_keys($genreCounts);
         
-        // Normalize to percentages (of Songs)
+        // Normalize to percentages (Total of Top 5 should be 100%)
         $genreDna = [];
         foreach ($topGenres as $genre => $count) {
             $genreDna[$genre] = [
-                'percent' => $songsWithGenresCount > 0 ? round(($count / $songsWithGenresCount) * 100) : 0,
+                'percent' => $totalTopGenreCount > 0 ? round(($count / $totalTopGenreCount) * 100) : 0,
             ];
         }
 
