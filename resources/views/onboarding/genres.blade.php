@@ -53,7 +53,7 @@
             {{-- Headline --}}
             <div class="text-center pt-4 sm:pt-8 pb-0.5 sm:pb-1 mt-2 sm:mt-4 mb-2 sm:mb-4">
                 <h1 class="text-[2rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
-                    Let's build your <span class="bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue text-transparent" style="-webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;">taste profile</span>
+                    Let's build your <span class="text-custom-dark-blue">taste profile</span>
                 </h1>
                 <p class="mt-2.5 sm:mt-3 text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
                     Search for a few songs you love.

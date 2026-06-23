@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="color-scheme" content="light dark">
+        <meta name="color-scheme" content="light">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
@@ -15,6 +15,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
+        <script>document.documentElement.classList.remove('dark');</script>
+
         <style>
             /* Scale the entire UI down dynamically on small mobile devices */
             @media (max-width: 480px) {
@@ -24,19 +26,23 @@
             }
         </style>
     </head>
-    <body class="font-sans text-slate-900 antialiased bg-slate-50/50 selection:bg-custom-periwinkle selection:text-custom-dark-blue">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 relative overflow-hidden">
+    <body class="font-sans text-slate-900 antialiased bg-slate-50 selection:bg-custom-periwinkle selection:text-custom-dark-blue">
+        <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
             {{-- Subtle background decoration elements --}}
             <div class="absolute top-0 inset-x-0 h-[220px] bg-gradient-to-b from-custom-periwinkle/10 to-transparent pointer-events-none z-0"></div>
 
-            <div class="mb-2 transform hover:scale-[1.03] transition-all duration-300 relative z-10">
-                <a href="/" class="flex items-center justify-center w-16 h-16 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
-                    <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-9 h-9 object-contain drop-shadow-sm">
-                </a>
-            </div>
+            <div class="flex flex-col items-center w-full sm:max-w-md relative z-10">
+                {{-- Logo circle --}}
+                <div class="mb-5 transform hover:scale-[1.03] transition-all duration-300">
+                    <a href="/" class="flex items-center justify-center w-16 h-16 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
+                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-9 h-9 object-contain drop-shadow-sm">
+                    </a>
+                </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-10 py-10 bg-white shadow-[0_15px_50px_rgba(22,42,114,0.03)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-100 sm:rounded-3xl relative z-10">
-                {{ $slot }}
+                {{-- Auth Card --}}
+                <div class="w-full px-6 py-8 sm:px-10 sm:py-10 bg-white shadow-[0_15px_50px_rgba(22,42,114,0.03)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-100 rounded-3xl">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
     </body>
