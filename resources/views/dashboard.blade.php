@@ -29,6 +29,47 @@
                         </a>
                     </div>
 
+                    @if($feedType === 'explore' && $usersToSuggest->isNotEmpty())
+                        <div class="block lg:hidden mb-8">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Who to Follow</h3>
+                            </div>
+                            <div class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4 custom-scrollbar">
+                                @foreach($usersToSuggest->take(8) as $suggestedUser)
+                                    <div class="flex-none w-40 bg-white/60 dark:bg-black backdrop-blur-lg rounded-2xl p-4 border border-gray-200/50 dark:border-white/10 shadow-sm text-center flex flex-col items-center" x-data="{ followed: {{ auth()->user()->following->contains($suggestedUser) ? 'true' : 'false' }} }" x-show="!followed" x-transition>
+                                        <a href="{{ route('profile.show', $suggestedUser->name) }}" class="block mb-2">
+                                            <x-user-avatar :user="$suggestedUser" class="w-16 h-16 shadow-sm border border-gray-100 dark:border-gray-700" />
+                                        </a>
+                                        <div class="min-w-0 w-full mb-3">
+                                            <a href="{{ route('profile.show', $suggestedUser->name) }}" class="block font-bold text-gray-800 dark:text-gray-100 hover:underline truncate text-sm">{{ $suggestedUser->name }}</a>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">@ {{ $suggestedUser->username }}</p>
+                                        </div>
+                                        <form @submit.prevent="
+                                            fetch('{{ route('users.follow', $suggestedUser) }}', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json'
+                                                },
+                                                body: JSON.stringify({})
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => { followed = data.followed; })
+                                            .catch(error => console.error('Error:', error));
+                                        " class="mt-auto w-full">
+                                            <button type="submit" 
+                                                    x-text="followed ? 'Unfollow' : 'Follow'" 
+                                                    :class="followed ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/30'" 
+                                                    class="w-full text-white text-xs font-bold py-1.5 px-3 rounded-full transition duration-300 shadow-lg hover:shadow-xl">
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     <div id="feed-container" class="space-y-6">
                         @forelse ($shares as $share)
                             <x-share-card :share="$share" />

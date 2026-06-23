@@ -1,10 +1,11 @@
 @props(['usersToSuggest'])
 
+@if($usersToSuggest->isNotEmpty())
 <div class="bg-white/60 dark:bg-black backdrop-blur-lg rounded-3xl p-5 border border-white/40 dark:border-white/10 shadow-xl mb-6">
     <div class="text-gray-900 dark:text-white">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Who to Follow</h3>
 
-        @forelse ($usersToSuggest as $suggestedUser)
+        @foreach ($usersToSuggest as $suggestedUser)
             <div class="flex items-center justify-between mb-5 last:mb-0" x-data="{ followed: {{ auth()->user()->following->contains($suggestedUser) ? 'true' : 'false' }}, followersCount: {{ $suggestedUser->followers()->count() }} }" x-show="!followed" x-transition.duration.300ms>
                 <div class="flex items-center min-w-0 flex-1 mr-2 xl:mr-3">
                     <x-user-avatar :user="$suggestedUser" class="w-10 h-10 xl:w-12 xl:h-12 mr-3 shrink-0 border border-white dark:border-gray-700 shadow-sm" />
@@ -37,8 +38,7 @@
                     </button>
                 </form>
             </div>
-        @empty
-            <p class="text-gray-500 text-sm">No suggestions right now.</p>
-        @endforelse
+        @endforeach
     </div>
 </div>
+@endif
