@@ -234,8 +234,6 @@
                 </div>
             </div>
         </div>
-        
-        <x-spotify-beta-modal />
 
         @livewireScripts
     </body>
