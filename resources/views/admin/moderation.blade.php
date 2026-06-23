@@ -183,6 +183,63 @@
         </div>
         <div class="pagination-wrap">{{ $comments->links() }}</div>
     </div>
+    {{-- ── Playlists Panel ───────────────────────────────────── --}}
+    <div class="panel-card" style="grid-column: 1 / -1;">
+        <div class="panel-head">
+            <h4><i class="fa fa-list" style="color:#ef4444;margin-right:5px;"></i> Playlists
+                <span style="font-size:.72rem;color:#94a3b8;font-weight:500;margin-left:4px;">({{ $playlists->total() }})</span>
+            </h4>
+            <form method="GET" action="{{ route('admin.moderation') }}" class="search-mini">
+                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Filter by user or name…">
+                <button type="submit"><i class="fa fa-search"></i></button>
+            </form>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table class="mod-table">
+                <thead>
+                    <tr>
+                        <th>Creator</th>
+                        <th>Playlist Name</th>
+                        <th>Songs</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($playlists as $playlist)
+                    <tr>
+                        <td>
+                            <span class="author-chip">{{ $playlist->creator->user->name ?? 'Unknown' }}</span>
+                        </td>
+                        <td>
+                            <div class="content-preview">{{ Str::limit($playlist->name ?? '—', 70) }}</div>
+                        </td>
+                        <td>
+                            <span class="likes-pill" style="color:#2563eb; background:#eff6ff;"><i class="fa fa-music"></i> {{ $playlist->songs_count }}</span>
+                        </td>
+                        <td>
+                            <span class="time-chip">{{ $playlist->created_at->format('d M Y') }}</span>
+                            <span class="time-chip">{{ $playlist->created_at->diffForHumans() }}</span>
+                        </td>
+                        <td>
+                            <form action="{{ route('admin.playlists.delete', $playlist->id) }}" method="POST"
+                                  onsubmit="return confirm('Delete this playlist and all related data?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-del-sm"><i class="fa fa-trash"></i> Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:1.5rem;color:#94a3b8;">No playlists found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-wrap">{{ $playlists->links() }}</div>
+    </div>
 
 </div>
 @endsection

@@ -110,13 +110,30 @@ class AdminController extends Controller
         $shares   = Share::with('user', 'song')
             ->withCount('likes')
             ->when($search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%")))
-            ->latest()->paginate(12)->withQueryString();
+            ->latest()->paginate(12, ['*'], 'shares_page')->withQueryString();
         $comments = Comment::with('user')
             ->when($search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
                                         ->orWhere('body', 'like', "%{$search}%"))
-            ->latest()->paginate(12)->withQueryString();
+            ->latest()->paginate(12, ['*'], 'comments_page')->withQueryString();
+        $playlists = \App\Models\Playlist::with('creator.user')
+            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%")
+                                        ->orWhereHas('creator.user', fn($u) => $u->where('name', 'like', "%{$search}%")))
+            ->withCount('songs')
+            ->latest()->paginate(12, ['*'], 'playlists_page')->withQueryString();
 
-        return view('admin.moderation', compact('shares', 'comments', 'search'));
+        return view('admin.moderation', compact('shares', 'comments', 'playlists', 'search'));
+    }
+
+    public function deletePlaylist($id)
+    {
+        $playlist = \App\Models\Playlist::findOrFail($id);
+        
+        // Manual cleanup if needed, though usually cascade covers this
+        \App\Models\PlaylistCollaborator::where('playlist_id', $playlist->id)->delete();
+        \App\Models\PlaylistSong::where('playlist_id', $playlist->id)->delete();
+        
+        $playlist->delete();
+        return redirect()->back()->with('success', 'Playlist deleted successfully.');
     }
 
     public function deleteShare($id)
