@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\UserShelfSong;
 use App\Models\SongInteraction;
 use App\Services\SpotifyService;
@@ -18,7 +19,18 @@ class OnboardingController extends Controller
 
     public function genres()
     {
-        return view('onboarding.genres');
+        // Fetch 6 trending starter tracks, cached for 24 hours to avoid hammering the API on every page load
+        $suggestedTracks = Cache::remember('onboarding_suggested_tracks', 60 * 60 * 24, function () {
+            try {
+                $results = $this->spotifyService->searchTracks('top hits 2024', 6);
+                return is_array($results) ? array_slice($results, 0, 6) : [];
+            } catch (\Exception $e) {
+                \Log::warning('Onboarding: Could not fetch suggested tracks — ' . $e->getMessage());
+                return [];
+            }
+        });
+
+        return view('onboarding.genres', compact('suggestedTracks'));
     }
 
     public function store(Request $request)
