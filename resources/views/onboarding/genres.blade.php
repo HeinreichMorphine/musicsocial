@@ -245,18 +245,21 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-4 relative bg-indigo-50/90 border border-indigo-100/50 rounded-xl p-3 text-xs text-indigo-600 flex items-start gap-2.5 shadow-sm">
-                        <div class="absolute -top-1 left-6 w-2.5 h-2.5 bg-indigo-50 border-t border-l border-indigo-100/50 rotate-45"></div>
-                        <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500 mt-0.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         class="mt-4 relative bg-indigo-50/95 border border-indigo-100/50"
+                         style="padding: 12px; display: flex; align-items: start; gap: 10px; border-radius: 12px; position: relative; border: 1px solid rgba(224, 231, 255, 0.5);">
+                        <div class="absolute bg-indigo-50 border-t border-l border-indigo-100/50" 
+                             style="width: 10px; height: 10px; top: -6px; left: 24px; transform: rotate(45deg); border-top: 1px solid rgba(224, 231, 255, 0.5); border-left: 1px solid rgba(224, 231, 255, 0.5);"></div>
+                        <svg class="text-indigo-500 mt-0.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; flex-shrink: 0;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <div class="flex-1">
-                            <p class="font-bold text-indigo-800 mb-0.5">Quick Tip</p>
-                            <p class="text-indigo-600/90 leading-relaxed">Your picks will appear here. Tap any trending track below, or search to add your favorites!</p>
+                        <div style="flex: 1 1 0%; min-width: 0;">
+                            <p class="font-bold text-indigo-800" style="margin: 0 0 2px 0; font-size: 12px;">Quick Tip</p>
+                            <p class="text-indigo-600/90" style="margin: 0; font-size: 11px; line-height: 1.4;">Your picks will appear here. Tap any trending track below, or search to add your favorites!</p>
                         </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
-                                class="text-indigo-400 hover:text-indigo-600 transition-colors text-base leading-none shrink-0 -mt-1 -mr-1 p-1">
+                                class="text-indigo-400 hover:text-indigo-600 transition-colors" 
+                                style="font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: -4px; margin-right: -4px; padding: 4px; cursor: pointer; border: none; background: transparent;">
                             &times;
                         </button>
                     </div>
