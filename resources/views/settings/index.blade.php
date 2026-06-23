@@ -97,15 +97,11 @@
                                 </p>
                             </div>
                             <div x-data="{
-                                darkMode: localStorage.getItem('darkMode') === 'true',
+                                darkMode: localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches,
                                 toggleDarkMode() {
                                     this.darkMode = !this.darkMode;
-                                    localStorage.setItem('darkMode', this.darkMode);
-                                    if (this.darkMode) {
-                                        document.documentElement.classList.add('dark');
-                                    } else {
-                                        document.documentElement.classList.remove('dark');
-                                    }
+                                    localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+                                    document.documentElement.classList.toggle('dark', this.darkMode);
                                 }
                             }">
                                 <button @click="toggleDarkMode()" class="p-3 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white focus:outline-none transition-colors duration-200 shadow-sm" title="Toggle Dark Mode">

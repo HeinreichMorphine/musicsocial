@@ -208,8 +208,8 @@
                 </div>
                 <input
                     type="text"
-                    class="w-full rounded-[2rem] border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-4 md:py-5 pl-16 pr-28 shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-xl"
-                    :placeholder="isSeekingRecommendations ? 'Search for a track you want similar suggestions for...' : 'Search for a song you\'re loving...'"
+                    class="w-full flex-1 min-w-0 truncate rounded-[2rem] border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-4 md:py-5 pl-16 pr-28 shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-base sm:text-xl"
+                    :placeholder="isSeekingRecommendations ? 'Search for a track you want similar suggestions for...' : 'Search for a song...'"
                     x-model.debounce.300ms="searchQuery"
                     x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
                     @focus="fetchRecent(); showRecent = true"

@@ -34,7 +34,9 @@
     }
 }">
     {{-- Always show User Avatar --}}
-    <x-user-avatar :user="$comment->user" class="h-10 w-10" />
+    <a href="{{ route('profile.show', $comment->user->name) }}" class="shrink-0">
+        <x-user-avatar :user="$comment->user" class="h-10 w-10" />
+    </a>
     
     <div class="flex-1">
         <div>

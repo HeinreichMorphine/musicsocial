@@ -18,16 +18,20 @@
 
         <script>
             // Dark Mode
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
+            const theme = localStorage.getItem('theme') 
+              ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+              if (!localStorage.getItem('theme')) {
+                document.documentElement.classList.toggle('dark', e.matches);
+              }
+            });
 
             document.addEventListener('livewire:navigated', () => {
-                if (localStorage.getItem('darkMode') === 'true') {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+                const theme = localStorage.getItem('theme') 
+                  ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.classList.toggle('dark', theme === 'dark');
             });
 
             // Scroll Position Persistence

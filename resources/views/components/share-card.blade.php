@@ -24,7 +24,9 @@
             
             <!-- Mobile Header Row (Visible Only on Mobile) -->
             <div class="flex md:hidden items-center mb-3 space-x-3 w-full">
-                <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm shrink-0" />
+                <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="shrink-0">
+                    <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" />
+                </a>
                 <div class="flex-1 min-w-0">
                     <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
                     <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
@@ -108,7 +110,9 @@
             </div>
 
             <!-- Desktop Avatar (Hidden on Mobile) -->
-            <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm shrink-0" />
+            <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="shrink-0">
+                <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm" />
+            </a>
 
             <!-- Main Content Area (Stretches full width on mobile) -->
             <div class="flex-1 min-w-0 w-full">
@@ -475,7 +479,9 @@
                         <div class="mt-4 space-y-2" x-show="!commentsOpen">
                             @foreach ($previews as $preview)
                                 <div class="flex items-start space-x-3 cursor-pointer hover:bg-white/60 dark:hover:bg-white/10 p-3 rounded-2xl transition shadow-sm border border-gray-100/50 dark:border-white/5" @click="commentsOpen = true">
-                                     <x-user-avatar :user="$preview->user" class="h-10 w-10 mt-0.5 border-2 border-white dark:border-gray-700 shadow-sm" />
+                                     <a href="{{ route('profile.show', $preview->user->name) }}" x-on:click.stop class="shrink-0">
+                                         <x-user-avatar :user="$preview->user" class="h-10 w-10 mt-0.5 border-2 border-white dark:border-gray-700 shadow-sm" />
+                                     </a>
                                     <div class="flex-1">
                                         <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $preview->user->name }}</p>
                                         <p class="text-gray-700 dark:text-gray-300 text-base leading-snug mt-1">{{ Str::limit($preview->body, 120) }}</p>

@@ -13,15 +13,11 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
 
 <nav x-data="{ 
     open: false,
-    darkMode: localStorage.getItem('darkMode') === 'true',
+    darkMode: localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches,
     toggleDarkMode() {
         this.darkMode = !this.darkMode;
-        localStorage.setItem('darkMode', this.darkMode);
-        if (this.darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', this.darkMode);
     }
 }" class="sticky top-0 z-50 bg-white/80 dark:bg-black backdrop-blur-md border-b border-indigo-100 dark:border-white/10 transition-colors duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -52,7 +52,7 @@ class Comment extends Model
      */
     public function getEmbeddedSongId()
     {
-        if (preg_match('/\[SONG:([a-zA-Z0-9]+)\]/', $this->body, $matches)) {
+        if (preg_match('/[\[\(]SONG:([a-zA-Z0-9]+)[\]\)]/i', $this->body, $matches)) {
             return $matches[1];
         }
         return null;
@@ -63,8 +63,8 @@ class Comment extends Model
      */
     public function getCleanBody()
     {
-        $body = preg_replace('/\[SONG:[a-zA-Z0-9]+\]/', '', $this->body);
-        $body = preg_replace('/\[UPVOTES:.*?\]/', '', $body);
+        $body = preg_replace('/[\[\(]SONG:[a-zA-Z0-9]+[\]\)]/i', '', $this->body);
+        $body = preg_replace('/\[UPVOTES:.*?\]/i', '', $body);
         return trim($body);
     }
 
