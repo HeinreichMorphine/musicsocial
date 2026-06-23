@@ -52,10 +52,59 @@ class SocialAuthController extends Controller
 
         try {
             $socialUser = Socialite::driver($provider)->stateless()->user();
+
+            // Logic for Logged-In Users (Linking Account)
+            if (Auth::check()) {
+                $currentUser = Auth::user();
+
+                // Check if this social account is already linked to ANOTHER user
+                $existingUser = User::where($provider . '_id', $socialUser->getId())
+                                    ->where('id', '!=', $currentUser->id)
+                                    ->first();
+
+                if ($existingUser) {
+                    return redirect()->route('settings.index')->with('error', 'This ' . ucfirst($provider) . ' account is already linked to another user.');
+                }
+
+                // Update current user details
+                $updateData = [
+                    $provider . '_id' => $socialUser->getId(),
+                ];
+
+                // Update tokens for Spotify
+                if ($provider === 'spotify') {
+                    $updateData['spotify_token'] = $socialUser->token;
+                    $updateData['spotify_refresh_token'] = $socialUser->refreshToken;
+                }
+
+                // Verify email if it matches the social provider's email
+                if ($currentUser->email === $socialUser->getEmail() && is_null($currentUser->email_verified_at)) {
+                    $updateData['email_verified_at'] = now();
+                }
+                
+                $currentUser->update($updateData);
+
+                if ($provider === 'spotify') {
+                    session()->forget('spotify_retry_count');
+                }
+
+                return redirect()->route('settings.index')->with('status', ucfirst($provider) . ' account connected successfully.');
+            }
+
+            // Logic for Guest Users (Login/Register)
+            $user = $this->findOrCreateUser($socialUser, $provider);
+
+            Auth::login($user, true);
+
+            if ($provider === 'spotify') {
+                session()->forget('spotify_retry_count');
+            }
+
+            return redirect()->route('dashboard');
+
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
-            $msg = 'Invalid state. Please try again.';
-            if (Auth::check()) { return redirect()->route('settings.index')->with('error', $msg); }
-            return redirect()->route('login')->withErrors(['email' => $msg]);
+            \Log::warning('Spotify OAuth InvalidStateException: ' . $e->getMessage());
+            return $this->handleSpotifyCallbackError($provider, 'Invalid state. Please try again.');
         } catch (\Exception $e) {
             // Log the actual error for debugging
             \Log::error('Spotify OAuth Error: ' . $e->getMessage(), [
@@ -65,54 +114,31 @@ class SocialAuthController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            $msg = 'Unable to login using ' . ucfirst($provider) . '. Please try again.';
-            if (Auth::check()) { return redirect()->route('settings.index')->with('error', $msg); }
-            return redirect()->route('login')->withErrors(['email' => $msg]);
+            return $this->handleSpotifyCallbackError($provider, 'Unable to login using ' . ucfirst($provider) . '. Please try again.');
+        }
+    }
+
+    /**
+     * Handle Spotify callback errors with a silent retry mechanism.
+     */
+    private function handleSpotifyCallbackError($provider, $defaultMsg)
+    {
+        if ($provider === 'spotify') {
+            $retryCount = session()->get('spotify_retry_count', 0);
+            if ($retryCount < 3) {
+                session()->put('spotify_retry_count', $retryCount + 1);
+                return response()->view('auth.spotify-retry', [
+                    'retryCount' => $retryCount
+                ]);
+            }
+            // Clear retry count if we gave up
+            session()->forget('spotify_retry_count');
         }
 
-        // Logic for Logged-In Users (Linking Account)
         if (Auth::check()) {
-            $currentUser = Auth::user();
-
-            // Check if this social account is already linked to ANOTHER user
-            $existingUser = User::where($provider . '_id', $socialUser->getId())
-                                ->where('id', '!=', $currentUser->id)
-                                ->first();
-
-            if ($existingUser) {
-                return redirect()->route('settings.index')->with('error', 'This ' . ucfirst($provider) . ' account is already linked to another user.');
-            }
-
-            // Update current user details
-            $updateData = [
-                $provider . '_id' => $socialUser->getId(),
-            ];
-
-            // Update tokens for Spotify
-            if ($provider === 'spotify') {
-                $updateData['spotify_token'] = $socialUser->token;
-                $updateData['spotify_refresh_token'] = $socialUser->refreshToken;
-            }
-
-            // Verify email if it matches the social provider's email
-            if ($currentUser->email === $socialUser->getEmail() && is_null($currentUser->email_verified_at)) {
-                $updateData['email_verified_at'] = now();
-            }
-            
-            // Optionally update avatar if not set? 
-            // $currentUser->update($updateData); 
-            // For now, let's just update the ID and tokens
-             $currentUser->update($updateData);
-
-            return redirect()->route('settings.index')->with('status', ucfirst($provider) . ' account connected successfully.');
+            return redirect()->route('settings.index')->with('error', $defaultMsg);
         }
-
-        // Logic for Guest Users (Login/Register)
-        $user = $this->findOrCreateUser($socialUser, $provider);
-
-        Auth::login($user, true);
-
-        return redirect()->route('dashboard');
+        return redirect()->route('login')->withErrors(['email' => $defaultMsg]);
     }
 
     /**

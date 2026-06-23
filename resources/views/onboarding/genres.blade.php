@@ -60,9 +60,14 @@
                         </svg>
                     </div>
                     <input type="text" x-model="searchQuery" @input.debounce.500ms="performSearch" :disabled="isSubmitting"
+                           x-ref="searchInput"
+                           x-init="$nextTick(() => $refs.searchInput.focus())"
                            class="block w-full pl-12 pr-4 py-5 border-0 rounded-2xl leading-5 bg-white text-slate-900 placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none sm:text-lg shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] transition-all disabled:opacity-50"
                            placeholder="Search for an artist, album, or track...">
                 </div>
+                <p class="mt-3 text-sm text-indigo-600 font-medium text-center animate-pulse">
+                    Start typing an artist or song name here to fill your shelf!
+                </p>
 
                 <!-- Search Results Dropdown/Area -->
                 <div x-show="isSearching" x-cloak class="mt-4 text-center">

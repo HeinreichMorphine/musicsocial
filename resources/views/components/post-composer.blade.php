@@ -1,4 +1,4 @@
-<div class="w-full" x-data="{
+<div class="w-full bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/10 shadow-lg p-6 md:p-8 rounded-3xl" x-data="{
     postType: 'music',
     isSeekingRecommendations: false,
     searchQuery: '',
@@ -161,7 +161,7 @@
                 </div>
                 <input
                     type="text"
-                    class="w-full rounded-[2rem] border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-3 md:py-4 pl-16 pr-24 shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-lg"
+                    class="w-full rounded-[2rem] border-2 border-transparent bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white py-4 md:py-5 pl-16 pr-24 shadow-xl transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:bg-white dark:focus:bg-gray-800 focus:border-custom-mid-blue focus:ring-4 focus:ring-blue-500/10 text-xl"
                     :placeholder="isSeekingRecommendations ? 'Help me find similar tracks...' : 'Share a song you\'re loving...'"
                     x-model.debounce.300ms="searchQuery"
                     x-init="$watch('postType', (val) => { if (val === 'music') $el.focus() })"
@@ -169,7 +169,7 @@
                 />
                 <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
                     <button type="button" @click="searchQuery ? search() : $el.previousElementSibling.focus()"
-                            :class="searchQuery.length > 0 ? 'bg-custom-mid-blue text-white shadow-lg border-transparent shadow-blue-500/30' : 'bg-transparent text-gray-400 border border-gray-300 dark:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300'"
+                            :class="searchQuery.length > 0 ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg border-transparent shadow-indigo-600/30' : 'bg-transparent text-gray-400 border border-gray-300 dark:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300'"
                             class="rounded-full px-5 py-2 font-bold transition-all text-sm">Post</button>
                 </div>
             </div>
@@ -237,7 +237,7 @@
                         <div class="relative">
                             <textarea id="caption" name="caption" x-ref="captionInput" 
                                 placeholder="Your caption goes here...." 
-                                class="w-full border-0 bg-gray-100 dark:bg-white/10 rounded-xl p-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-custom-mid-blue transition resize-none pb-12"></textarea>
+                                class="w-full border-0 bg-gray-100 dark:bg-white/10 rounded-xl p-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-custom-mid-blue transition resize-none pb-12 h-32 md:h-40 text-lg"></textarea>
                             
                             <div class="absolute bottom-3 right-3 flex items-center gap-2">
                                 <button type="button" @click="selectedTrack = null; searchQuery=''" class="text-gray-400 hover:text-red-500 transition text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-white/10">
