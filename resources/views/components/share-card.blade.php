@@ -482,9 +482,40 @@
                                      <a href="{{ route('profile.show', $preview->user->name) }}" x-on:click.stop class="shrink-0">
                                          <x-user-avatar :user="$preview->user" class="h-10 w-10 mt-0.5 border-2 border-white dark:border-gray-700 shadow-sm" />
                                      </a>
-                                    <div class="flex-1">
+                                    <div class="flex-1" x-data="{
+                                        songId: '{{ $preview->getEmbeddedSongId() }}',
+                                        songData: null,
+                                        init() {
+                                            if (this.songId) {
+                                                fetch(`/search/tracks/${this.songId}`)
+                                                    .then(r => r.json())
+                                                    .then(data => {
+                                                        if (data.song) {
+                                                            this.songData = data.song;
+                                                        }
+                                                    })
+                                                    .catch(err => console.error('Failed to fetch comment preview song:', err));
+                                            }
+                                        }
+                                    }">
                                         <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $preview->user->name }}</p>
-                                        <p class="text-gray-700 dark:text-gray-300 text-base leading-snug mt-1">{{ Str::limit($preview->body, 120) }}</p>
+                                        <p class="text-gray-700 dark:text-gray-300 text-base leading-snug mt-1">{{ Str::limit($preview->getCleanBody(), 120) }}</p>
+                                        
+                                        {{-- Mini Song Card for Recommendations --}}
+                                        <template x-if="songData">
+                                            <div class="mt-2 max-w-sm rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow-sm flex items-center p-2 group/card transition-colors">
+                                                <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-10 h-10 rounded object-cover shadow-sm shrink-0">
+                                                <div class="ml-3 min-w-0 flex-1">
+                                                    <p class="text-xs font-bold text-gray-900 dark:text-white truncate" x-text="songData.track_name"></p>
+                                                    <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate" x-text="songData.artist_name"></p>
+                                                </div>
+                                                <div class="ml-2 pr-2 shrink-0 text-white">
+                                                    <div class="bg-[#1DB954] text-white rounded-full p-1 shadow-md">
+                                                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.54.659.301 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
                                 </div>
                             @endforeach
