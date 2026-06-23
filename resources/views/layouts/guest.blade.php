@@ -34,13 +34,13 @@
             <div class="flex flex-col items-center w-full max-w-md relative z-10">
                 {{-- Logo circle --}}
                 <div class="mb-4 transform hover:scale-[1.03] transition-all duration-300">
-                    <a href="/" class="flex items-center justify-center w-20 h-20 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
-                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-10 h-10 object-contain drop-shadow-sm">
+                    <a href="/" class="flex items-center justify-center w-24 h-24 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
+                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-12 h-12 object-contain drop-shadow-sm">
                     </a>
                 </div>
 
                 {{-- Auth Card --}}
-                <div class="w-full px-6 py-8 sm:px-10 sm:py-10 bg-white shadow-[0_15px_45px_rgba(22,42,114,0.06)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-200/80 rounded-3xl">
+                <div class="w-full px-6 pt-6 pb-8 sm:px-10 sm:pt-8 sm:pb-10 bg-white shadow-[0_15px_45px_rgba(22,42,114,0.06)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-200/80 rounded-3xl">
                     {{ $slot }}
                 </div>
             </div>
