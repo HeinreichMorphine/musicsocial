@@ -42,20 +42,20 @@
     </div>
 
     {{-- Page container --}}
-    <div class="min-h-screen flex flex-col items-center pt-8 sm:pt-12 pb-28 px-4 sm:px-6 bg-white relative overflow-x-hidden"
+    <div class="min-h-screen flex flex-col items-center pt-4 sm:pt-10 pb-20 px-4 sm:px-6 bg-white relative overflow-x-hidden"
          x-data="onboardingApp()">
 
         {{-- Subtle hero backdrop gradient fading out --}}
         <div class="absolute top-0 inset-x-0 h-[280px] bg-gradient-to-b from-custom-periwinkle/15 to-transparent pointer-events-none z-0"></div>
 
-        <div class="w-full max-w-lg space-y-6 relative z-10">
+        <div class="w-full max-w-lg space-y-4 sm:space-y-6 relative z-10">
 
             {{-- Headline --}}
-            <div class="text-center pt-8 pb-1" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-                <h1 class="text-[2.25rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
-                    Let's build your <span class="bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue bg-clip-text text-transparent">taste profile</span>
+            <div class="text-center pt-4 sm:pt-8 pb-0.5 sm:pb-1 mt-2 sm:mt-4 mb-2 sm:mb-4">
+                <h1 class="text-[2rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
+                    Let's build your <span class="bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue text-transparent" style="-webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;">taste profile</span>
                 </h1>
-                <p class="mt-3 text-[15px] sm:text-base text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
+                <p class="mt-2.5 sm:mt-3 text-sm sm:text-base text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
                     Search for a few songs you love.
                 </p>
             </div>
@@ -76,7 +76,7 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-custom-dark-blue/10 focus:outline-none transition-all"
+                           class="block w-full pl-11 pr-4 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-custom-dark-blue/10 focus:outline-none transition-all"
                            :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -88,14 +88,14 @@
                 </div>
 
                 {{-- Two-Tier Assistive Genre tags --}}
-                <div class="text-center space-y-3 pt-2">
-                    <span class="text-[13px] font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
-                    <div class="flex flex-wrap gap-2 justify-center w-full max-w-md mx-auto items-center">
+                <div class="text-center space-y-2 sm:space-y-3 pt-1 sm:pt-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
+                    <div class="flex flex-wrap gap-1.5 sm:gap-2 justify-center w-full max-w-md mx-auto items-center">
                         <!-- Broad genres -->
                         <template x-for="genre in broadGenres" :key="genre">
                             <button type="button"
                                     @click="selectTag(genre)"
-                                    class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
+                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
                                         : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
@@ -113,7 +113,7 @@
                                     x-transition:enter-start="opacity-0 scale-95"
                                     x-transition:enter-end="opacity-100 scale-100"
                                     @click="selectTag(genre)"
-                                    class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
+                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
                                         : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
@@ -126,9 +126,9 @@
                         <!-- Expander Button: styled matching regular tags for inline consistency -->
                         <button type="button"
                                 @click="showAllGenres = !showAllGenres"
-                                class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 focus:outline-none inline-flex items-center justify-center gap-1.5 active:scale-95">
+                                class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 focus:outline-none inline-flex items-center justify-center gap-1.5 active:scale-95">
                             <span x-text="showAllGenres ? 'Less genres' : 'More genres'"></span>
-                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -137,10 +137,10 @@
             </div>
 
             {{-- Unified card with colored top border strip --}}
-            <div class="bg-white rounded-2xl border-t-4 border-t-custom-dark-blue border-x border-b border-slate-100 shadow-md overflow-hidden">
+            <div class="bg-white sm:rounded-2xl border-t-4 border-t-custom-dark-blue border-0 sm:border border-slate-100 shadow-none sm:shadow-md overflow-hidden">
 
                 {{-- ── SECTION 1: Suggestions ── --}}
-                <div class="px-6 pt-5 pb-1">
+                <div class="px-4 pt-4 sm:px-6 sm:pt-5 pb-1">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-[13px] font-bold text-slate-400 uppercase tracking-widest"
                            x-text="suggestionsHeader">
@@ -168,7 +168,7 @@
                         <!-- Live list (Curated, Genre, or Search Results) -->
                         <template x-for="track in displayedSuggestions" :key="track.id">
                             <li @click="toggleTrack(track)"
-                                class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
+                                class="flex items-center gap-3 py-2.5 sm:py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-4 px-4 sm:-mx-6 sm:px-6 group"
                                 :class="isSelected(track.id) && 'bg-custom-periwinkle/10'">
                                 <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
                                      :alt="track.name"
@@ -218,21 +218,21 @@
                 </div>
 
                 {{-- Thin divider --}}
-                <div class="mx-6 my-3 border-t border-slate-100"></div>
+                <div class="mx-0 sm:mx-6 my-3 border-t border-slate-100"></div>
 
                 {{-- ── SECTION 2: Shelf ── --}}
-                <div class="px-6 pb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-baseline gap-2">
+                <div class="px-4 pb-4 sm:px-6 sm:pb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-4 gap-1.5 sm:gap-0">
+                        <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
                             {{-- Counter dynamically pops out --}}
-                            <span class="text-xl sm:text-2xl font-black text-custom-dark-blue transition-colors duration-300"
+                            <span class="text-2xl font-black text-custom-dark-blue leading-none transition-colors duration-300"
                                   x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
                             </span>
-                            <span class="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest"
+                            <span class="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest leading-none"
                                   x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'">
                             </span>
                         </div>
-                        <div class="text-[11px] sm:text-xs font-semibold">
+                        <div class="text-[11px] sm:text-xs font-semibold leading-none">
                             <span class="text-slate-500"
                                   x-show="selectedTracks.length < 5"
                                   x-text="'Pick ' + (5 - selectedTracks.length) + ' more to unlock'">
@@ -306,7 +306,7 @@
                 </div>
             </div>{{-- end unified card --}}
 
-            <div class="pt-8">
+            <div class="pt-4 sm:pt-8">
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
