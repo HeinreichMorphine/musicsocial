@@ -329,9 +329,16 @@ class AdminController extends Controller
         $query = \App\Models\Song::withCount('shares');
         
         if ($sort === 'untagged') {
-            $query->whereNull('genres')->orWhere('genres', '[]')->orWhere('genres', '""')->orWhere('genres', '');
+            $query->where(function ($q) {
+                $q->whereNull('genres')
+                  ->orWhere('genres', '')
+                  ->orWhere('genres', '[]')
+                  ->orWhere('genres', '""')
+                  ->orWhere('genres', 'null')
+                  ->orWhere('genres', '{}');
+            })->latest();
         } elseif ($sort === 'shares') {
-            $query->orderByDesc('shares_count');
+            $query->orderByDesc('shares_count')->latest();
         } elseif ($sort === 'oldest') {
             $query->oldest();
         } else {
