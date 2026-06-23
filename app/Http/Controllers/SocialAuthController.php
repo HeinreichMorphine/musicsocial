@@ -28,7 +28,7 @@ class SocialAuthController extends Controller
                     'playlist-modify-public',
                     'playlist-modify-private'
                 ])
-                ->with(['show_dialog' => 'true'])
+                // ->with(['show_dialog' => 'true']) // Removed to prevent infinite "Agree" loops on retries
                 ->redirect();
         }
 
@@ -115,7 +115,8 @@ class SocialAuthController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return $this->handleSpotifyCallbackError($provider, 'Unable to login using ' . ucfirst($provider) . '. Please try again.');
+            // Pass the actual exception message to the handler so we can see it in the UI!
+            return $this->handleSpotifyCallbackError($provider, 'Spotify Error: ' . $e->getMessage());
         }
     }
 
