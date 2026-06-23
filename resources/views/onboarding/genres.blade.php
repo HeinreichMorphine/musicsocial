@@ -26,30 +26,34 @@
         .slot-pop { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
         @keyframes subtlePulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-            50% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 42, 114, 0.3); }
+            50% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(22, 42, 114, 0); }
         }
         .pulse-glow {
             animation: subtlePulse 2s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased">
+<body class="bg-white text-slate-900 antialiased">
 
     {{-- Single top strip --}}
-    <div class="sticky top-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-b border-indigo-100 py-2.5 px-4 text-center text-xs sm:text-sm font-semibold text-indigo-600 tracking-wide">
+    <div class="sticky top-0 z-50 bg-custom-periwinkle/80 backdrop-blur-sm border-b border-custom-periwinkle/30 py-2.5 px-4 text-center text-xs sm:text-sm font-bold text-custom-dark-blue tracking-wide">
         Builds your taste profile for better recommendations & matches.
     </div>
 
-    <div class="min-h-screen flex flex-col items-center pt-8 sm:pt-12 pb-28 px-4 sm:px-6"
+    {{-- Page container --}}
+    <div class="min-h-screen flex flex-col items-center pt-8 sm:pt-12 pb-28 px-4 sm:px-6 bg-white relative overflow-x-hidden"
          x-data="onboardingApp()">
 
-        <div class="w-full max-w-lg space-y-6">
+        {{-- Subtle hero backdrop gradient fading out --}}
+        <div class="absolute top-0 inset-x-0 h-[280px] bg-gradient-to-b from-custom-periwinkle/15 to-transparent pointer-events-none z-0"></div>
+
+        <div class="w-full max-w-lg space-y-6 relative z-10">
 
             {{-- Headline --}}
             <div class="text-center pt-8 pb-1" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
                 <h1 class="text-[2.25rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
-                    Let's build your <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">taste profile</span>
+                    Let's build your <span class="bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue bg-clip-text text-transparent">taste profile</span>
                 </h1>
                 <p class="mt-3 text-[15px] sm:text-base text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
                     Search for a few songs you love.
@@ -61,7 +65,7 @@
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-300 transition-colors"
-                             :class="searchQuery.length > 0 && 'text-indigo-400'"
+                             :class="searchQuery.length > 0 && 'text-custom-dark-blue'"
                              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
@@ -72,11 +76,11 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
+                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-custom-dark-blue/10 focus:outline-none transition-all"
                            :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                        <svg class="animate-spin h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-4 w-4 text-custom-dark-blue" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                         </svg>
@@ -93,10 +97,10 @@
                                     @click="selectTag(genre)"
                                     class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
-                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
-                                        : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                        ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
+                                        : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
                                 <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
-                                      :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
+                                      :class="activeTag === genre ? 'bg-white' : 'bg-custom-periwinkle'"></span>
                                 <span x-text="genre"></span>
                             </button>
                         </template>
@@ -111,10 +115,10 @@
                                     @click="selectTag(genre)"
                                     class="px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
-                                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
-                                        : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                        ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
+                                        : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
                                 <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
-                                      :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
+                                      :class="activeTag === genre ? 'bg-white' : 'bg-custom-periwinkle'"></span>
                                 <span x-text="genre"></span>
                             </button>
                         </template>
@@ -132,8 +136,8 @@
                 </div>
             </div>
 
-            {{-- Unified card --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            {{-- Unified card with colored top border strip --}}
+            <div class="bg-white rounded-2xl border-t-4 border-t-custom-dark-blue border-x border-b border-slate-100 shadow-md overflow-hidden">
 
                 {{-- ── SECTION 1: Suggestions ── --}}
                 <div class="px-6 pt-5 pb-1">
@@ -143,11 +147,11 @@
                         </p>
                         <!-- Loading spinner for either search or genre fetch -->
                         <div x-show="isSearching || isLoadingGenre" x-cloak class="flex items-center gap-1.5">
-                            <svg class="animate-spin h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                            <svg class="animate-spin h-3.5 w-3.5 text-custom-dark-blue" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                             </svg>
-                            <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider"
+                            <span class="text-[10px] font-semibold text-custom-dark-blue uppercase tracking-wider"
                                   x-text="isSearching ? 'Searching...' : 'Loading...'"></span>
                         </div>
                     </div>
@@ -165,7 +169,7 @@
                         <template x-for="track in displayedSuggestions" :key="track.id">
                             <li @click="toggleTrack(track)"
                                 class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
-                                :class="isSelected(track.id) && 'bg-indigo-50/50'">
+                                :class="isSelected(track.id) && 'bg-custom-periwinkle/10'">
                                 <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
                                      :alt="track.name"
                                      class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
@@ -175,8 +179,8 @@
                                 </div>
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
                                      :class="isSelected(track.id)
-                                         ? 'bg-indigo-600 border-indigo-600 scale-110'
-                                         : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
+                                         ? 'bg-custom-dark-blue border-custom-dark-blue scale-110'
+                                         : 'border-slate-200 group-hover:border-custom-periwinkle group-hover:scale-105'">
                                     <svg x-show="isSelected(track.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
@@ -187,7 +191,7 @@
                         <!-- Empty state when search returns nothing -->
                         <template x-if="searchQuery.length >= 3 && !isSearching && displayedSuggestions.length === 0">
                             <li class="py-5 text-sm text-slate-400 text-center">
-                                Nothing found for "<span x-text="searchQuery" class="text-indigo-600 font-semibold"></span>".
+                                Nothing found for "<span x-text="searchQuery" class="text-custom-dark-blue font-semibold"></span>".
                             </li>
                         </template>
 
@@ -218,24 +222,27 @@
 
                 {{-- ── SECTION 2: Shelf ── --}}
                 <div class="px-6 pb-6">
-                    <div class="flex items-center mb-4 text-sm sm:text-base font-semibold text-slate-800">
-                        <span x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'"></span>
-                        <span class="mx-1.5 text-slate-300 font-normal">·</span>
-                        {{-- Counter dynamically scales limit visual --}}
-                        <span class="text-sm font-bold uppercase tracking-widest transition-colors duration-300"
-                              :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
-                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
-                        </span>
-                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length < 5">·</span>
-                        <span class="text-sm text-slate-500 transition-all duration-300"
-                              x-show="selectedTracks.length < 5"
-                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
-                        </span>
-                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length >= 5">·</span>
-                        <span class="text-sm text-emerald-600 font-bold"
-                              x-show="selectedTracks.length >= 5">
-                            ready to continue
-                        </span>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-baseline gap-2">
+                            {{-- Counter dynamically pops out --}}
+                            <span class="text-xl sm:text-2xl font-black text-custom-dark-blue transition-colors duration-300"
+                                  x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
+                            </span>
+                            <span class="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest"
+                                  x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'">
+                            </span>
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-semibold">
+                            <span class="text-slate-500"
+                                  x-show="selectedTracks.length < 5"
+                                  x-text="'Pick ' + (5 - selectedTracks.length) + ' more to unlock'">
+                            </span>
+                            <span class="text-emerald-600 flex items-center gap-1.5"
+                                  x-show="selectedTracks.length >= 5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                Ready to continue
+                            </span>
+                        </div>
                     </div>
 
                     {{-- Shelf row with snappy animation (<400ms) --}}
@@ -260,40 +267,38 @@
                             </div>
                         </template>
 
-                        {{-- Ghost badge --}}
+                        {{-- Ghost badge styled with custom-periwinkle / custom-dark-blue pairing --}}
                         <div x-show="selectedTracks.length < 10"
                              class="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
                              :class="selectedTracks.length === 0
-                                 ? 'pulse-glow border-indigo-400 bg-indigo-50 shadow-md shadow-indigo-100/30'
-                                 : (selectedTracks.length >= 5 ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-indigo-50')">
+                                 ? 'pulse-glow border-custom-periwinkle bg-custom-periwinkle/20 text-custom-dark-blue shadow-sm shadow-custom-periwinkle/25'
+                                 : (selectedTracks.length >= 5 
+                                     ? 'border-emerald-300 bg-emerald-50/50 text-emerald-600' 
+                                     : 'border-custom-periwinkle bg-custom-periwinkle/10 text-custom-dark-blue')">
                             <span class="text-sm font-black leading-none"
-                                  :class="selectedTracks.length >= 5 ? 'text-emerald-400' : 'text-indigo-400'"
                                   x-text="selectedTracks.length < 5 ? '+' + (5 - selectedTracks.length) : '+'">
                             </span>
                         </div>
 
                     </div>
 
-                    {{-- First-time shelf hint --}}
+                    {{-- First-time shelf hint: softened background, borders dropped --}}
                     <div x-show="showShelfTip && selectedTracks.length === 0"
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-4 relative bg-indigo-50/95 border border-indigo-100/50"
-                         style="padding: 12px; display: flex; align-items: start; gap: 10px; border-radius: 12px; position: relative; border: 1px solid rgba(224, 231, 255, 0.5);">
-                        <div class="absolute bg-indigo-50 border-t border-l border-indigo-100/50" 
-                             style="width: 10px; height: 10px; top: -6px; left: 24px; transform: rotate(45deg); border-top: 1px solid rgba(224, 231, 255, 0.5); border-left: 1px solid rgba(224, 231, 255, 0.5);"></div>
-                        <svg class="text-indigo-500 mt-0.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; flex-shrink: 0;">
+                         class="mt-4 relative bg-custom-light-gray/40 rounded-xl p-3.5 flex items-start gap-3 border-none shadow-none">
+                        <div class="absolute bg-custom-light-gray/40 w-2.5 h-2.5 -top-[5px] left-6 rotate-45"></div>
+                        <svg class="text-custom-dark-blue mt-0.5 animate-bounce flex-shrink-0 w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <div style="flex: 1 1 0%; min-width: 0;">
-                            <p class="font-bold text-indigo-800" style="margin: 0 0 2px 0; font-size: 14px;">Quick Tip</p>
-                            <p class="text-indigo-600/90" style="margin: 0; font-size: 13px; line-height: 1.4;">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-custom-dark-blue text-sm mb-0.5">Quick Tip</p>
+                            <p class="text-slate-600/90 text-xs leading-relaxed">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
                         </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
-                                class="text-indigo-400 hover:text-indigo-600 transition-colors" 
-                                style="font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: -4px; margin-right: -4px; padding: 4px; cursor: pointer; border: none; background: transparent;">
+                                class="text-custom-slate-blue hover:text-custom-dark-blue transition-colors text-lg leading-none shrink-0 -mt-1 -mr-1 p-1 cursor-pointer border-none bg-transparent">
                             &times;
                         </button>
                     </div>
@@ -305,20 +310,14 @@
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
-                        class="relative w-full py-5 rounded-2xl font-bold text-base sm:text-lg tracking-wide overflow-hidden transition-all duration-500 shadow-sm border"
+                        class="w-full py-5 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
                         :class="selectedTracks.length >= 5
-                            ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer bg-slate-200 border-transparent animate-pulse-glow'
+                            ? 'bg-custom-dark-blue hover:bg-custom-mid-blue border-transparent text-white shadow-md shadow-custom-dark-blue/20 hover:shadow-lg active:scale-[0.99] cursor-pointer'
                             : (selectedTracks.length > 0
-                                ? 'bg-indigo-50/80 border-indigo-100/50 cursor-not-allowed'
-                                : 'bg-slate-100 border-slate-100 cursor-not-allowed')">
+                                ? 'bg-custom-periwinkle/10 border-custom-periwinkle/30 text-custom-dark-blue/70 cursor-not-allowed'
+                                : 'bg-slate-100 border-slate-100 text-slate-400 cursor-not-allowed')">
 
-                    {{-- Indigo layer fills as tracks accumulate --}}
-                    <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-[inherit] transition-opacity duration-500"
-                          :style="'opacity:' + (selectedTracks.length >= 5 ? 1 : 0)">
-                    </span>
-
-                    <span class="relative z-10 flex items-center justify-center gap-2 transition-colors duration-300"
-                          :class="selectedTracks.length >= 5 ? 'text-white' : (selectedTracks.length > 0 ? 'text-indigo-600/70' : 'text-slate-500')">
+                    <span class="flex items-center justify-center gap-2">
                         <span x-show="!isSubmitting">
                             <template x-if="selectedTracks.length === 0">
                                 <span>Pick 5 tracks to get started</span>
@@ -330,22 +329,22 @@
                                 <span>Complete Onboarding</span>
                             </template>
                         </span>
-                        <svg x-show="!isSubmitting && selectedTracks.length >= 5" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        <svg x-show="!isSubmitting && selectedTracks.length >= 5" class="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                         <span x-show="isSubmitting" class="flex items-center gap-2">
                             <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                             </svg>
-                            Building your feed…
+                            Building your taste profile…
                         </span>
                     </span>
                 </button>
 
                 {{-- Actionable guidance helper text directly below --}}
                 <p class="mt-3 text-center text-sm font-semibold transition-colors duration-300"
-                   :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
+                   :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-bold' : 'text-slate-500'"
                    x-text="selectedTracks.length >= 5 
                        ? 'Ready to unlock your personalized feed!' 
                        : (5 - selectedTracks.length) + ' more song' + (5 - selectedTracks.length === 1 ? '' : 's') + ' to unlock your personalized feed'">
