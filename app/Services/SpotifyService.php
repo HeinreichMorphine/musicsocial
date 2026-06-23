@@ -348,7 +348,34 @@ class SpotifyService
             // Limit to top 5 AFTER cleaning to ensure they are high quality
             $finalGenres = array_slice($uniqueGenres, 0, 5);
 
-            // 7. LAST-RESORT FALLBACK: Inherit from artist's other songs in our DB
+            // 7. SHAZAM / APPLE MUSIC FALLBACK: 
+            // Shazam uses the Apple Music database. The iTunes search API is 100% public 
+            // and requires ZERO API keys, allowing us to fetch the Shazam genre perfectly!
+            if (empty($finalGenres)) {
+                try {
+                    $itunesResponse = Http::timeout(10)->get('https://itunes.apple.com/search', [
+                        'term' => $artistName . ' ' . $trackName,
+                        'entity' => 'song',
+                        'limit' => 1
+                    ]);
+
+                    if ($itunesResponse->successful() && !empty($itunesResponse->json('results'))) {
+                        $itunesTrack = $itunesResponse->json('results')[0];
+                        if (!empty($itunesTrack['primaryGenreName'])) {
+                            // iTunes genres are official catalog genres, so we don't need strict mode
+                            $itunesGenre = $cleaner->clean([$itunesTrack['primaryGenreName']]);
+                            if (!empty($itunesGenre)) {
+                                $finalGenres = $itunesGenre;
+                                $debugSources['shazam_apple_music_fallback'] = $finalGenres;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: iTunes Fallback Error: ' . $e->getMessage());
+                }
+            }
+
+            // 8. LAST-RESORT FALLBACK: Inherit from artist's other songs in our DB
             if (empty($finalGenres)) {
                 $sibling = \App\Models\Song::where('artist_name', $artistName)
                     ->whereNotNull('genres')
