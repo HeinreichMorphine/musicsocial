@@ -34,7 +34,7 @@
         }
     </style>
 </head>
-<body class="bg-white text-slate-900 antialiased">
+<body class="bg-slate-50/50 text-slate-900 antialiased selection:bg-custom-periwinkle selection:text-custom-dark-blue">
 
     {{-- Single top strip --}}
     <div class="sticky top-0 z-50 bg-custom-periwinkle/80 backdrop-blur-sm border-b border-custom-periwinkle/30 py-2.5 px-4 text-center text-xs sm:text-sm font-bold text-custom-dark-blue tracking-wide">
@@ -42,11 +42,11 @@
     </div>
 
     {{-- Page container --}}
-    <div class="min-h-screen flex flex-col items-center pt-4 sm:pt-10 pb-20 px-4 sm:px-6 bg-white relative overflow-x-hidden"
+    <div class="min-h-screen flex flex-col items-center pt-4 sm:pt-10 pb-20 px-4 sm:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
          x-data="onboardingApp()">
 
         {{-- Subtle hero backdrop gradient fading out --}}
-        <div class="absolute top-0 inset-x-0 h-[280px] bg-gradient-to-b from-custom-periwinkle/15 to-transparent pointer-events-none z-0"></div>
+        <div class="absolute top-0 inset-x-0 h-[280px] bg-gradient-to-b from-custom-periwinkle/25 to-transparent pointer-events-none z-0"></div>
 
         <div class="w-full max-w-lg space-y-4 sm:space-y-6 relative z-10">
 
@@ -76,7 +76,7 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-11 pr-4 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-slate-100 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-custom-dark-blue/10 focus:outline-none transition-all"
+                           class="block w-full pl-11 pr-4 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-custom-periwinkle/30 hover:border-custom-periwinkle/60 bg-white text-slate-900 placeholder-slate-400 text-base shadow-[0_4px_20px_rgba(22,42,114,0.03)] focus:ring-4 focus:ring-custom-mid-blue/15 focus:border-custom-mid-blue focus:outline-none transition-all"
                            :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -95,10 +95,10 @@
                         <template x-for="genre in broadGenres" :key="genre">
                             <button type="button"
                                     @click="selectTag(genre)"
-                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
+                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
-                                        : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                        : 'bg-custom-periwinkle/10 border-custom-periwinkle/25 hover:border-custom-periwinkle/45 hover:bg-custom-periwinkle/20 text-custom-dark-blue/80 hover:text-custom-dark-blue'">
                                 <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
                                       :class="activeTag === genre ? 'bg-white' : 'bg-custom-periwinkle'"></span>
                                 <span x-text="genre"></span>
@@ -113,10 +113,10 @@
                                     x-transition:enter-start="opacity-0 scale-95"
                                     x-transition:enter-end="opacity-100 scale-100"
                                     @click="selectTag(genre)"
-                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
+                                    class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-custom-mid-blue border-custom-mid-blue text-white shadow-md scale-[1.03]' 
-                                        : 'bg-white border-slate-100/80 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
+                                        : 'bg-custom-periwinkle/10 border-custom-periwinkle/25 hover:border-custom-periwinkle/45 hover:bg-custom-periwinkle/20 text-custom-dark-blue/80 hover:text-custom-dark-blue'">
                                 <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
                                       :class="activeTag === genre ? 'bg-white' : 'bg-custom-periwinkle'"></span>
                                 <span x-text="genre"></span>
@@ -126,9 +126,9 @@
                         <!-- Expander Button: styled matching regular tags for inline consistency -->
                         <button type="button"
                                 @click="showAllGenres = !showAllGenres"
-                                class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-semibold transition-all duration-200 shadow-sm border border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 focus:outline-none inline-flex items-center justify-center gap-1.5 active:scale-95">
+                                class="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-bold transition-all duration-200 shadow-sm border border-custom-periwinkle/25 bg-custom-periwinkle/10 hover:border-custom-periwinkle/45 hover:bg-custom-periwinkle/20 text-custom-dark-blue/80 hover:text-custom-dark-blue focus:outline-none inline-flex items-center justify-center gap-1.5 active:scale-95">
                             <span x-text="showAllGenres ? 'Less genres' : 'More genres'"></span>
-                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-custom-slate-blue transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -137,12 +137,12 @@
             </div>
 
             {{-- Unified card with colored top border strip --}}
-            <div class="bg-white sm:rounded-2xl border-t-4 border-t-custom-dark-blue border-0 sm:border border-slate-100 shadow-none sm:shadow-md overflow-hidden">
+            <div class="bg-white sm:rounded-2xl border-t-4 border-t-custom-dark-blue border-0 sm:border sm:border-custom-periwinkle/25 shadow-none sm:shadow-[0_15px_50px_rgba(22,42,114,0.04)] overflow-hidden">
 
                 {{-- ── SECTION 1: Suggestions ── --}}
                 <div class="px-4 pt-4 sm:px-6 sm:pt-5 pb-1">
                     <div class="flex items-center justify-between mb-3">
-                        <p class="text-[13px] font-bold text-slate-400 uppercase tracking-widest"
+                        <p class="text-[13px] font-bold text-custom-slate-blue uppercase tracking-widest"
                            x-text="suggestionsHeader">
                         </p>
                         <!-- Loading spinner for either search or genre fetch -->
@@ -168,8 +168,8 @@
                         <!-- Live list (Curated, Genre, or Search Results) -->
                         <template x-for="track in displayedSuggestions" :key="track.id">
                             <li @click="toggleTrack(track)"
-                                class="flex items-center gap-3 py-2.5 sm:py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-4 px-4 sm:-mx-6 sm:px-6 group"
-                                :class="isSelected(track.id) && 'bg-custom-periwinkle/10'">
+                                class="flex items-center gap-3 py-2.5 sm:py-3.5 cursor-pointer hover:bg-custom-periwinkle/5 hover:bg-opacity-80 active:scale-[0.98] transition-all duration-75 -mx-4 px-4 sm:-mx-6 sm:px-6 group"
+                                :class="isSelected(track.id) && 'bg-custom-periwinkle/15'">
                                 <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
                                      :alt="track.name"
                                      class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
@@ -180,7 +180,7 @@
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
                                      :class="isSelected(track.id)
                                          ? 'bg-custom-dark-blue border-custom-dark-blue scale-110'
-                                         : 'border-slate-200 group-hover:border-custom-periwinkle group-hover:scale-105'">
+                                         : 'border-custom-periwinkle/45 group-hover:border-custom-periwinkle group-hover:scale-105'">
                                     <svg x-show="isSelected(track.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
@@ -287,14 +287,14 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-4 relative bg-custom-light-gray/40 rounded-xl p-3.5 flex items-start gap-3 border-none shadow-none">
-                        <div class="absolute bg-custom-light-gray/40 w-2.5 h-2.5 -top-[5px] left-6 rotate-45"></div>
+                         class="mt-4 relative bg-custom-periwinkle/15 rounded-xl p-3.5 flex items-start gap-3 border-none shadow-none">
+                        <div class="absolute bg-custom-periwinkle/15 w-2.5 h-2.5 -top-[5px] left-6 rotate-45"></div>
                         <svg class="text-custom-dark-blue mt-0.5 animate-bounce flex-shrink-0 w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-custom-dark-blue text-sm mb-0.5">Quick Tip</p>
-                            <p class="text-slate-600/90 text-xs leading-relaxed">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
+                            <p class="text-custom-mid-blue/90 text-xs leading-relaxed">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
                         </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
@@ -312,10 +312,10 @@
                         type="button"
                         class="w-full py-5 rounded-2xl font-bold text-base sm:text-lg tracking-wide transition-all duration-300 shadow-sm border focus:outline-none"
                         :class="selectedTracks.length >= 5
-                            ? 'bg-custom-dark-blue hover:bg-custom-mid-blue border-transparent text-white shadow-md shadow-custom-dark-blue/20 hover:shadow-lg active:scale-[0.99] cursor-pointer'
+                            ? 'bg-gradient-to-r from-custom-dark-blue to-custom-mid-blue hover:from-custom-mid-blue hover:to-custom-dark-blue border-transparent text-white shadow-lg shadow-custom-dark-blue/25 hover:shadow-xl hover:shadow-custom-dark-blue/35 active:scale-[0.99] cursor-pointer'
                             : (selectedTracks.length > 0
-                                ? 'bg-custom-periwinkle/10 border-custom-periwinkle/30 text-custom-dark-blue/70 cursor-not-allowed'
-                                : 'bg-slate-100 border-slate-100 text-slate-400 cursor-not-allowed')">
+                                ? 'bg-custom-periwinkle/15 border-custom-periwinkle/25 text-custom-dark-blue/50 cursor-not-allowed'
+                                : 'bg-custom-periwinkle/10 border-custom-periwinkle/20 text-custom-slate-blue/60 cursor-not-allowed')">
 
                     <span class="flex items-center justify-center gap-2">
                         <span x-show="!isSubmitting">
