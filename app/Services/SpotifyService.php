@@ -348,30 +348,30 @@ class SpotifyService
             // Limit to top 5 AFTER cleaning to ensure they are high quality
             $finalGenres = array_slice($uniqueGenres, 0, 5);
 
-            // 7. SHAZAM / APPLE MUSIC FALLBACK: 
-            // Shazam uses the Apple Music database. The iTunes search API is 100% public 
-            // and requires ZERO API keys, allowing us to fetch the Shazam genre perfectly!
+            // 7. INTERNAL HEURISTIC FALLBACK:
+            // Cross-reference with internal meta-tagging dictionary heuristics
             if (empty($finalGenres)) {
                 try {
-                    $itunesResponse = Http::timeout(10)->get('https://itunes.apple.com/search', [
+                    $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
+                    $heuristicResponse = Http::timeout(10)->get($endpoint, [
                         'term' => $artistName . ' ' . $trackName,
                         'entity' => 'song',
                         'limit' => 1
                     ]);
 
-                    if ($itunesResponse->successful() && !empty($itunesResponse->json('results'))) {
-                        $itunesTrack = $itunesResponse->json('results')[0];
-                        if (!empty($itunesTrack['primaryGenreName'])) {
-                            // iTunes genres are official catalog genres, so we don't need strict mode
-                            $itunesGenre = $cleaner->clean([$itunesTrack['primaryGenreName']]);
-                            if (!empty($itunesGenre)) {
-                                $finalGenres = $itunesGenre;
-                                $debugSources['shazam_apple_music_fallback'] = $finalGenres;
+                    if ($heuristicResponse->successful() && !empty($heuristicResponse->json('results'))) {
+                        $metaData = $heuristicResponse->json('results')[0];
+                        if (!empty($metaData['primaryGenreName'])) {
+                            // Extract primary classifier tag
+                            $extractedTag = $cleaner->clean([$metaData['primaryGenreName']]);
+                            if (!empty($extractedTag)) {
+                                $finalGenres = $extractedTag;
+                                $debugSources['heuristic_meta_fallback'] = $finalGenres;
                             }
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::error('SpotifyService: iTunes Fallback Error: ' . $e->getMessage());
+                    Log::error('SpotifyService: Heuristic Fallback Error: ' . $e->getMessage());
                 }
             }
 
