@@ -64,17 +64,83 @@
                 
                 {{-- Mini Song Card for Recommendations (Dynamic) --}}
                 <template x-if="songData">
-                    <div class="mt-3 max-w-sm rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow-sm flex items-center p-2 group/card hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors">
-                        <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-12 h-12 rounded object-cover shadow-sm shrink-0">
-                        <div class="ml-3 min-w-0 flex-1">
-                            <p class="text-sm font-bold text-gray-900 dark:text-white truncate" x-text="songData.track_name"></p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="songData.artist_name"></p>
-                        </div>
-                        <a :href="songData.spotify_url" target="_blank" class="ml-2 pr-2 shrink-0 text-white hover:scale-110 transition-transform">
-                            <div class="bg-[#1DB954] text-white rounded-full p-1.5 shadow-md">
-                                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.54.659.301 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                    <div class="mt-3 relative rounded-2xl p-4 group/card overflow-hidden">
+                        {{-- Background blur/gradient --}}
+                        <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover/card:scale-125" :style="`background-image: url('${songData.album_art_url || '/images/default-album-art.png'}');`"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                        
+                        <div class="relative flex items-center space-x-4 z-10">
+                            <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-xl transition-transform duration-300 group-hover/card:scale-105 shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-lg font-bold text-white truncate drop-shadow-md" x-text="songData.track_name"></p>
+                                <p class="text-sm text-gray-200 truncate drop-shadow-sm" x-text="songData.artist_name"></p>
+                                
+                                <div class="flex items-center space-x-3 mt-2">
+                                    {{-- Spotify Link --}}
+                                    <a :href="songData.spotify_url" target="_blank" title="Play on Spotify" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                        <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                                    </a>
+                
+                                    <!-- Add to Playlist Button -->
+                                    <div class="relative inline-block" x-data="{ isDropdownOpen: false }">
+                                        <button type="button" 
+                                            @click.prevent.stop="isDropdownOpen = !isDropdownOpen"
+                                            title="Add to Playlist" 
+                                            class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] bg-white/20 rounded-full p-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-white">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                        </button>
+                                        <!-- Dropdown menu -->
+                                        <div x-show="isDropdownOpen"
+                                                @click.away="isDropdownOpen = false"
+                                                x-transition
+                                                class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 bg-white dark:bg-[#141414] rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden z-50 py-1"
+                                                style="display: none;">
+                                                
+                                                <!-- Add to Reso Playlist -->
+                                                <button type="button"
+                                                        @click.prevent.stop="
+                                                            $dispatch('open-reso-playlist-modal', { songId: songData.spotify_track_id, trackName: songData.track_name });
+                                                            isDropdownOpen = false;
+                                                        "
+                                                        class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left font-semibold">
+                                                    <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-indigo-500 text-white shrink-0">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"/>
+                                                        </svg>
+                                                    </span>
+                                                    <span>Reso Playlist</span>
+                                                </button>
+                
+                                                <!-- Add to Spotify Playlist -->
+                                                <button type="button"
+                                                        @click.prevent.stop="
+                                                            @if(auth()->check() && auth()->user()->spotify_id)
+                                                                $dispatch('open-spotify-playlist-modal', { trackUri: 'spotify:track:' + songData.spotify_track_id, trackName: songData.track_name })
+                                                            @else
+                                                                $dispatch('open-spotify-link-modal')
+                                                            @endif;
+                                                            isDropdownOpen = false;
+                                                        "
+                                                        class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left font-semibold">
+                                                    <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-[#1DB954] text-white shrink-0">
+                                                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                                                    </span>
+                                                    <span>Spotify Playlist</span>
+                                                </button>
+                                        </div>
+                                    </div>
+                
+                                    <!-- YouTube Link (if available) -->
+                                    <template x-if="songData.youtube_url">
+                                        <a :href="songData.youtube_url" x-on:click.stop target="_blank" title="Watch on YouTube" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(255,0,0,0.6)]">
+                                            <svg class="w-7 h-7 drop-shadow-lg" fill="#FF0000" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                        </a>
+                                    </template>
+                                </div>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 </template>
             </div>
