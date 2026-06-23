@@ -130,41 +130,6 @@
                         </button>
                     </div>
                 </div>
-
-                {{-- Search results overlay --}}
-                <div x-show="searchQuery.length >= 3 && (searchResults.length > 0 || (!isSearching && searchQuery.length >= 3))"
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 -translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-h-60 overflow-y-auto z-40">
-                    {{-- No results --}}
-                    <div x-show="!isSearching && searchResults.length === 0"
-                         class="px-4 py-5 text-sm text-slate-400 text-center">
-                        Nothing found for "<span x-text="searchQuery" class="text-indigo-500"></span>".
-                    </div>
-                    {{-- Result rows --}}
-                    <ul x-show="searchResults.length > 0">
-                        <template x-for="track in searchResults" :key="track.id">
-                            <li @click="toggleTrack(track)"
-                                class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 border-b border-slate-50 last:border-0 active:scale-[0.98] transition-all duration-75 group"
-                                :class="isSelected(track.id) && 'bg-indigo-50/60'">
-                                <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
-                                     class="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-sm">
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-base font-semibold text-slate-800 truncate" x-text="track.name"></div>
-                                    <div class="text-sm text-slate-500 truncate" x-text="getArtistName(track)"></div>
-                                </div>
-                                <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-                                     :class="isSelected(track.id) ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
-                                    <svg x-show="isSelected(track.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                </div>
-                            </li>
-                        </template>
-                    </ul>
-                </div>
             </div>
 
             {{-- Unified card --}}
@@ -174,20 +139,29 @@
                 <div class="px-6 pt-5 pb-1">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-[13px] font-bold text-slate-400 uppercase tracking-widest"
-                           x-text="activeTag ? 'Trending in ' + activeTag + ' — tap to add' : 'A bit of everything — tap to add'">
+                           x-text="suggestionsHeader">
                         </p>
-                        <!-- Loading spinner for genre fetch -->
-                        <div x-show="isLoadingGenre" x-cloak class="flex items-center gap-1.5">
+                        <!-- Loading spinner for either search or genre fetch -->
+                        <div x-show="isSearching || isLoadingGenre" x-cloak class="flex items-center gap-1.5">
                             <svg class="animate-spin h-3.5 w-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                             </svg>
-                            <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider">Loading...</span>
+                            <span class="text-[10px] font-semibold text-indigo-500 uppercase tracking-wider"
+                                  x-text="isSearching ? 'Searching...' : 'Loading...'"></span>
                         </div>
                     </div>
                     
                     <!-- Suggestions list -->
-                    <ul class="divide-y divide-slate-50" x-show="!isLoadingGenre">
+                    <ul class="divide-y divide-slate-50" x-show="!(isSearching || isLoadingGenre)">
+                        <!-- Search prompts when query length is 1 or 2 -->
+                        <template x-if="searchQuery.length > 0 && searchQuery.length < 3">
+                            <li class="py-5 text-sm text-slate-400 text-center">
+                                Type at least 3 characters to search...
+                            </li>
+                        </template>
+
+                        <!-- Live list (Curated, Genre, or Search Results) -->
                         <template x-for="track in displayedSuggestions" :key="track.id">
                             <li @click="toggleTrack(track)"
                                 class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
@@ -209,12 +183,24 @@
                                 </div>
                             </li>
                         </template>
-                        <li x-show="displayedSuggestions.length === 0" class="py-5 text-xs text-slate-400 text-center">
-                            No tracks available right now.
-                        </li>
+
+                        <!-- Empty state when search returns nothing -->
+                        <template x-if="searchQuery.length >= 3 && !isSearching && displayedSuggestions.length === 0">
+                            <li class="py-5 text-sm text-slate-400 text-center">
+                                Nothing found for "<span x-text="searchQuery" class="text-indigo-600 font-semibold"></span>".
+                            </li>
+                        </template>
+
+                        <!-- Empty state when genre tag has no suggestions -->
+                        <template x-if="searchQuery.length === 0 && activeTag && !isLoadingGenre && displayedSuggestions.length === 0">
+                            <li class="py-5 text-sm text-slate-400 text-center">
+                                No tracks available in this vibe right now.
+                            </li>
+                        </template>
                     </ul>
+                    
                     <!-- Loading Skeletons -->
-                    <div class="space-y-3 py-3" x-show="isLoadingGenre" x-cloak>
+                    <div class="space-y-3 py-3" x-show="isSearching || isLoadingGenre" x-cloak>
                         <template x-for="i in [1, 2, 3]" :key="i">
                             <div class="flex items-center gap-3 py-1 px-6 -mx-6">
                                 <div class="w-10 h-10 bg-slate-100 animate-pulse rounded-xl flex-shrink-0"></div>
@@ -235,14 +221,21 @@
                     <div class="flex items-center mb-4 text-sm sm:text-base font-semibold text-slate-800">
                         <span x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'"></span>
                         <span class="mx-1.5 text-slate-300 font-normal">·</span>
-                        <span :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-600'"
-                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'"></span>
-                        <span class="mx-1.5 text-slate-300 font-normal" x-show="selectedTracks.length < 5">·</span>
-                        <span class="text-sm font-medium text-slate-500"
+                        {{-- Counter dynamically scales limit visual --}}
+                        <span class="text-sm font-bold uppercase tracking-widest transition-colors duration-300"
+                              :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
+                              x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
+                        </span>
+                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length < 5">·</span>
+                        <span class="text-sm text-slate-500 transition-all duration-300"
                               x-show="selectedTracks.length < 5"
-                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'"></span>
-                        <span class="mx-1.5 text-slate-300 font-normal" x-show="selectedTracks.length >= 5">·</span>
-                        <span class="text-sm font-bold text-emerald-600" x-show="selectedTracks.length >= 5">ready to continue</span>
+                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
+                        </span>
+                        <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length >= 5">·</span>
+                        <span class="text-sm text-emerald-600 font-bold"
+                              x-show="selectedTracks.length >= 5">
+                            ready to continue
+                        </span>
                     </div>
 
                     {{-- Shelf row with snappy animation (<400ms) --}}
@@ -449,7 +442,23 @@
                 },
 
                 get displayedSuggestions() {
-                    return this.activeTag ? this.genreTracks : this.defaultSuggestedTracks;
+                    if (this.searchQuery.length > 0) {
+                        return this.searchResults;
+                    }
+                    if (this.activeTag) {
+                        return this.genreTracks;
+                    }
+                    return this.defaultSuggestedTracks;
+                },
+
+                get suggestionsHeader() {
+                    if (this.searchQuery.length > 0) {
+                        return "Search Results — Tap to Add";
+                    }
+                    if (this.activeTag) {
+                        return "Trending in " + this.activeTag + " — Tap to Add";
+                    }
+                    return "A Bit of Everything — Tap to Add";
                 },
 
                 getArtistName(track) {
@@ -467,6 +476,8 @@
                         this.genreTracks = [];
                         return;
                     }
+                    // Clear search query if selecting a tag to avoid conflict
+                    this.searchQuery = '';
                     this.activeTag = genre;
                     this.isLoadingGenre = true;
                     try {
@@ -498,6 +509,8 @@
                         this.searchResults = [];
                         return;
                     }
+                    // Clear active tag when searching
+                    this.activeTag = null;
                     this.isSearching = true;
                     try {
                         const r = await fetch(`/search/tracks?query=${encodeURIComponent(this.searchQuery)}`);
