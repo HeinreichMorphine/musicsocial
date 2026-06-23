@@ -53,10 +53,10 @@
                                     <p class="text-xs text-amber-600/80 dark:text-amber-400/60 leading-relaxed mb-4">
                                         You haven't linked your Spotify account yet. While you can still import public playlists by URL, connecting your account allows you to browse and import directly from <strong>your own library</strong>.
                                     </p>
-                                    <a href="{{ route('social.redirect', 'spotify') }}" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white px-5 py-2 rounded-xl text-xs font-black transition shadow-lg shadow-amber-500/20">
+                                    <button type="button" @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white px-5 py-2 rounded-xl text-xs font-black transition shadow-lg shadow-amber-500/20">
                                         Connect Spotify Library
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         @endif
@@ -202,7 +202,7 @@
                                     </div>
                                     <h4 class="font-bold text-gray-900 dark:text-white mb-1">Link your Spotify</h4>
                                     <p class="text-xs text-gray-500 mb-4">Connect your account to see your playlists here.</p>
-                                    <a href="{{ route('social.redirect', 'spotify') }}" class="bg-black dark:bg-white dark:text-black text-white px-6 py-2 rounded-xl text-xs font-black hover:opacity-80 transition">Connect Now</a>
+                                    <button type="button" @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="bg-black dark:bg-white dark:text-black text-white px-6 py-2 rounded-xl text-xs font-black hover:opacity-80 transition">Connect Now</button>
                                 </div>
                             @endif
                         @endif

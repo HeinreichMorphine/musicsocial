@@ -386,7 +386,7 @@
                             
                             <div class="mt-2 flex gap-2">
                                 @if(!$isLinked)
-                                    <a href="{{ route('social.redirect', 'spotify') }}" class="inline-block bg-white text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</a>
+                                    <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-white text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
                                 @else
                                     <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
                                 @endif
@@ -397,7 +397,7 @@
                         <div class="text-sm text-gray-400 p-2 text-center">No preview available for this track.</div>
                         <div class="mt-2 text-center">
                             @if(!$isLinked)
-                                <a href="{{ route('social.redirect', 'spotify') }}" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</a>
+                                <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
                             @else
                                 <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
                             @endif
