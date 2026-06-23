@@ -189,4 +189,28 @@ class GenreCleanerService
         // 6. Re-index array (0, 1, 2...)
         return array_values($unique);
     }
+
+    /**
+     * Scan a block of text (like a playlist description) for any valid genres in the whitelist.
+     *
+     * @param string $text
+     * @return array
+     */
+    public function extractFromText(string $text): array
+    {
+        $lowercaseText = strtolower($text);
+        $foundGenres = [];
+
+        // Loop through your loaded canonical genres list
+        foreach ($this->beetsWhitelist as $lowercaseGenre => $canonicalGenre) {
+            // Look for exact word/phrase matches inside the text block
+            // Example matching: "instrumental hip-hop" inside the description string
+            if (str_contains($lowercaseText, $lowercaseGenre)) {
+                $foundGenres[] = $canonicalGenre;
+            }
+        }
+
+        // Pass it back through standard deduplication and filtering
+        return $this->clean($foundGenres);
+    }
 }

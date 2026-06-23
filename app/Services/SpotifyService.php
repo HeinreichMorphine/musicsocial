@@ -287,33 +287,41 @@ class SpotifyService
                 }
             }
             
-            // 5. THE ULTIMATE BACKSTOP: YouTube Snippet Tags
+            // Clean and Sanitize (instantiate early so we can use it for extraction if needed)
+            $cleaner = new GenreCleanerService();
+            
+            // 5. CONTEXTUAL FALLBACK: Scan Spotify Playlist Descriptions for the Artist
             if (count(array_unique($allGenres)) === 0) {
                 try {
-                    $youtubeService = new \App\Services\YouTubeService();
-                    // Look up the track video query
-                    $ytVideo = $youtubeService->searchVideo("{$artistName} {$trackName}");
-                    if ($ytVideo && isset($ytVideo['video_id'])) {
-                        $ytDetails = $youtubeService->getVideo($ytVideo['video_id']);
-                        if (!empty($ytDetails['tags'])) {
-                            // YouTube tags are extremely noisy (artists, song names, "official video")
-                            // Clean them strictly against our known genre whitelist FIRST
-                            $cleaner = new GenreCleanerService();
-                            $strictYtTags = $cleaner->clean($ytDetails['tags'], true);
-                            
-                            if (!empty($strictYtTags)) {
-                                $debugSources['youtube_fallback'] = $strictYtTags;
-                                $allGenres = array_merge($allGenres, $strictYtTags);
-                            }
+                    // Search for "[Artist Name] Radio" using your existing searchPlaylists method
+                    $playlists = $this->searchPlaylists($artistName . ' Radio', 3);
+                    
+                    // If Radio playlist doesn't exist, try searching general public playlists for the artist
+                    if (empty($playlists)) {
+                        $playlists = $this->searchPlaylists($artistName, 3);
+                    }
+
+                    // Combine titles and descriptions to form a searchable text contextual block
+                    $combinedText = '';
+                    foreach ($playlists as $playlist) {
+                        $combinedText .= ' ' . ($playlist['name'] ?? '') . ' ' . ($playlist['description'] ?? '');
+                    }
+
+                    if (!empty(trim($combinedText))) {
+                        // Use the text extraction tool to isolate genuine genres
+                        $playlistGenres = $cleaner->extractFromText($combinedText);
+                        
+                        if (!empty($playlistGenres)) {
+                            $debugSources['spotify_playlist_context'] = $playlistGenres;
+                            $allGenres = array_merge($allGenres, $playlistGenres);
                         }
                     }
                 } catch (\Exception $e) {
-                    Log::error('SpotifyService: YouTube Genre Fallback Error: ' . $e->getMessage());
+                    Log::error('SpotifyService: Playlist Context Fallback Error: ' . $e->getMessage());
                 }
             }
 
-            // Clean and Sanitize
-            $cleaner = new GenreCleanerService();
+            // Final Clean and Sanitize
             $uniqueGenres = $cleaner->clean($allGenres);
             
             // Limit to top 5 AFTER cleaning to ensure they are high quality
