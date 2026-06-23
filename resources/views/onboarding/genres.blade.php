@@ -61,7 +61,7 @@
             </div>
 
             {{-- Search bar container --}}
-            <div class="relative z-30 space-y-3 px-4 md:px-0">
+            <div class="relative z-30 space-y-3 px-0">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-300 transition-colors"
@@ -76,7 +76,7 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-11 pr-4 py-3 md:py-3.5 rounded-xl md:rounded-2xl border border-custom-periwinkle/30 hover:border-custom-periwinkle/60 bg-white text-slate-900 placeholder-slate-400 text-base shadow-[0_4px_20px_rgba(22,42,114,0.03)] focus:ring-4 focus:ring-custom-mid-blue/15 focus:border-custom-mid-blue focus:outline-none transition-all"
+                           class="block w-full pl-11 pr-4 py-3 md:py-3.5 rounded-xl md:rounded-2xl border border-custom-periwinkle/30 hover:border-custom-periwinkle/60 bg-white text-slate-900 placeholder-slate-400 placeholder:text-sm md:placeholder:text-base text-base shadow-[0_4px_20px_rgba(22,42,114,0.03)] focus:ring-4 focus:ring-custom-mid-blue/15 focus:border-custom-mid-blue focus:outline-none transition-all"
                            :placeholder="placeholders[placeholderIdx]">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -397,26 +397,26 @@
 
                 // Rotating search placeholders
                 placeholders: [
-                    "Try: an artist from your local scene",
-                    "Try: a track with less than 10k plays",
-                    "Try: the weirdest genre you actually love",
-                    "Try: a song you discovered completely by accident",
-                    "Try: the best B-side track you know",
-                    "Try: the first song you ever downloaded",
-                    "Try: your ultimate middle school anthem",
-                    "Try: the best song you discovered in a video game",
-                    "Try: a track that reminds you of a specific summer",
-                    "Try: the first band you saw live",
-                    "Try: your go-to late-night drive track",
-                    "Try: the song that always resets your mood",
-                    "Try: a flawless album opener",
-                    "Try: your ultimate rainy day comfort song",
-                    "Try: the hardest gym hype track you know",
-                    "Try: your undisputed karaoke weapon",
-                    "Try: the song you always force your friends to hear",
-                    "Try: a track you would play to introduce yourself",
-                    "Try: the last song you sent to a friend",
-                    "Try: the track you have on repeat right now"
+                    "Try: local scene artists",
+                    "Try: tracks with <10k plays",
+                    "Try: your weirdest genre",
+                    "Try: accidental discoveries",
+                    "Try: your favorite B-side",
+                    "Try: first song downloaded",
+                    "Try: middle school anthems",
+                    "Try: game soundtracks",
+                    "Try: summer memories",
+                    "Try: first live band",
+                    "Try: late-night drives",
+                    "Try: mood resetters",
+                    "Try: album openers",
+                    "Try: rainy day comfort",
+                    "Try: gym hype tracks",
+                    "Try: karaoke weapons",
+                    "Try: songs for friends",
+                    "Try: self-introducing tracks",
+                    "Try: last song sent",
+                    "Try: songs on repeat"
                 ],
                 placeholderIdx:  0,
                 _phTimer:        null,
