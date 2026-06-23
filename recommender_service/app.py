@@ -1095,14 +1095,13 @@ def content_based_similarity_tfidf(user_id, all_songs_df, user_liked_songs_df):
                         reason_parts.append(f"Deep cut from {artist}")
                         artist_matched = True
                     else:
-                        reason_parts.append(f"Vibe check: Matches your sound profile")
+                        reason_parts.append(f"Matches your sound profile")
                 
                 # If we have an exact artist match, explicit is better
                 if artist_matched:
                      pass 
                 else:
-                     # For generic TF-IDF matches, be more generic unless we know the specific feature
-                     reason_parts.append("Hidden gem based on your taste")
+                     pass
 
                 reason = " · ".join(reason_parts) if reason_parts else 'Fits your music style'
                 
