@@ -301,8 +301,7 @@
                         <div class="relative">
                             <textarea id="caption" name="caption" x-ref="captionInput"
                                 placeholder="Add a caption... what does this track mean to you?"
-                                class="w-full border-0 bg-gray-100 dark:bg-white/10 rounded-xl p-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-custom-mid-blue transition resize-none pb-12 h-32 md:h-40 text-lg">
-                            </textarea>
+                                class="w-full border-0 bg-gray-100 dark:bg-white/10 rounded-xl p-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-custom-mid-blue transition resize-none pb-12 h-32 md:h-40 text-lg"></textarea>
 
                             <div class="absolute bottom-3 right-3 flex items-center gap-2">
                                 <button type="button"
