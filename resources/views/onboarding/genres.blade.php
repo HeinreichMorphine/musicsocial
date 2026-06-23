@@ -42,7 +42,7 @@
     </div>
 
     {{-- Page container --}}
-    <div class="min-h-screen flex flex-col items-center pt-4 md:pt-10 pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
+    <div class="min-h-screen w-full flex flex-col items-center pt-4 md:pt-10 pb-20 px-4 md:px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 relative overflow-x-hidden"
          x-data="onboardingApp()">
 
         {{-- Subtle hero backdrop gradient fading out --}}
@@ -61,7 +61,7 @@
             </div>
 
             {{-- Search bar container --}}
-            <div class="relative z-30 space-y-4">
+            <div class="relative z-30 space-y-4 px-4 md:px-0">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-300 transition-colors"
@@ -306,7 +306,7 @@
                 </div>
             </div>{{-- end unified card --}}
 
-            <div class="pt-4 md:pt-8">
+            <div class="pt-4 md:pt-8 px-4 md:px-0">
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
