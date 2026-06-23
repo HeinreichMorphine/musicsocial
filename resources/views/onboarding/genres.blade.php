@@ -39,7 +39,7 @@
         <div class="w-full max-w-lg space-y-6">
 
             {{-- Headline: clear chapter heading, unmistakably first read --}}
-            <div class="text-center pt-8 pb-1">
+            <div class="text-center pt-8 pb-1" style="margin-top: 3.5rem; margin-bottom: 2.5rem;">
                 {{-- 32px font-black — wins the page, nothing else comes close --}}
                 <h1 class="text-[2rem] leading-snug font-black text-slate-900 tracking-tight">
                     Curate Your Song Shelf
