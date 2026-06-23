@@ -33,13 +33,13 @@
         Songs you pick here train your taste profile — better matches, better people to follow.
     </div>
 
-    <div class="min-h-screen flex flex-col items-center pt-16 pb-28 px-4 sm:px-6"
+    <div class="min-h-screen flex flex-col items-center pt-16 sm:pt-24 pb-28 px-4 sm:px-6"
          x-data="onboardingApp()">
 
         <div class="w-full max-w-lg space-y-6">
 
             {{-- Headline: clear chapter heading, unmistakably first read --}}
-            <div class="text-center pt-10 pb-1">
+            <div class="text-center pt-8 pb-1">
                 {{-- 32px font-black — wins the page, nothing else comes close --}}
                 <h1 class="text-[2rem] leading-snug font-black text-slate-900 tracking-tight">
                     Curate Your Song Shelf
