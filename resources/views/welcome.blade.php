@@ -56,10 +56,10 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased selection:bg-brand selection:text-white bg-white dark:bg-black text-gray-900 dark:text-white transition-colors duration-200">
+<body class="font-sans antialiased selection:bg-brand selection:text-white bg-slate-50 dark:bg-black text-slate-900 dark:text-white transition-colors duration-200">
 
     <!-- Navbar -->
-    <nav class="fixed w-full z-50 top-0 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 transition-colors duration-200">
+    <nav class="fixed w-full z-50 top-0 bg-slate-50/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center gap-3">
@@ -81,7 +81,7 @@
                         @else
                             <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition">Log in</a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition">
+                                <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold hover:from-blue-700 hover:to-purple-700 transition">
                                     Sign up
                                 </a>
                             @endif
@@ -119,7 +119,7 @@
                                 </a>
                             @else
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 rounded-full bg-brand text-white dark:text-black font-bold hover:bg-[#1ed760] transition text-center shadow-lg hover:shadow-xl">
+                                    <a href="{{ route('register') }}" class="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:from-blue-700 hover:to-purple-700 transition text-center shadow-lg hover:shadow-xl">
                                         Create Account
                                     </a>
                                 @endif
@@ -170,6 +170,18 @@
                                         <button type="button" title="Play track" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
                                             <svg class="w-8 h-8 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
                                         </button>
+                                        
+                                        <div class="relative inline-block">
+                                            <button type="button" title="Add to Playlist" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] bg-white/20 rounded-full p-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <a href="#" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(255,0,0,0.6)]">
+                                            <svg class="w-8 h-8 drop-shadow-lg" fill="#FF0000" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
