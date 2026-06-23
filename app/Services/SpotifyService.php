@@ -286,6 +286,24 @@ class SpotifyService
                     Log::error('SpotifyService: MusicBrainz Error: ' . $e->getMessage());
                 }
             }
+            
+            // 5. THE ULTIMATE BACKSTOP: YouTube Snippet Tags
+            if (count(array_unique($allGenres)) === 0) {
+                try {
+                    $youtubeService = new \App\Services\YouTubeService();
+                    // Look up the track video query
+                    $ytVideo = $youtubeService->searchVideo("{$artistName} {$trackName}");
+                    if ($ytVideo && isset($ytVideo['video_id'])) {
+                        $ytDetails = $youtubeService->getVideo($ytVideo['video_id']);
+                        if (!empty($ytDetails['tags'])) {
+                            $debugSources['youtube_fallback'] = $ytDetails['tags'];
+                            $allGenres = array_merge($allGenres, $ytDetails['tags']);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: YouTube Genre Fallback Error: ' . $e->getMessage());
+                }
+            }
 
             // Clean and Sanitize
             $cleaner = new GenreCleanerService();

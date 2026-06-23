@@ -83,7 +83,19 @@
     .results-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem; }
     
     .genres-list { font-size: 0.8rem; color: #64748b; }
+    
+    /* Sync API button styles */
+    .sync-group { display: flex; align-items: center; gap: 8px; }
+    .sync-btn {
+        opacity: 0; background: #e0e7ff; color: #4f46e5; border: none; padding: 4px 8px;
+        border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: opacity 0.2s, background 0.2s;
+        display: inline-flex; align-items: center; gap: 4px;
+    }
+    .sync-btn:hover { background: #c7d2fe; }
+    .sync-group:hover .sync-btn { opacity: 1; }
+    .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
 @section('content')
@@ -137,14 +149,23 @@
                             </div>
                         </td>
                         <td>{{ $song->artist_name }}</td>
-                        <td>
+                        <td id="genres-cell-{{ $song->id }}">
                             @php
                                 $genres = $song->genres ? json_decode($song->genres, true) : [];
                             @endphp
                             @if(!empty($genres))
                                 <span class="genres-list">{{ implode(', ', array_slice($genres, 0, 3)) }}{{ count($genres) > 3 ? '...' : '' }}</span>
                             @else
-                                <span style="color:#cbd5e1;">-</span>
+                                <div class="sync-group">
+                                    <span style="color:#94a3b8; font-style: italic; font-size: 0.85rem;">No tags</span>
+                                    <button 
+                                        onclick="handleRefetch({{ $song->id }}, this)"
+                                        class="sync-btn"
+                                        title="Bypass cache and force re-scan all API endpoints"
+                                    >
+                                        <i class="fa fa-refresh"></i> Sync APIs
+                                    </button>
+                                </div>
                             @endif
                         </td>
                         <td style="text-align:center;font-weight:600;">{{ $song->shares_count ?? 0 }}</td>
@@ -180,3 +201,41 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function handleRefetch(songId, btn) {
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Syncing...';
+    btn.disabled = true;
+    
+    fetch(`/admin/songs/${songId}/refetch-genres`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the cell content to show the new genres
+            const cell = document.getElementById(`genres-cell-${songId}`);
+            const displayGenres = data.genres.slice(0, 3).join(', ') + (data.genres.length > 3 ? '...' : '');
+            cell.innerHTML = `<span class="genres-list">${displayGenres}</span>`;
+            alert('Tags synced successfully!');
+        } else {
+            alert(data.message || 'Failed to sync tags.');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        alert('An error occurred while syncing.');
+        console.error(error);
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    });
+}
+</script>
+@endpush

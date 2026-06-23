@@ -70,6 +70,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('songs/{song}/edit', [AdminController::class, 'editSong'])->name('songs.edit');
         Route::put('songs/{song}', [AdminController::class, 'updateSong'])->name('songs.update');
         Route::delete('songs/{song}', [AdminController::class, 'deleteSong'])->name('songs.delete');
+        Route::post('songs/{song}/refetch-genres', [AdminController::class, 'refetchGenres'])->name('songs.refetchGenres');
     });
 });
 

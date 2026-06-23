@@ -417,4 +417,36 @@ class AdminController extends Controller
         $song->delete();
         return redirect()->back()->with('success', 'Song deleted successfully.');
     }
+
+    public function refetchGenres(\App\Models\Song $song, \App\Services\SpotifyService $spotifyService)
+    {
+        if (!$song->spotify_track_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Song missing Spotify Track ID.'
+            ], 422);
+        }
+
+        // 1. Force flush the 7-day cache block for this specific track
+        \Illuminate\Support\Facades\Cache::forget("genres_track_v2_{$song->spotify_track_id}");
+
+        // 2. Re-run the engine (which now includes your new YouTube backstop)
+        $genreData = $spotifyService->getGenresWithSources($song->spotify_track_id);
+
+        if (!empty($genreData['genres'])) {
+            $song->update([
+                'genres' => json_encode($genreData['genres'])
+            ]);
+
+            return response()->json([
+                'success' => true, 
+                'genres' => $genreData['genres']
+            ]);
+        }
+
+        return response()->json([
+            'success' => false, 
+            'message' => 'All automated metadata systems drew a blank.'
+        ], 422);
+    }
 }
