@@ -62,6 +62,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::any('algo-test-suite/api/{endpoint?}', [AdminController::class, 'algoTestSuiteApi'])
             ->where('endpoint', '.*')
             ->name('algo-test-suite.api');
+            
+        // Admin Songs Management
+        Route::get('songs', [AdminController::class, 'songs'])->name('songs');
+        Route::get('songs/create', [AdminController::class, 'createSong'])->name('songs.create');
+        Route::post('songs', [AdminController::class, 'storeSong'])->name('songs.store');
+        Route::get('songs/{song}/edit', [AdminController::class, 'editSong'])->name('songs.edit');
+        Route::put('songs/{song}', [AdminController::class, 'updateSong'])->name('songs.update');
+        Route::delete('songs/{song}', [AdminController::class, 'deleteSong'])->name('songs.delete');
     });
 });
 

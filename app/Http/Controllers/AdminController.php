@@ -319,4 +319,102 @@ class AdminController extends Controller
             return response()->json(['error' => 'Recommender Connection failed: ' . $e->getMessage()], 500);
         }
     }
+
+    // --- Song Management ---
+
+    public function songs()
+    {
+        $search = request('search');
+        $songs = \App\Models\Song::withCount('shares')
+            ->when($search, fn($q) => $q->where('track_name', 'like', "%{$search}%")
+                                        ->orWhere('artist_name', 'like', "%{$search}%"))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.songs.index', compact('songs', 'search'));
+    }
+
+    public function createSong()
+    {
+        return view('admin.songs.create');
+    }
+
+    public function storeSong(Request $request)
+    {
+        $data = $request->validate([
+            'track_name' => 'required|string|max:255',
+            'artist_name' => 'required|string|max:255',
+            'release_date' => 'nullable|date',
+            'genres' => 'nullable|string',
+            'album_art_url' => 'nullable|url',
+            'spotify_track_id' => 'nullable|string',
+            'youtube_url' => 'nullable|url',
+        ]);
+
+        if (!empty($data['genres'])) {
+            $genresArray = array_map('trim', explode(',', $data['genres']));
+            $data['genres'] = json_encode(array_values(array_filter($genresArray)));
+        }
+
+        if (!empty($data['spotify_track_id'])) {
+            if (preg_match('/track\/([a-zA-Z0-9]+)/', $data['spotify_track_id'], $matches)) {
+                $data['spotify_track_id'] = $matches[1];
+            }
+            $data['spotify_url'] = 'https://open.spotify.com/track/' . $data['spotify_track_id'];
+        }
+
+        \App\Models\Song::create($data);
+
+        return redirect()->route('admin.songs')->with('success', 'Song added successfully.');
+    }
+
+    public function editSong(\App\Models\Song $song)
+    {
+        return view('admin.songs.edit', compact('song'));
+    }
+
+    public function updateSong(Request $request, \App\Models\Song $song)
+    {
+        $data = $request->validate([
+            'track_name' => 'required|string|max:255',
+            'artist_name' => 'required|string|max:255',
+            'release_date' => 'nullable|date',
+            'genres' => 'nullable|string',
+            'album_art_url' => 'nullable|url',
+            'spotify_track_id' => 'nullable|string',
+            'youtube_url' => 'nullable|url',
+        ]);
+
+        if (!empty($data['genres'])) {
+            $genresArray = array_map('trim', explode(',', $data['genres']));
+            $data['genres'] = json_encode(array_values(array_filter($genresArray)));
+        } else {
+            $data['genres'] = null;
+        }
+
+        if (!empty($data['spotify_track_id'])) {
+            if (preg_match('/track\/([a-zA-Z0-9]+)/', $data['spotify_track_id'], $matches)) {
+                $data['spotify_track_id'] = $matches[1];
+            }
+            $data['spotify_url'] = 'https://open.spotify.com/track/' . $data['spotify_track_id'];
+        } else {
+            $data['spotify_track_id'] = null;
+            $data['spotify_url'] = null;
+        }
+
+        $song->update($data);
+
+        return redirect()->route('admin.songs')->with('success', 'Song updated successfully.');
+    }
+
+    public function deleteSong(\App\Models\Song $song)
+    {
+        if ($song->shares()->count() > 0) {
+            return redirect()->back()->with('error', 'Cannot delete a song that has shares. Delete the shares first.');
+        }
+
+        $song->delete();
+        return redirect()->back()->with('success', 'Song deleted successfully.');
+    }
 }

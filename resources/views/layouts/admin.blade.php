@@ -336,6 +336,9 @@
                   <li class="{{ request()->routeIs('admin.users') ? 'active' : '' }}">
                     <a href="{{ route('admin.users') }}"><i class="fa fa-users"></i> Users</a>
                   </li>
+                  <li class="{{ request()->routeIs('admin.songs') || request()->routeIs('admin.songs.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.songs') }}"><i class="fa fa-music"></i> Songs</a>
+                  </li>
                   <li class="{{ request()->routeIs('admin.moderation') ? 'active' : '' }}">
                     <a href="{{ route('admin.moderation') }}"><i class="fa fa-gavel"></i> Moderation</a>
                   </li>
