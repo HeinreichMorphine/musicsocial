@@ -105,7 +105,7 @@
                 <div class="text-left max-w-2xl">
                     <h1 class="text-5xl md:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
                         Music discovery, <br>
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:text-brand dark:bg-none dark:bg-transparent">humanized.</span>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">humanized.</span>
                     </h1>
                     <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 leading-relaxed transition-colors">
                         Drop the algorithm. Connect with listeners who share your exact music taste and discover your next favorite track through real recommendations.
@@ -215,7 +215,7 @@
                     </div>
                     <h3 class="text-xl font-bold mb-3">Share Your Rotation</h3>
                     <p class="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
-                        Post the tracks you can't stop playing. Build your profile and let your taste speak for itself.
+                        Share any track with a caption. Your network can upvote, save, or mark tracks as 'not for me', while diving deep into nested comment threads.
                     </p>
                 </div>
 
@@ -224,9 +224,9 @@
                     <div class="w-12 h-12 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center mb-6 shadow-sm transition-colors">
                         <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Find Your Neighbors</h3>
+                    <h3 class="text-xl font-bold mb-3">Find Taste Neighbors</h3>
                     <p class="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
-                        Our engine analyzes your Spotify history to match you with users who share your exact niche.
+                        Our custom recommendation engine uses TF-IDF vectorization to analyze your Spotify history, finding peers who share your exact musical niche.
                     </p>
                 </div>
 
@@ -235,9 +235,9 @@
                     <div class="w-12 h-12 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center mb-6 shadow-sm transition-colors">
                         <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">Curate Together</h3>
+                    <h3 class="text-xl font-bold mb-3">Seamless Curation</h3>
                     <p class="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
-                        Save tracks directly to your Spotify playlists. Collaborate and build a library with your network.
+                        Organize your musical discoveries into Reso Playlists, or push tracks directly to your connected Spotify account with a single click.
                     </p>
                 </div>
             </div>
