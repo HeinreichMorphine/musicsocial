@@ -62,6 +62,43 @@ class SpotifyService
     }
 
     /**
+     * Get tracks from a playlist.
+     *
+     * @param string $playlistId
+     * @param int $limit
+     * @return array
+     */
+    public function getPlaylistTracks(string $playlistId, int $limit = 10): array
+    {
+        $token = $this->getAccessToken();
+        if (!$token) {
+            Log::error('Cannot get playlist tracks; Spotify access token is missing.');
+            return [];
+        }
+
+        $response = Http::withToken($token)
+            ->timeout(30)
+            ->get($this->baseUrl . "playlists/{$playlistId}/tracks", [
+                'limit' => $limit,
+            ]);
+
+        if ($response->failed()) {
+            Log::error("Spotify Playlist Tracks API Error ({$response->status()}): " . $response->body());
+            return [];
+        }
+
+        $items = $response->json('items') ?? [];
+        $tracks = [];
+        foreach ($items as $item) {
+            if (!empty($item['track'])) {
+                $tracks[] = $item['track'];
+            }
+        }
+
+        return $tracks;
+    }
+
+    /**
      * Get raw track data from Spotify.
      *
      * @param string $trackId
