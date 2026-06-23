@@ -35,7 +35,7 @@
                         </button>
                     </form>
                 @else
-                    <button type="button" @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-flex items-center px-4 py-2 bg-[#1DB954] border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-[#1ed760] focus:bg-[#1ed760] active:bg-[#1aa34a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1DB954] transition ease-in-out duration-150">
+                    <button type="button" @click.prevent.stop="$dispatch('open-spotify-beta-modal')" class="inline-flex items-center px-4 py-2 bg-[#1DB954] border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-[#1ed760] focus:bg-[#1ed760] active:bg-[#1aa34a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1DB954] transition ease-in-out duration-150">
                         Connect Spotify
                     </button>
                 @endif
