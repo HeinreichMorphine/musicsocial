@@ -42,7 +42,7 @@
     </script>
     <style>
         .hero-bg-dark {
-            background: radial-gradient(circle at top center, rgba(29, 185, 84, 0.15) 0%, rgba(0, 0, 0, 1) 100%);
+            background: radial-gradient(circle at top center, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 1) 100%);
         }
         .hero-bg-light {
             background: radial-gradient(circle at top center, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0) 70%),
