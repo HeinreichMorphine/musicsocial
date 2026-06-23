@@ -27,20 +27,20 @@
         </style>
     </head>
     <body class="font-sans text-slate-900 antialiased bg-slate-50 selection:bg-custom-periwinkle selection:text-custom-dark-blue">
-        <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+        <div class="min-h-screen w-full px-4 sm:px-6 py-12 flex flex-col items-center justify-center relative overflow-x-hidden">
             {{-- Subtle background decoration elements --}}
             <div class="absolute top-0 inset-x-0 h-[220px] bg-gradient-to-b from-custom-periwinkle/10 to-transparent pointer-events-none z-0"></div>
 
-            <div class="flex flex-col items-center w-full sm:max-w-md relative z-10">
+            <div class="flex flex-col items-center w-full max-w-md relative z-10">
                 {{-- Logo circle --}}
-                <div class="mb-5 transform hover:scale-[1.03] transition-all duration-300">
-                    <a href="/" class="flex items-center justify-center w-16 h-16 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
-                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-9 h-9 object-contain drop-shadow-sm">
+                <div class="mb-4 transform hover:scale-[1.03] transition-all duration-300">
+                    <a href="/" class="flex items-center justify-center w-20 h-20 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
+                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-10 h-10 object-contain drop-shadow-sm">
                     </a>
                 </div>
 
                 {{-- Auth Card --}}
-                <div class="w-full px-6 py-8 sm:px-10 sm:py-10 bg-white shadow-[0_15px_50px_rgba(22,42,114,0.03)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-100 rounded-3xl">
+                <div class="w-full px-6 py-8 sm:px-10 sm:py-10 bg-white shadow-[0_15px_45px_rgba(22,42,114,0.06)] border-t-4 border-t-custom-dark-blue border-x border-b border-slate-200/80 rounded-3xl">
                     {{ $slot }}
                 </div>
             </div>
