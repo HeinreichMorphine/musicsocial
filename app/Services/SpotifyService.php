@@ -68,7 +68,7 @@ class SpotifyService
      * @param int $limit
      * @return array
      */
-    public function getPlaylistTracks(string $playlistId, int $limit = 10): array
+    public function getPlaylistTrackItems(string $playlistId, int $limit = 10): array
     {
         $token = $this->getAccessToken();
         if (!$token) {

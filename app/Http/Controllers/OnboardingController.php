@@ -22,7 +22,7 @@ class OnboardingController extends Controller
         // Fetch 6 actual trending starter tracks from Spotify Global Top 50 playlist, cached for 24 hours
         $suggestedTracks = Cache::remember('onboarding_suggested_tracks', 60 * 60 * 24, function () {
             try {
-                $results = $this->spotifyService->getPlaylistTracks('37i9dQZEVXbMDoIb9hqKuo', 6);
+                $results = $this->spotifyService->getPlaylistTrackItems('37i9dQZEVXbMDoIb9hqKuo', 6);
                 return is_array($results) ? array_slice($results, 0, 6) : [];
             } catch (\Exception $e) {
                 \Log::warning('Onboarding: Could not fetch suggested tracks — ' . $e->getMessage());
