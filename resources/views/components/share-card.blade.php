@@ -405,21 +405,6 @@
                     @endif
                 </div>
                 @endif
-                @if($isPremium)
-                {{-- Spotify Premium Full Iframe Embed --}}
-                <div x-show="playerOpen"
-                     x-on:click.stop
-                     x-transition:enter="transition ease-out duration-300"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-2"
-                     class="mt-3 relative overflow-hidden rounded-[16px]"
-                     style="display:none; height: 152px;">
-                    <iframe src="https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" class="rounded-[16px]"></iframe>
-                </div>
-                @endif
 
                 <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
                     
@@ -539,15 +524,13 @@
                                     <div class="flex-1" x-data="{
                                         songId: '{{ $preview->getEmbeddedSongId() }}',
                                         songData: null,
+                                        playerOpen: false,
+                                        isPlayingPreview: false,
                                         init() {
                                             if (this.songId) {
                                                 fetch(`/search/tracks/${this.songId}`)
                                                     .then(r => r.json())
-                                                    .then(data => {
-                                                        if (data.song) {
-                                                            this.songData = data.song;
-                                                        }
-                                                    })
+                                                    .then(data => { if (data.song) this.songData = data.song; })
                                                     .catch(err => console.error('Failed to fetch comment preview song:', err));
                                             }
                                         }
@@ -570,9 +553,31 @@
                                                         
                                                         <div class="flex items-center space-x-3 mt-2">
                                                             {{-- Spotify Link --}}
-                                                            <a :href="songData.spotify_url" target="_blank" title="Play on Spotify" class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
-                                                                <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
-                                                            </a>
+                                                            @if($isPremium)
+                                                                <button type="button"
+                                                                    x-on:click.stop.prevent="
+                                                                        if(window.playSpotifyTrack) {
+                                                                            window.playSpotifyTrack('spotify:track:' + songData.spotify_track_id);
+                                                                        }
+                                                                    "
+                                                                    title="Play on Spotify"
+                                                                    class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                                                    <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                                                                </button>
+                                                            @else
+                                                                <button type="button"
+                                                                    x-on:click.stop.prevent="
+                                                                        playerOpen = !playerOpen;
+                                                                        if(!playerOpen) {
+                                                                            const audio = $el.closest('[x-data]').querySelector('audio');
+                                                                            if(audio) audio.pause();
+                                                                        }
+                                                                    "
+                                                                    title="Play 30s preview"
+                                                                    class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                                                    <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                                                                </button>
+                                                            @endif
                                         
                                                             <!-- Add to Playlist Button -->
                                                             <div class="relative inline-block" x-data="{ isDropdownOpen: false }">
@@ -636,6 +641,24 @@
                                                 </div>
                                             </div>
                                         </template>
+                                        
+                                        {{-- 30s Preview player panel --}}
+                                        <div x-show="playerOpen" x-on:click.stop x-transition class="mt-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 flex flex-col gap-2" style="display:none;">
+                                            <template x-if="songData?.preview_url">
+                                                <div class="flex items-center gap-3 w-full">
+                                                    <button @click="const a = $refs.miniAudio; if(a.paused){a.play(); isPlayingPreview=true;}else{a.pause(); isPlayingPreview=false;}"
+                                                        class="w-8 h-8 shrink-0 rounded-full bg-[#1DB954] flex items-center justify-center text-black hover:scale-105 transition-transform">
+                                                        <svg x-show="!isPlayingPreview" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 ml-0.5"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
+                                                        <svg x-show="isPlayingPreview" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
+                                                    </button>
+                                                    <span class="text-xs text-gray-300">30s Preview</span>
+                                                    <audio x-ref="miniAudio" :src="songData.preview_url" @play="isPlayingPreview = true" @pause="isPlayingPreview = false" @ended="isPlayingPreview = false"></audio>
+                                                </div>
+                                            </template>
+                                            <template x-if="!songData?.preview_url">
+                                                <span class="text-xs text-gray-400">No preview available for this track.</span>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
