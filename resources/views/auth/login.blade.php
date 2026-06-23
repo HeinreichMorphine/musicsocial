@@ -187,7 +187,7 @@
         </div>
 
         <div class="text-center mt-4">
-             <p class="text-sm text-slate-600 dark:text-slate-400">
+             <p class="text-sm text-slate-600 dark:text-white">
                 Don't have an account?
                 <a href="{{ route('register') }}" class="font-bold text-custom-mid-blue dark:text-white hover:text-custom-dark-blue dark:hover:text-gray-300 transition-colors">
                     {{ __('Register now') }}
