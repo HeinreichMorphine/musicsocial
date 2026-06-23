@@ -38,9 +38,10 @@
 
         <div class="w-full max-w-lg space-y-6">
 
-            {{-- Headline: bold-black, nothing competing --}}
-            <div class="text-center space-y-2 pt-2">
-                <h1 class="text-[2.6rem] leading-tight font-black text-slate-900 tracking-tight">
+            {{-- Headline: unmistakably largest text on the page --}}
+            <div class="text-center space-y-2.5 pt-2">
+                {{-- Fix 1: explicit 28px font-black — must beat all other text by a wide margin --}}
+                <h1 class="text-[1.75rem] leading-snug font-black text-slate-900 tracking-tight">
                     Curate Your Song Shelf
                 </h1>
                 <p class="text-sm text-slate-400 font-normal">
@@ -52,7 +53,7 @@
             <div class="relative z-30">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-slate-300 transition-colors"
+                        <svg class="h-5 w-5 text-slate-300 transition-colors"
                              :class="searchQuery.length > 0 && 'text-indigo-400'"
                              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -64,7 +65,8 @@
                            :disabled="isSubmitting"
                            x-ref="searchInput"
                            x-init="$nextTick(() => $refs.searchInput.focus())"
-                           class="block w-full pl-10 pr-4 py-3.5 rounded-2xl border-0 bg-white text-slate-900 placeholder-slate-300 text-sm shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
+                           {{-- Fix 3: text-base (16px) so placeholder fills the bar's visual weight --}}
+                           class="block w-full pl-11 pr-4 py-3.5 rounded-2xl border-0 bg-white text-slate-900 placeholder-slate-300 text-base shadow-md focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all"
                            placeholder="Search artist, album, or track…">
                     {{-- Spinner inside input --}}
                     <div x-show="isSearching" x-cloak class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -115,9 +117,9 @@
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
                 {{-- ── SECTION 1: Trending ── --}}
-                {{-- Fix 5: inner padding px-6 matches search bar internal rhythm --}}
+                {{-- Fix 4: section label to text-xs 12px — same weight and size as "YOUR SHELF" --}}
                 <div class="px-6 pt-5 pb-1">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                         Trending — tap to add
                     </p>
                     <ul class="divide-y divide-slate-50">
@@ -145,8 +147,9 @@
                                          alt="{{ $stName }}"
                                          class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
                                     <div class="flex-1 min-w-0">
-                                        <div class="text-sm font-semibold text-slate-800 truncate">{{ $stName }}</div>
-                                        <div class="text-xs text-slate-400 truncate mt-0.5">{{ $stArtist }}</div>
+                                        {{-- Fix 2: title 15px semibold, artist 12px regular lighter --}}
+                                        <div class="text-[15px] font-semibold text-slate-800 truncate">{{ $stName }}</div>
+                                        <div class="text-[12px] font-normal text-slate-400 truncate mt-0.5">{{ $stArtist }}</div>
                                     </div>
                                     {{-- Fix 2: Circle 20→24px, solid purple fill + check on selected, hover ring --}}
                                     <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
@@ -171,20 +174,21 @@
                 {{-- ── SECTION 2: Shelf ── --}}
                 {{-- Fix 5: inner padding px-6 --}}
                 <div class="px-6 pb-6">
-                    {{-- Fix 4: single header line, equal dot spacing --}}
+                    {{-- Fix 4: "YOUR SHELF" matches trending label: text-xs 12px uppercase --}}
                     <div class="flex items-center mb-4">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Shelf</span>
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Your Shelf</span>
                         <span class="mx-1.5 text-slate-300 text-xs leading-none">·</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest transition-colors duration-300"
-                              :class="selectedTracks.length >= 5 ? 'text-emerald-500' : 'text-slate-400'"
+                        {{-- 0/10 counter: slightly more prominent since it's the actionable info --}}
+                        <span class="text-xs font-bold uppercase tracking-widest transition-colors duration-300"
+                              :class="selectedTracks.length >= 5 ? 'text-emerald-500' : 'text-slate-500'"
                               x-text="selectedTracks.length + '/10'">
                         </span>
                         <span class="mx-1.5 text-slate-200 text-xs leading-none">·</span>
-                        <span class="text-[10px] text-slate-400 transition-all duration-300"
+                        <span class="text-xs text-slate-400 transition-all duration-300"
                               x-show="selectedTracks.length < 5"
-                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock your feed'">
+                              x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
                         </span>
-                        <span class="text-[10px] text-emerald-500 font-semibold"
+                        <span class="text-xs text-emerald-500 font-semibold"
                               x-show="selectedTracks.length >= 5">
                             ready to continue
                         </span>
@@ -213,18 +217,16 @@
                             </div>
                         </template>
 
-                        {{-- Ghost "+" badge — shows remaining needed, disappears at 10 --}}
+                        {{-- Fix 5: ghost badge = same 48px as album art slots, larger text --}}
                         <div x-show="selectedTracks.length < 10"
-                             class="flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
+                             class="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
                              :class="selectedTracks.length >= 5
                                  ? 'border-emerald-200 bg-emerald-50'
                                  : 'border-indigo-200 bg-indigo-50'">
-                            <div class="text-center leading-tight">
-                                <span class="text-xs font-bold block"
-                                      :class="selectedTracks.length >= 5 ? 'text-emerald-400' : 'text-indigo-400'"
-                                      x-text="selectedTracks.length < 5 ? '+' + (5 - selectedTracks.length) : '+'">
-                                </span>
-                            </div>
+                            <span class="text-sm font-black leading-none"
+                                  :class="selectedTracks.length >= 5 ? 'text-emerald-400' : 'text-indigo-400'"
+                                  x-text="selectedTracks.length < 5 ? '+' + (5 - selectedTracks.length) : '+'">
+                            </span>
                         </div>
 
                     </div>
