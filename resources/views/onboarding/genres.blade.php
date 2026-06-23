@@ -305,49 +305,6 @@
                         </button>
                     </div>
 
-                    {{-- Live Taste Profile Strip (only appears after first track selection) --}}
-                    <div x-show="selectedTracks.length > 0"
-                         x-cloak
-                         x-transition:enter="transition ease-out duration-300 transform"
-                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         class="bg-indigo-50/40 border border-indigo-100/50 rounded-xl p-4 mt-5">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-indigo-700 uppercase tracking-widest">Live Taste Profile</span>
-                            <span class="text-xs font-bold text-slate-400" x-text="selectedTracks.length + ' / 10 Songs Chosen'"></span>
-                        </div>
-                        <!-- Stacked percentage bar -->
-                        <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex mb-3">
-                            <template x-for="(genre, idx) in tasteProfile" :key="genre.name">
-                                <div :style="'width: ' + genre.percentage + '%'"
-                                     :class="[
-                                         'h-full transition-all duration-500',
-                                         idx === 0 ? 'bg-indigo-600' : 
-                                         (idx === 1 ? 'bg-violet-500' : 
-                                         (idx === 2 ? 'bg-emerald-500' : 
-                                         (idx === 3 ? 'bg-amber-500' : 'bg-slate-400')))
-                                     ]">
-                                </div>
-                            </template>
-                        </div>
-                        <!-- Genre Pills with percentage -->
-                        <div class="flex flex-wrap gap-2">
-                            <template x-for="(genre, idx) in tasteProfile" :key="genre.name">
-                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white shadow-sm border border-slate-100">
-                                    <span class="w-1.5 h-1.5 rounded-full block shrink-0"
-                                          :class="[
-                                              idx === 0 ? 'bg-indigo-600' : 
-                                              (idx === 1 ? 'bg-violet-500' : 
-                                              (idx === 2 ? 'bg-emerald-500' : 
-                                              (idx === 3 ? 'bg-amber-500' : 'bg-slate-400')))
-                                          ]"></span>
-                                    <span class="text-slate-700" x-text="genre.name"></span>
-                                    <span class="text-slate-400 font-bold" x-text="genre.percentage + '%'"></span>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
                 </div>
             </div>{{-- end unified card --}}
 
@@ -424,25 +381,6 @@
     </div>
 
     <script>
-        const GENRE_HINTS = {
-            'pop':'pop','hip hop':'hip-hop','rap':'hip-hop','r&b':'R&B','soul':'soul',
-            'jazz':'jazz','rock':'rock','indie':'indie','electronic':'electronic',
-            'edm':'EDM','classical':'classical','country':'country','metal':'metal',
-            'punk':'punk','latin':'latin','afrobeats':'afrobeats','kpop':'K-pop',
-            'reggae':'reggae','blues':'blues','folk':'folk','lo-fi':'lo-fi','math-rock':'math-rock','funk':'funk'
-        };
-
-        function guessGenre(track) {
-            const artistsList = track.artists || [];
-            const artistsStr = artistsList.map(a => typeof a === 'string' ? a : (a.name || '')).join(' ');
-            const hay = [track.name || '', artistsStr, track.album?.name || '']
-                .join(' ').toLowerCase();
-            for (const [kw, lbl] of Object.entries(GENRE_HINTS)) {
-                if (hay.includes(kw)) return lbl;
-            }
-            return null;
-        }
-
         document.addEventListener('alpine:init', () => {
             Alpine.data('onboardingApp', () => ({
                 searchQuery:    '',
@@ -521,27 +459,6 @@
                         return track.artists.map(a => typeof a === 'string' ? a : a.name).join(', ');
                     }
                     return 'Unknown Artist';
-                },
-
-                get tasteProfile() {
-                    if (this.selectedTracks.length === 0) return [];
-                    let counts = {};
-                    let total = 0;
-                    this.selectedTracks.forEach(track => {
-                        let g = guessGenre(track) || 'Other';
-                        counts[g] = (counts[g] || 0) + 1;
-                        total++;
-                    });
-                    
-                    let profile = Object.entries(counts).map(([name, count]) => {
-                        return {
-                            name: name.charAt(0).toUpperCase() + name.slice(1),
-                            percentage: Math.round((count / total) * 100)
-                        };
-                    });
-                    
-                    profile.sort((a, b) => b.percentage - a.percentage);
-                    return profile;
                 },
 
                 async selectTag(genre) {
