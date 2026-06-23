@@ -111,20 +111,15 @@
 
         {{-- Search Bar --}}
         <form method="GET" action="{{ route('admin.songs') }}" class="search-bar-row">
-            <div class="search-input-wrap">
-                <i class="fa fa-search"></i>
-                <input class="search-input" type="text" name="search"
-                       value="{{ $search ?? '' }}" placeholder="Search by track or artist…">
-            </div>
-            <button type="submit" class="btn-search"><i class="fa fa-search"></i> Search</button>
-            @if($search)
-                <a href="{{ route('admin.songs') }}" class="btn-clear"><i class="fa fa-times"></i> Clear</a>
-            @endif
+            <select name="sort" class="search-input" onchange="this.form.submit()">
+                <option value="latest" {{ (request('sort') ?? 'latest') == 'latest' ? 'selected' : '' }}>Sort By: Newest First</option>
+                <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Sort By: Oldest First</option>
+                <option value="untagged" {{ request('sort') == 'untagged' ? 'selected' : '' }}>Filter: Untagged Songs Only</option>
+                <option value="shares" {{ request('sort') == 'shares' ? 'selected' : '' }}>Sort By: Most Shares</option>
+            </select>
         </form>
 
-        @if($search)
-            <p class="results-info">Showing results for "<strong>{{ $search }}</strong>"</p>
-        @endif
+        <p class="results-info">Showing {{ $songs->total() }} total {{ \Str::plural('song', $songs->total()) }}.</p>
 
         <div style="overflow-x:auto;">
             <table class="songs-table">

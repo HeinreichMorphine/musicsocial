@@ -324,15 +324,23 @@ class AdminController extends Controller
 
     public function songs()
     {
-        $search = request('search');
-        $songs = \App\Models\Song::withCount('shares')
-            ->when($search, fn($q) => $q->where('track_name', 'like', "%{$search}%")
-                                        ->orWhere('artist_name', 'like', "%{$search}%"))
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $sort = request('sort', 'latest');
+        
+        $query = \App\Models\Song::withCount('shares');
+        
+        if ($sort === 'untagged') {
+            $query->whereNull('genres')->orWhere('genres', '[]')->orWhere('genres', '""')->orWhere('genres', '');
+        } elseif ($sort === 'shares') {
+            $query->orderByDesc('shares_count');
+        } elseif ($sort === 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
 
-        return view('admin.songs.index', compact('songs', 'search'));
+        $songs = $query->paginate(15)->withQueryString();
+
+        return view('admin.songs.index', compact('songs', 'sort'));
     }
 
     public function createSong()
