@@ -96,11 +96,6 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
         
         <!-- Album Art Container -->
         <div class="relative flex-1 h-full overflow-hidden group-hover:shadow-inner">
-            <!-- Match Score overlay -->
-            <div class="absolute top-2 right-2 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-sm text-gray-900 dark:text-white text-[10px] font-bold px-2 py-1 rounded-full border border-black/5 dark:border-white/10 flex items-center shadow-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
-                {{ $matchScore }}%
-            </div>
 
             <div class="absolute inset-0 bg-cover bg-center blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 scale-110" style="background-image: url('{{ $song->album_art_url }}');"></div>
             <img class="relative z-10 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ $song->album_art_url }}" alt="Album Art">
