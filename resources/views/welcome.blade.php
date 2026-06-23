@@ -49,7 +49,7 @@
                         linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
         }
         .border-glow-dark {
-            box-shadow: 0 0 40px rgba(29, 185, 84, 0.1);
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.15); /* Purple glow */
         }
         .border-glow-light {
             box-shadow: 0 0 40px rgba(29, 185, 84, 0.2);
@@ -133,7 +133,7 @@
 
                 <!-- App Mockup -->
                 <div class="relative max-w-md mx-auto w-full lg:ml-auto">
-                    <div class="absolute -inset-0.5 bg-brand/10 dark:bg-brand/20 rounded-2xl blur-2xl transition"></div>
+                    <div class="absolute -inset-0.5 bg-brand/10 dark:bg-purple-600/20 rounded-2xl blur-2xl transition"></div>
                     
                     <div class="bg-white dark:bg-card border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-6 relative z-10 border-glow-light dark:border-glow-dark transform lg:rotate-y-[-5deg] lg:rotate-x-[5deg] transition-all duration-500 hover:rotate-0">
                         <!-- Header -->
