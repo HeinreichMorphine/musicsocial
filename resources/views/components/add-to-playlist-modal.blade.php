@@ -109,7 +109,7 @@
                                 <template x-if="!loading">
                                     <template x-for="playlist in playlists" :key="playlist.id">
                                         <button @click="addToPlaylist(playlist.id)" class="flex items-center w-full p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition group text-left">
-                                            <img :src="playlist.images[0]?.url || 'https://via.placeholder.com/40'" class="w-10 h-10 rounded object-cover mr-3 bg-gray-200 dark:bg-gray-800">
+                                            <img :src="playlist.images[0]?.url || '{{ asset('icons/reso.png') }}'" class="w-10 h-10 rounded object-cover mr-3 bg-gray-200 dark:bg-gray-800">
                                             <div>
                                                 <p class="font-bold text-sm text-gray-800 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400" x-text="playlist.name"></p>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400" x-text="playlist.tracks.total + ' tracks'"></p>

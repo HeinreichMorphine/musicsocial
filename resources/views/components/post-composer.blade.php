@@ -73,7 +73,7 @@
         return artists.map(artist => artist.name).join(', ');
     },
     getAlbumArt(track) {
-        return track.album.images && track.album.images.length > 0 ? track.album.images[0].url : 'https://via.placeholder.com/40';
+        return track.album.images && track.album.images.length > 0 ? track.album.images[0].url : '{{ asset('icons/reso.png') }}';
     },
     resetComposer() {
         this.postType = 'music';
