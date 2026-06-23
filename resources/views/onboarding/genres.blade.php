@@ -24,13 +24,21 @@
             100% { opacity: 1; transform: scale(1); }
         }
         .slot-pop { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+        @keyframes subtlePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            50% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+        }
+        .pulse-glow {
+            animation: subtlePulse 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
 
     {{-- Single top strip — one sentence only --}}
     <div class="sticky top-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-b border-indigo-100 py-2 px-4 text-center text-xs font-medium text-indigo-600 tracking-wide">
-        Songs you pick here train your taste profile — better matches, better people to follow.
+        Builds your taste profile for better recommendations & matches.
     </div>
 
     <div class="min-h-screen flex flex-col items-center pt-16 sm:pt-24 pb-28 px-4 sm:px-6"
@@ -41,8 +49,8 @@
             {{-- Headline: clear chapter heading, unmistakably first read --}}
             <div class="text-center pt-8 pb-1" style="margin-top: 3.5rem; margin-bottom: 2.5rem;">
                 {{-- 32px font-black — wins the page, nothing else comes close --}}
-                <h1 class="text-[2rem] leading-snug font-black text-slate-900 tracking-tight">
-                    Curate Your Song Shelf
+                <h1 class="text-[2.25rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
+                    Curate Your <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Song Shelf</span>
                 </h1>
                 {{-- Subtext does double duty: guidance for first-timers, no extra block needed --}}
                 <p class="mt-4 text-[13px] text-slate-500 font-normal leading-relaxed max-w-sm mx-auto">
@@ -94,7 +102,7 @@
                     <ul x-show="searchResults.length > 0">
                         <template x-for="track in searchResults" :key="track.id">
                             <li @click="toggleTrack(track)"
-                                class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
+                                class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 border-b border-slate-50 last:border-0 active:scale-[0.98] transition-all duration-75 group"
                                 :class="isSelected(track.id) && 'bg-indigo-50/60'">
                                 <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
                                      class="w-9 h-9 rounded-lg object-cover flex-shrink-0 shadow-sm">
@@ -102,9 +110,9 @@
                                     <div class="text-sm font-semibold text-slate-800 truncate" x-text="track.name"></div>
                                     <div class="text-xs text-slate-400 truncate" x-text="track.artists?.map(a => a.name).join(', ')"></div>
                                 </div>
-                                <div class="flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-                                     :class="isSelected(track.id) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200'">
-                                    <svg x-show="isSelected(track.id)" class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
+                                     :class="isSelected(track.id) ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
+                                    <svg x-show="isSelected(track.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
@@ -121,7 +129,7 @@
                 {{-- Fix 4: section label to text-xs 12px — same weight and size as "YOUR SHELF" --}}
                 <div class="px-6 pt-5 pb-1">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        Trending — tap to add
+                        Trending this week — tap to add
                     </p>
                     <ul class="divide-y divide-slate-50">
                         @forelse($suggestedTracks ?? [] as $st)
@@ -142,7 +150,7 @@
                                     }'
                                     @click="toggleTrack(track)"
                                     {{-- Fix 1: py-3 → py-3.5 for breathing room --}}
-                                    class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 transition-colors -mx-6 px-6 group"
+                                    class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-slate-50/80 active:scale-[0.98] transition-all duration-75 -mx-6 px-6 group"
                                     :class="isSelected({{ json_encode($stId) }}) && 'bg-indigo-50/50'">
                                     <img src="{{ $stArt }}"
                                          alt="{{ $stName }}"
@@ -221,9 +229,9 @@
                         {{-- Fix 5: ghost badge = same 48px as album art slots, larger text --}}
                         <div x-show="selectedTracks.length < 10"
                              class="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 border-2 border-dashed transition-all duration-300"
-                             :class="selectedTracks.length >= 5
-                                 ? 'border-emerald-200 bg-emerald-50'
-                                 : 'border-indigo-200 bg-indigo-50'">
+                             :class="selectedTracks.length === 0
+                                 ? 'pulse-glow border-indigo-400 bg-indigo-50 shadow-md shadow-indigo-100/30'
+                                 : (selectedTracks.length >= 5 ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-200 bg-indigo-50')">
                             <span class="text-sm font-black leading-none"
                                   :class="selectedTracks.length >= 5 ? 'text-emerald-400' : 'text-indigo-400'"
                                   x-text="selectedTracks.length < 5 ? '+' + (5 - selectedTracks.length) : '+'">
@@ -237,14 +245,18 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 translate-y-1"
                          x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-3 flex items-center gap-2 text-xs text-indigo-500/70">
-                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                         class="mt-4 relative bg-indigo-50/90 border border-indigo-100/50 rounded-xl p-3 text-xs text-indigo-600 flex items-start gap-2.5 shadow-sm">
+                        <div class="absolute -top-1 left-6 w-2.5 h-2.5 bg-indigo-50 border-t border-l border-indigo-100/50 rotate-45"></div>
+                        <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500 mt-0.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Your picks will appear here — tap any track to add it.</span>
+                        <div class="flex-1">
+                            <p class="font-bold text-indigo-800 mb-0.5">Quick Tip</p>
+                            <p class="text-indigo-600/90 leading-relaxed">Your picks will appear here. Tap any trending track below, or search to add your favorites!</p>
+                        </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
-                                class="ml-auto text-slate-300 hover:text-slate-500 transition-colors text-base leading-none shrink-0">
+                                class="text-indigo-400 hover:text-indigo-600 transition-colors text-base leading-none shrink-0 -mt-1 -mr-1 p-1">
                             &times;
                         </button>
                     </div>
@@ -252,25 +264,36 @@
                 </div>
             </div>{{-- end unified card --}}
 
-            {{-- Fix 6: CTA gap pt-2 → pt-8 so it reads as a clear separate action --}}
             <div class="pt-8">
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
-                        class="relative w-full py-5 rounded-2xl font-bold text-base tracking-wide overflow-hidden bg-slate-200 transition-all duration-500"
+                        class="relative w-full py-5 rounded-2xl font-bold text-base tracking-wide overflow-hidden transition-all duration-500 shadow-sm border"
                         :class="selectedTracks.length >= 5
-                            ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer'
-                            : 'cursor-not-allowed'">
+                            ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer bg-slate-200 border-transparent'
+                            : (selectedTracks.length > 0
+                                ? 'bg-indigo-50/80 border-indigo-100/50 cursor-not-allowed'
+                                : 'bg-slate-100 border-slate-100 cursor-not-allowed')">
 
                     {{-- Indigo layer fills as tracks accumulate --}}
                     <span class="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-[inherit] transition-opacity duration-500"
-                          :style="'opacity:' + Math.min(1, Math.max(0, selectedTracks.length / 5))">
+                          :style="'opacity:' + (selectedTracks.length >= 5 ? 1 : 0)">
                     </span>
 
                     <span class="relative z-10 flex items-center justify-center gap-2 transition-colors duration-300"
-                          :class="selectedTracks.length >= 5 ? 'text-white' : 'text-slate-400'">
-                        <span x-show="!isSubmitting">Complete Onboarding</span>
-                        <svg x-show="!isSubmitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          :class="selectedTracks.length >= 5 ? 'text-white' : (selectedTracks.length > 0 ? 'text-indigo-600' : 'text-slate-400')">
+                        <span x-show="!isSubmitting">
+                            <template x-if="selectedTracks.length === 0">
+                                <span>Pick 5 tracks to get started</span>
+                            </template>
+                            <template x-if="selectedTracks.length > 0 && selectedTracks.length < 5">
+                                <span x-text="'Pick ' + (5 - selectedTracks.length) + ' more ' + (5 - selectedTracks.length === 1 ? 'track' : 'tracks')"></span>
+                            </template>
+                            <template x-if="selectedTracks.length >= 5">
+                                <span>Complete Onboarding</span>
+                            </template>
+                        </span>
+                        <svg x-show="!isSubmitting && selectedTracks.length >= 5" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                         <span x-show="isSubmitting" class="flex items-center gap-2">
