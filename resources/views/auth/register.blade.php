@@ -14,48 +14,91 @@
                 <span>Sign up with Spotify</span>
             </button>
 
-            <!-- Spotify Limitation Modal -->
-            <div x-show="showSpotifyModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                    <div x-show="showSpotifyModal" x-transition.opacity class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm transition-opacity" @click="showSpotifyModal = false" aria-hidden="true"></div>
-                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                    <div x-show="showSpotifyModal" x-transition class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <div class="sm:flex sm:items-start">
-                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-12 sm:w-12">
-                                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                    </svg>
-                                </div>
-                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                    <h3 class="text-xl leading-6 font-bold text-gray-900" id="modal-title">Spotify Integration Limited</h3>
-                                    <div class="mt-3">
-                                        <p class="text-sm text-gray-600">
-                                            Due to Spotify's recent B2B API restrictions, native Spotify login is currently in <strong>Closed Beta</strong> and restricted to whitelisted development accounts.
-                                        </p>
-                                        <p class="text-sm text-gray-600 mt-2">
-                                            If you are not an approved beta tester, your login will be rejected by Spotify. We recommend using <strong>Google</strong> or <strong>Email</strong> to register.
-                                        </p>
-                                        <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                            <p class="text-sm text-blue-800">
-                                                Want to link your Spotify? Email <a href="mailto:adamakib507@gmail.com" class="font-bold underline hover:text-blue-900">adamakib507@gmail.com</a> to request whitelist access!
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+            <!-- Spotify Closed Beta Modal -->
+            <div x-show="showSpotifyModal" style="display: none;"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                role="dialog" aria-modal="true" aria-labelledby="spotify-modal-title-reg">
+
+                <div class="absolute inset-0 bg-gray-950/80 backdrop-blur-md" @click="showSpotifyModal = false"></div>
+
+                <div x-show="showSpotifyModal"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                    class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+                    <div class="h-1.5 w-full" style="background: linear-gradient(90deg, #1DB954, #158a3e);"></div>
+
+                    <div class="p-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center" style="background-color: #e8fdf0;">
+                                <svg class="w-7 h-7" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-widest text-[#1DB954] mb-0.5">Closed Beta</p>
+                                <h3 class="text-xl font-bold text-gray-900 leading-tight" id="spotify-modal-title-reg">Spotify Signup Restricted</h3>
                             </div>
                         </div>
-                        <div class="bg-gray-50 px-4 py-4 sm:px-6 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-100">
-                            <a href="{{ route('social.redirect', 'spotify') }}" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 bg-[#1DB954] text-sm font-bold text-white hover:bg-[#1ed760] focus:outline-none focus:ring-4 focus:ring-[#1DB954]/30 sm:w-auto transition-all active:scale-95">
-                                Proceed Anyway
+
+                        <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                            Due to Spotify's new <strong class="text-gray-800">B2B API policy</strong>, our Spotify integration is in a closed development mode. Only manually approved accounts can sign up via Spotify.
+                        </p>
+
+                        <div class="space-y-3 mb-6">
+                            <div class="flex items-start gap-3 p-3.5 bg-amber-50 rounded-xl border border-amber-100">
+                                <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-xs text-amber-800 leading-relaxed">
+                                    <strong>Not on the allowlist?</strong> Your Spotify sign-up will be rejected. Please register with Google or Email instead.
+                                </p>
+                            </div>
+                            <div class="flex items-start gap-3 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
+                                <svg class="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                </svg>
+                                <p class="text-xs text-blue-800 leading-relaxed">
+                                    <strong>Want access?</strong> Email <a href="mailto:adamakib507@gmail.com" class="font-bold underline decoration-blue-300 hover:text-blue-900 transition-colors">adamakib507@gmail.com</a> to request whitelist approval.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-3">
+                            <a href="{{ route('social.redirect', 'google') }}"
+                                class="w-full flex items-center justify-center gap-2.5 py-3 px-4 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-[0.99]">
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
+                                Sign up with Google instead
                             </a>
-                            <button type="button" @click="showSpotifyModal = false" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-5 py-2.5 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 sm:mt-0 sm:w-auto transition-all active:scale-95">
-                                Use Email / Google
+                            <button type="button" @click="showSpotifyModal = false"
+                                class="w-full py-3 px-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">
+                                Go back
                             </button>
+                            <div class="text-center pt-1 border-t border-slate-100">
+                                <a href="{{ route('social.redirect', 'spotify') }}" class="text-xs text-slate-400 hover:text-slate-600 transition-colors underline decoration-dashed">
+                                    Whitelisted beta tester? Proceed anyway →
+                                </a>
+                            </div>
                         </div>
                     </div>
+
+                    <button type="button" @click="showSpotifyModal = false"
+                        class="absolute top-5 right-5 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
+
             <a href="{{ route('social.redirect', 'google') }}" class="w-full flex justify-center items-center gap-2.5 py-3.5 px-4 border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-custom-mid-blue/10 transition-all active:scale-[0.99]">
                  <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
