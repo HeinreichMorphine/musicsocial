@@ -35,7 +35,7 @@
                 {{-- Logo circle --}}
                 <div class="mb-4 transform hover:scale-[1.03] transition-all duration-300">
                     <a href="/" class="flex items-center justify-center w-24 h-24 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
-                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-12 h-12 object-contain drop-shadow-sm">
+                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-16 h-16 object-contain drop-shadow-sm">
                     </a>
                 </div>
 
