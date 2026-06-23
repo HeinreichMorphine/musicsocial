@@ -52,12 +52,7 @@ class RegisteredUserController extends Controller
             'profile_picture' => $profilePicturePath,
         ]);
 
-        try {
-            event(new Registered($user));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send registration email: ' . $e->getMessage());
-            // We can continue logging the user in even if the email fails
-        }
+        event(new Registered($user));
 
         Auth::login($user);
 

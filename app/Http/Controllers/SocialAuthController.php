@@ -75,6 +75,7 @@ class SocialAuthController extends Controller
                 if ($provider === 'spotify') {
                     $updateData['spotify_token'] = $socialUser->token;
                     $updateData['spotify_refresh_token'] = $socialUser->refreshToken;
+                    $updateData['spotify_product'] = $socialUser->user['product'] ?? null;
                 }
 
                 // Verify email if it matches the social provider's email
@@ -155,6 +156,7 @@ class SocialAuthController extends Controller
                 $user->update([
                     'spotify_token' => $socialUser->token,
                     'spotify_refresh_token' => $socialUser->refreshToken,
+                    'spotify_product' => $socialUser->user['product'] ?? null,
                 ]);
             }
             return $user;
@@ -175,6 +177,7 @@ class SocialAuthController extends Controller
                 $user->update([
                     'spotify_token' => $socialUser->token,
                     'spotify_refresh_token' => $socialUser->refreshToken,
+                    'spotify_product' => $socialUser->user['product'] ?? null,
                 ]);
             }
 
@@ -185,7 +188,7 @@ class SocialAuthController extends Controller
         $newUser = User::create([
             'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? 'User',
             'email' => $socialUser->getEmail(),
-            'password' => bcrypt(Str::random(24)), // Generate a random secure password for social auth users
+            'password' => null, // Allow users to set this later
             'email_verified_at' => now(), // Assume verified by provider
             $provider . '_id' => $socialUser->getId(),
             'avatar' => $socialUser->getAvatar(),
@@ -195,6 +198,7 @@ class SocialAuthController extends Controller
             $newUser->update([
                 'spotify_token' => $socialUser->token,
                 'spotify_refresh_token' => $socialUser->refreshToken,
+                'spotify_product' => $socialUser->user['product'] ?? null,
             ]);
         }
 
@@ -223,6 +227,7 @@ class SocialAuthController extends Controller
         if ($provider === 'spotify') {
             $updateData['spotify_token'] = null;
             $updateData['spotify_refresh_token'] = null;
+            $updateData['spotify_product'] = null;
         }
 
         $user->update($updateData);

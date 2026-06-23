@@ -170,8 +170,14 @@ class SpotifyService
                 'genres' => !empty($genres) ? json_encode($genres) : null,
                 'release_date' => $releaseDate,
                 'spotify_url' => $track['external_urls']['spotify'] ?? '#',
+                'preview_url' => $track['preview_url'] ?? null,
             ]
         );
+
+        // Update preview_url if it was missing on an existing song but we now have it
+        if ($song->preview_url === null && !empty($track['preview_url'])) {
+            $song->update(['preview_url' => $track['preview_url']]);
+        }
 
         return ['song' => $song, 'album_art_url' => $track['album']['images'][0]['url'] ?? null];
     }
@@ -295,7 +301,7 @@ class SpotifyService
             // Clean and Sanitize (instantiate early so we can use it for extraction if needed)
             $cleaner = new GenreCleanerService();
             
-            // 4. INTERNAL HEURISTIC FALLBACK (iTunes/Apple Music API)
+            // 4. INTERNAL HEURISTIC FALLBACK
             // Highly structured secondary source before resorting to user-generated tags
             // Run this if we have less than 3 genres to supplement our highly-accurate primary tags
             if (count(array_unique($allGenres)) < 3) {

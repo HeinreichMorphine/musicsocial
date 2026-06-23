@@ -43,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'spotify_id',
         'spotify_token',
         'spotify_refresh_token',
+        'spotify_product',
         'google_id',
         'avatar',
         'email_verified_at',
@@ -228,5 +229,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new \App\Notifications\VerifyEmailCustom);
+    }
+
+    /**
+     * Check if the user has an active Spotify Premium subscription.
+     */
+    public function isSpotifyPremium(): bool
+    {
+        return $this->spotify_product === 'premium';
     }
 }

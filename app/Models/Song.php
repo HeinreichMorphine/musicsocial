@@ -33,6 +33,7 @@ class Song extends Model
         'youtube_video_id',
         'spotify_url',
         'youtube_url',
+        'preview_url',
         'genres',
         'release_date',
     ];

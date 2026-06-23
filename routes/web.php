@@ -149,6 +149,9 @@ Route::middleware(['auth', App\Http\Middleware\CheckOnboarding::class])->group(f
     // Spotify search routes
     Route::get('/spotify/recently-played', [SpotifySearchController::class, 'recentlyPlayed'])->name('spotify.recently-played');
 
+    // Spotify Player Token
+    Route::get('/spotify/token', [\App\Http\Controllers\SpotifyPlayerController::class, 'token'])->name('spotify.token');
+
     // Spotify Playlist Actions
     Route::get('/spotify/playlists', [App\Http\Controllers\SpotifyPlaylistController::class, 'index'])->name('spotify.playlists.index');
     Route::post('/spotify/playlists/add', [App\Http\Controllers\SpotifyPlaylistController::class, 'addTrack'])->name('spotify.playlists.add');

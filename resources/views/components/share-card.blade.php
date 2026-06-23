@@ -7,6 +7,7 @@
             commentsOpen: false, 
             editing: false, 
             playerOpen: false,
+            isPlayingPreview: false,
             editCaption: @js($share->caption),
             originalCaption: @js($share->caption),
             liked: {{ auth()->check() && auth()->user()->likes->contains($share) ? 'true' : 'false' }},
@@ -263,17 +264,27 @@
                             
                             <div class="flex items-center space-x-3 mt-2 md:mt-3">
                                 {{-- Inline player toggle button instead of external link --}}
+                                @php
+                                    $isLinked = auth()->check() && auth()->user()->spotify_token;
+                                    $isPremium = auth()->check() && auth()->user()->isSpotifyPremium();
+                                @endphp
                                 <button type="button"
                                     x-on:click.stop.prevent="
-                                        playerOpen = !playerOpen;
-                                        const frame = $el.closest('[x-data]').querySelector('.share-spotify-frame');
-                                        if (frame) {
-                                            frame.src = playerOpen
-                                                ? 'https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0'
-                                                : '';
-                                        }
+                                        @if($isPremium)
+                                            if(window.playSpotifyTrack) {
+                                                window.playSpotifyTrack('spotify:track:{{ $share->song->spotify_track_id }}');
+                                            } else {
+                                                console.error('Spotify Web Player not ready');
+                                            }
+                                        @else
+                                            playerOpen = !playerOpen;
+                                            if(!playerOpen) {
+                                                const audio = $el.closest('[x-data]').querySelector('audio');
+                                                if(audio) audio.pause();
+                                            }
+                                        @endif
                                     "
-                                    title="Play inline preview"
+                                    title="Play track"
                                     class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
                                     {{-- Spotify logo --}}
                                     <svg class="w-8 h-8 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -347,6 +358,8 @@
                 </div>
 
                 {{-- Inline Spotify Embed Player — expands below song card on the Feed --}}
+                @if(!$isPremium)
+                {{-- Local 30s Preview Player --}}
                 <div x-show="playerOpen"
                      x-on:click.stop
                      x-transition:enter="transition ease-out duration-300"
@@ -355,17 +368,43 @@
                      x-transition:leave="transition ease-in duration-200"
                      x-transition:leave-start="opacity-100 translate-y-0"
                      x-transition:leave-end="opacity-0 -translate-y-2"
-                     class="mt-3"
+                     class="mt-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-[16px] p-4 flex flex-col gap-3 relative overflow-hidden"
                      style="display:none;">
-                    <iframe class="share-spotify-frame"
-                        src=""
-                        width="100%" height="152"
-                        frameborder="0"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                        style="border-radius:16px; display:block;">
-                    </iframe>
+                    
+                    @if($share->song->preview_url)
+                        <div class="flex flex-col gap-3 z-10">
+                            <div class="flex items-center gap-3">
+                                <button @click="const a = $refs.audio; if(a.paused){a.play(); isPlayingPreview=true;}else{a.pause(); isPlayingPreview=false;}" class="w-10 h-10 shrink-0 rounded-full bg-[#1DB954] flex items-center justify-center text-black hover:scale-105 transition-transform">
+                                    <svg x-show="!isPlayingPreview" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 ml-1"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" /></svg>
+                                    <svg x-show="isPlayingPreview" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <div class="flex-1">
+                                    <div class="text-sm text-white font-medium">30s Preview</div>
+                                    <div class="text-xs text-gray-400">Full playback requires a Premium subscription.</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2 flex gap-2">
+                                @if(!$isLinked)
+                                    <a href="{{ route('social.redirect', 'spotify') }}" class="inline-block bg-white text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</a>
+                                @else
+                                    <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
+                                @endif
+                            </div>
+                        </div>
+                        <audio x-ref="audio" src="{{ $share->song->preview_url }}" @play="isPlayingPreview = true" @pause="isPlayingPreview = false" @ended="isPlayingPreview = false"></audio>
+                    @else
+                        <div class="text-sm text-gray-400 p-2 text-center">No preview available for this track.</div>
+                        <div class="mt-2 text-center">
+                            @if(!$isLinked)
+                                <a href="{{ route('social.redirect', 'spotify') }}" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</a>
+                            @else
+                                <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
+                @endif
 
                 <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
                     
