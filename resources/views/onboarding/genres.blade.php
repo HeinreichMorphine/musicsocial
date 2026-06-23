@@ -37,7 +37,7 @@
 <body class="bg-slate-50 text-slate-900 antialiased">
 
     {{-- Single top strip --}}
-    <div class="sticky top-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-b border-indigo-100 py-2 px-4 text-center text-xs font-medium text-indigo-600 tracking-wide">
+    <div class="sticky top-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-b border-indigo-100 py-2.5 px-4 text-center text-xs sm:text-sm font-semibold text-indigo-600 tracking-wide">
         Builds your taste profile for better recommendations & matches.
     </div>
 
@@ -51,7 +51,7 @@
                 <h1 class="text-[2.25rem] sm:text-[2.5rem] leading-tight font-black text-slate-900 tracking-tight">
                     Let's build your <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">taste profile</span>
                 </h1>
-                <p class="mt-3 text-[14px] text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">
+                <p class="mt-3 text-[15px] sm:text-base text-slate-600 font-medium leading-relaxed max-w-sm mx-auto">
                     Search for a few songs you love.
                 </p>
             </div>
@@ -84,18 +84,18 @@
                 </div>
 
                 {{-- Two-Tier Assistive Genre tags --}}
-                <div class="text-center space-y-2.5 pt-2">
-                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
+                <div class="text-center space-y-3 pt-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block">Or tap a vibe to get started</span>
                     <div class="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
                         <!-- Broad genres -->
                         <template x-for="genre in broadGenres" :key="genre">
                             <button type="button"
                                     @click="selectTag(genre)"
-                                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm border focus:outline-none flex items-center gap-1.5 active:scale-95"
+                                    class="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
                                         : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
-                                <span class="w-1.5 h-1.5 rounded-full" 
+                                <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
                                       :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
                                 <span x-text="genre"></span>
                             </button>
@@ -109,11 +109,11 @@
                                     x-transition:enter-start="opacity-0 scale-95"
                                     x-transition:enter-end="opacity-100 scale-100"
                                     @click="selectTag(genre)"
-                                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm border focus:outline-none flex items-center gap-1.5 active:scale-95"
+                                    class="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm border focus:outline-none inline-flex items-center justify-center gap-2 active:scale-95"
                                     :class="activeTag === genre 
                                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-600 text-white shadow-indigo-100 scale-105' 
                                         : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800'">
-                                <span class="w-1.5 h-1.5 rounded-full" 
+                                <span class="w-1.5 h-1.5 rounded-full block shrink-0" 
                                       :class="activeTag === genre ? 'bg-indigo-200' : 'bg-indigo-400'"></span>
                                 <span x-text="genre"></span>
                             </button>
@@ -122,9 +122,9 @@
                         <!-- Expander Button -->
                         <button type="button"
                                 @click="showAllGenres = !showAllGenres"
-                                class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 shadow-sm border border-indigo-100 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-50 focus:outline-none flex items-center gap-1">
+                                class="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 shadow-sm border border-indigo-100 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-50 focus:outline-none inline-flex items-center justify-center gap-1.5">
                             <span x-text="showAllGenres ? 'Less genres' : 'More genres'"></span>
-                            <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="showAllGenres && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -150,10 +150,10 @@
                                 class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 border-b border-slate-50 last:border-0 active:scale-[0.98] transition-all duration-75 group"
                                 :class="isSelected(track.id) && 'bg-indigo-50/60'">
                                 <img :src="track.album?.images[0]?.url || '/images/default-album.png'"
-                                     class="w-9 h-9 rounded-lg object-cover flex-shrink-0 shadow-sm">
+                                     class="w-10 h-10 rounded-lg object-cover flex-shrink-0 shadow-sm">
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-semibold text-slate-800 truncate" x-text="track.name"></div>
-                                    <div class="text-xs text-slate-400 truncate" x-text="getArtistName(track)"></div>
+                                    <div class="text-base font-semibold text-slate-800 truncate" x-text="track.name"></div>
+                                    <div class="text-sm text-slate-500 truncate" x-text="getArtistName(track)"></div>
                                 </div>
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
                                      :class="isSelected(track.id) ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-slate-200 group-hover:border-indigo-300 group-hover:scale-105'">
@@ -172,8 +172,8 @@
 
                 {{-- ── SECTION 1: Suggestions ── --}}
                 <div class="px-6 pt-5 pb-1">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-widest"
                            x-text="activeTag ? 'Trending in ' + activeTag + ' — tap to add' : 'Trending this week — tap to add'">
                         </p>
                         <!-- Loading spinner for genre fetch -->
@@ -196,8 +196,8 @@
                                      :alt="track.name"
                                      class="w-10 h-10 rounded-xl object-cover flex-shrink-0 shadow-sm">
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-[15px] font-semibold text-slate-800 truncate" x-text="track.name"></div>
-                                    <div class="text-[12px] font-normal text-slate-400 truncate mt-0.5" x-text="getArtistName(track)"></div>
+                                    <div class="text-base font-semibold text-slate-800 truncate" x-text="track.name"></div>
+                                    <div class="text-sm font-normal text-slate-500 truncate mt-0.5" x-text="getArtistName(track)"></div>
                                 </div>
                                 <div class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200"
                                      :class="isSelected(track.id)
@@ -233,22 +233,22 @@
                 {{-- ── SECTION 2: Shelf ── --}}
                 <div class="px-6 pb-6">
                     <div class="flex items-center mb-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest"
+                        <span class="text-sm font-bold text-slate-600 uppercase tracking-widest"
                               x-text="selectedTracks.length >= 5 ? 'Taste Profile: Ready' : 'Taste Profile: Building'">
                         </span>
                         <span class="mx-1.5 text-slate-300 text-xs leading-none">·</span>
                         {{-- Counter dynamically scales limit visual --}}
-                        <span class="text-xs font-bold uppercase tracking-widest transition-colors duration-300"
-                              :class="selectedTracks.length >= 5 ? 'text-emerald-500' : 'text-slate-500'"
+                        <span class="text-sm font-bold uppercase tracking-widest transition-colors duration-300"
+                              :class="selectedTracks.length >= 5 ? 'text-emerald-600' : 'text-slate-500'"
                               x-text="selectedTracks.length >= 5 ? selectedTracks.length + '/10' : selectedTracks.length + '/5'">
                         </span>
                         <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length < 5">·</span>
-                        <span class="text-xs text-slate-400 transition-all duration-300"
+                        <span class="text-sm text-slate-500 transition-all duration-300"
                               x-show="selectedTracks.length < 5"
                               x-text="'pick ' + (5 - selectedTracks.length) + ' more to unlock'">
                         </span>
                         <span class="mx-1.5 text-slate-200 text-xs leading-none" x-show="selectedTracks.length >= 5">·</span>
-                        <span class="text-xs text-emerald-500 font-semibold"
+                        <span class="text-sm text-emerald-600 font-bold"
                               x-show="selectedTracks.length >= 5">
                             ready to continue
                         </span>
@@ -303,8 +303,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div style="flex: 1 1 0%; min-width: 0;">
-                            <p class="font-bold text-indigo-800" style="margin: 0 0 2px 0; font-size: 12px;">Quick Tip</p>
-                            <p class="text-indigo-600/90" style="margin: 0; font-size: 11px; line-height: 1.4;">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
+                            <p class="font-bold text-indigo-800" style="margin: 0 0 2px 0; font-size: 14px;">Quick Tip</p>
+                            <p class="text-indigo-600/90" style="margin: 0; font-size: 13px; line-height: 1.4;">Your picks will appear here. Tap any trending track, search, or click on a vibe above to find your favorites!</p>
                         </div>
                         <button @click="dismissShelfTip()"
                                 type="button"
@@ -322,8 +322,8 @@
                          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
                          class="bg-indigo-50/40 border border-indigo-100/50 rounded-xl p-4 mt-5">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-widest">Live Taste Profile</span>
-                            <span class="text-[10px] font-bold text-slate-400" x-text="selectedTracks.length + ' / 10 Songs Chosen'"></span>
+                            <span class="text-xs font-bold text-indigo-700 uppercase tracking-widest">Live Taste Profile</span>
+                            <span class="text-xs font-bold text-slate-400" x-text="selectedTracks.length + ' / 10 Songs Chosen'"></span>
                         </div>
                         <!-- Stacked percentage bar -->
                         <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex mb-3">
@@ -343,7 +343,7 @@
                         <div class="flex flex-wrap gap-2">
                             <template x-for="(genre, idx) in tasteProfile" :key="genre.name">
                                 <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white shadow-sm border border-slate-100">
-                                    <span class="w-1.5 h-1.5 rounded-full"
+                                    <span class="w-1.5 h-1.5 rounded-full block shrink-0"
                                           :class="[
                                               idx === 0 ? 'bg-indigo-600' : 
                                               (idx === 1 ? 'bg-violet-500' : 
@@ -364,7 +364,7 @@
                 <button @click="submitShelf"
                         :disabled="selectedTracks.length < 5 || isSubmitting"
                         type="button"
-                        class="relative w-full py-5 rounded-2xl font-bold text-base tracking-wide overflow-hidden transition-all duration-500 shadow-sm border"
+                        class="relative w-full py-5 rounded-2xl font-bold text-base sm:text-lg tracking-wide overflow-hidden transition-all duration-500 shadow-sm border"
                         :class="selectedTracks.length >= 5
                             ? 'shadow-lg shadow-indigo-300/40 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer bg-slate-200 border-transparent animate-pulse-glow'
                             : (selectedTracks.length > 0
@@ -403,7 +403,7 @@
                 </button>
 
                 {{-- Actionable guidance helper text directly below --}}
-                <p class="mt-3 text-center text-xs transition-colors duration-300"
+                <p class="mt-3 text-center text-sm transition-colors duration-300"
                    :class="selectedTracks.length >= 5 ? 'text-emerald-600 font-semibold' : 'text-slate-400'"
                    x-text="selectedTracks.length >= 5 
                        ? 'Ready to unlock your personalized feed!' 
