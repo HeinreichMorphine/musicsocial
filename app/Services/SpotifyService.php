@@ -290,6 +290,32 @@ class SpotifyService
             // Clean and Sanitize (instantiate early so we can use it for extraction if needed)
             $cleaner = new GenreCleanerService();
             
+            // 4. INTERNAL HEURISTIC FALLBACK (iTunes/Apple Music API)
+            // Highly structured secondary source before resorting to user-generated tags
+            if (count(array_unique($allGenres)) === 0) {
+                try {
+                    $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
+                    $heuristicResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])->timeout(10)->get($endpoint, [
+                        'term' => $artistName . ' ' . $trackName,
+                        'entity' => 'song',
+                        'limit' => 1
+                    ]);
+
+                    if ($heuristicResponse->successful() && !empty($heuristicResponse->json('results'))) {
+                        $metaData = $heuristicResponse->json('results')[0];
+                        if (!empty($metaData['primaryGenreName'])) {
+                            $extractedTag = $cleaner->clean([$metaData['primaryGenreName']]);
+                            if (!empty($extractedTag)) {
+                                $debugSources['heuristic_meta_fallback'] = $extractedTag;
+                                $allGenres = array_merge($allGenres, $extractedTag);
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: Heuristic Fallback Error: ' . $e->getMessage());
+                }
+            }
+            
             // 5. YOUTUBE FALLBACK: Underground/regional tags
             if (count(array_unique($allGenres)) === 0) {
                 try {
@@ -348,32 +374,7 @@ class SpotifyService
             // Limit to top 5 AFTER cleaning to ensure they are high quality
             $finalGenres = array_slice($uniqueGenres, 0, 5);
 
-            // 7. INTERNAL HEURISTIC FALLBACK:
-            // Cross-reference with internal meta-tagging dictionary heuristics
-            if (empty($finalGenres)) {
-                try {
-                    $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
-                    $heuristicResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])->timeout(10)->get($endpoint, [
-                        'term' => $artistName . ' ' . $trackName,
-                        'entity' => 'song',
-                        'limit' => 1
-                    ]);
 
-                    if ($heuristicResponse->successful() && !empty($heuristicResponse->json('results'))) {
-                        $metaData = $heuristicResponse->json('results')[0];
-                        if (!empty($metaData['primaryGenreName'])) {
-                            // Extract primary classifier tag
-                            $extractedTag = $cleaner->clean([$metaData['primaryGenreName']]);
-                            if (!empty($extractedTag)) {
-                                $finalGenres = $extractedTag;
-                                $debugSources['heuristic_meta_fallback'] = $finalGenres;
-                            }
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::error('SpotifyService: Heuristic Fallback Error: ' . $e->getMessage());
-                }
-            }
 
             // 8. LAST-RESORT FALLBACK: Inherit from artist's other songs in our DB
             if (empty($finalGenres)) {
