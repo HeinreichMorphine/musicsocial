@@ -226,7 +226,7 @@
                     </div>
                     <h3 class="text-xl font-bold mb-3">Find Taste Neighbors</h3>
                     <p class="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
-                        Our custom recommendation engine uses TF-IDF vectorization to analyze your Spotify history, finding peers who share your exact musical niche.
+                        Our custom recommendation engine uses TF-IDF vectorization to analyze your in-house posting and interaction history, finding peers who share your exact musical niche.
                     </p>
                 </div>
 
