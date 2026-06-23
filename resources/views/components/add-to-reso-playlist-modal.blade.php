@@ -68,7 +68,7 @@
              x-show="open"
              x-transition:enter="ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
              x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
-             class="relative w-full sm:max-w-md bg-white dark:bg-[#141414] rounded-3xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden">
+             class="relative w-full sm:max-w-xl bg-white dark:bg-[#141414] rounded-3xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden">
 
             {{-- Header --}}
             <div class="flex items-center space-x-3 px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/10">
