@@ -329,23 +329,6 @@
             </div>
         </div>
 
-        {{-- "Added" micro-toast --}}
-        <div x-show="nicePickMsg"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-end="opacity-0 translate-y-2"
-             class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
-             style="display:none;">
-            <div class="bg-slate-900 text-white px-5 py-2.5 rounded-2xl shadow-xl text-xs font-medium flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                </svg>
-                <span x-text="nicePickMsg"></span>
-            </div>
-        </div>
-
     </div>
 
     <script>
@@ -374,8 +357,6 @@
                 isSearching:    false,
                 isSubmitting:   false,
                 errorMessage:   '',
-                nicePickMsg:    '',
-                _pickTimer:     null,
 
                 // Rotating search placeholder
                 placeholders: [
@@ -400,12 +381,6 @@
                     setTimeout(() => { this.errorMessage = ''; }, 4000);
                 },
 
-                showNicePick(track) {
-                    const genre = guessGenre(track);
-                    this.nicePickMsg = genre ? `Added — you're into ${genre}` : `Added to your shelf`;
-                    clearTimeout(this._pickTimer);
-                    this._pickTimer = setTimeout(() => { this.nicePickMsg = ''; }, 1800);
-                },
 
                 init() {
                     // Rotate placeholder every 3.5s when user isn't typing
@@ -445,7 +420,6 @@
                     } else {
                         if (this.selectedTracks.length < 10) {
                             this.selectedTracks.push(track);
-                            this.showNicePick(track);
                         } else {
                             this.showError('Maximum 10 tracks — remove one to swap.');
                         }
