@@ -86,7 +86,7 @@
                 {{-- Two-Tier Assistive Genre tags --}}
                 <div class="text-center space-y-3 pt-2">
                     <span class="text-[13px] font-bold text-slate-400 uppercase tracking-widest block">Or tap a vibe to get started</span>
-                    <div class="flex flex-wrap gap-2 justify-center max-w-md mx-auto items-center">
+                    <div class="flex flex-wrap gap-2 justify-center w-full max-w-md mx-auto items-center">
                         <!-- Broad genres -->
                         <template x-for="genre in broadGenres" :key="genre">
                             <button type="button"
