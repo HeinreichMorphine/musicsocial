@@ -405,6 +405,21 @@
                     @endif
                 </div>
                 @endif
+                @if($isPremium)
+                {{-- Spotify Premium Full Iframe Embed --}}
+                <div x-show="playerOpen"
+                     x-on:click.stop
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-2"
+                     class="mt-3 relative overflow-hidden rounded-[16px]"
+                     style="display:none; height: 152px;">
+                    <iframe src="https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" class="rounded-[16px]"></iframe>
+                </div>
+                @endif
 
                 <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
                     

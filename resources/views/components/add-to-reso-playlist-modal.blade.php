@@ -111,19 +111,19 @@
                             <button @click="addToPlaylist(pl.id)"
                                     class="flex items-center w-full px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/8 transition group text-left space-x-3">
                                 {{-- Thumbnail --}}
-                                <div class="w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                <div class="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     <template x-if="pl.cover_image_url">
                                         <img :src="pl.cover_image_url" class="w-full h-full object-cover" onerror="this.src='{{ asset('icons/reso.png') }}'; this.onerror=null;">
                                     </template>
                                     <template x-if="!pl.cover_image_url">
-                                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z"/>
                                         </svg>
                                     </template>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate" x-text="pl.name"></p>
-                                    <p class="text-xs text-gray-400" x-text="(pl.songs_count ?? 0) + ' songs'"></p>
+                                    <p class="text-base font-semibold text-gray-800 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate" x-text="pl.name"></p>
+                                    <p class="text-sm text-gray-400" x-text="(pl.songs_count ?? 0) + ' songs'"></p>
                                 </div>
                                 <template x-if="adding === pl.id">
                                     <svg class="w-4 h-4 text-indigo-500 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
