@@ -32,10 +32,10 @@
             <div class="absolute top-0 inset-x-0 h-[220px] bg-gradient-to-b from-custom-periwinkle/10 to-transparent pointer-events-none z-0"></div>
 
             <div class="flex flex-col items-center w-full max-w-md relative z-10">
-                {{-- Logo circle --}}
-                <div class="mb-4 transform hover:scale-[1.03] transition-all duration-300">
-                    <a href="/" class="flex items-center justify-center w-24 h-24 rounded-full bg-custom-periwinkle/20 border border-custom-periwinkle/30 shadow-sm hover:bg-custom-periwinkle/30 transition-colors">
-                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-16 h-16 object-contain drop-shadow-sm">
+                {{-- Logo --}}
+                <div class="mb-5 transform hover:scale-[1.03] transition-all duration-300">
+                    <a href="/" class="flex items-center justify-center">
+                        <img src="{{ asset('icons/reso.png') }}" alt="Reso Logo" class="w-24 h-24 object-contain drop-shadow-sm">
                     </a>
                 </div>
 
