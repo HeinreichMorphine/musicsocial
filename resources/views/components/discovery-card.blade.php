@@ -48,10 +48,16 @@
             ->get();
     }
     
-    // Match Score derived from ID to be consistent across page loads
-    srand($song->id);
-    $matchScore = rand(88, 99);
-    srand();
+    // Compute real match percentage from score if available
+    if (isset($song->score) && $song->score !== null) {
+        // Map scores (typically 0.05 to ~6.0+) using an elegant exponential formula to fit 60% to 99% range
+        $matchScore = (int) round(60 + 39 * (1 - exp(-0.55 * $song->score)));
+    } else {
+        // Fallback seeded match score if score is missing
+        srand($song->id);
+        $matchScore = rand(88, 99);
+        srand();
+    }
 @endphp
 <div x-data="{ 
     listened: false,

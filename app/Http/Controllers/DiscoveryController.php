@@ -93,6 +93,7 @@ class DiscoveryController extends Controller
 
                 $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
                     $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                    $song->score = $recommendationData[$song->id]['score'] ?? null;
                     $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
                     return $song;
                 });
