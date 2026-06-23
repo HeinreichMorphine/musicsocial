@@ -290,7 +290,28 @@ class SpotifyService
             // Clean and Sanitize (instantiate early so we can use it for extraction if needed)
             $cleaner = new GenreCleanerService();
             
-            // 5. CONTEXTUAL FALLBACK: Scan Spotify Playlist Descriptions for the Artist
+            // 5. YOUTUBE FALLBACK: Underground/regional tags
+            if (count(array_unique($allGenres)) === 0) {
+                try {
+                    $youtube = new \App\Services\YouTubeService();
+                    $video = $youtube->searchVideo($artistName . ' ' . $trackName);
+                    if ($video && isset($video['video_id'])) {
+                        $videoDetails = $youtube->getVideo($video['video_id']);
+                        if (!empty($videoDetails['tags'])) {
+                            // Clean strictly to prevent garbage
+                            $ytTags = $cleaner->clean($videoDetails['tags'], true);
+                            if (!empty($ytTags)) {
+                                $debugSources['youtube_tags'] = $ytTags;
+                                $allGenres = array_merge($allGenres, $ytTags);
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('SpotifyService: YouTube Tags Fallback Error: ' . $e->getMessage());
+                }
+            }
+            
+            // 6. CONTEXTUAL FALLBACK: Scan Spotify Playlist Descriptions for the Artist
             if (count(array_unique($allGenres)) === 0) {
                 try {
                     // Search for "[Artist Name] Radio" using your existing searchPlaylists method
@@ -326,6 +347,21 @@ class SpotifyService
             
             // Limit to top 5 AFTER cleaning to ensure they are high quality
             $finalGenres = array_slice($uniqueGenres, 0, 5);
+
+            // 7. LAST-RESORT FALLBACK: Inherit from artist's other songs in our DB
+            if (empty($finalGenres)) {
+                $sibling = \App\Models\Song::where('artist_name', $artistName)
+                    ->whereNotNull('genres')
+                    ->where('genres', '!=', '[]')
+                    ->first();
+                if ($sibling) {
+                    $siblingGenres = json_decode($sibling->genres, true);
+                    if (is_array($siblingGenres) && !empty($siblingGenres)) {
+                        $finalGenres = $siblingGenres;
+                        $debugSources['inherited_from_sibling_track'] = $finalGenres;
+                    }
+                }
+            }
 
             return [
                 'genres' => $finalGenres,
