@@ -343,7 +343,17 @@ class AdminController extends Controller
     {
         $sort = request('sort', 'latest');
         
-        $query = \App\Models\Song::withCount('shares');
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $likeExpression = $driver === 'sqlite'
+            ? "'%[SONG:' || songs.spotify_track_id || ']%'"
+            : "concat('%[SONG:', songs.spotify_track_id, ']%')";
+
+        $query = \App\Models\Song::select('songs.*')
+            ->addSelect([
+                'comments_count' => \App\Models\Comment::selectRaw('count(*)')
+                    ->whereRaw("comments.body LIKE {$likeExpression}")
+            ])
+            ->withCount('shares');
         
         if ($sort === 'untagged') {
             $query->where(function ($q) {
@@ -355,7 +365,7 @@ class AdminController extends Controller
                   ->orWhere('genres', '{}');
             })->latest();
         } elseif ($sort === 'shares') {
-            $query->orderByDesc('shares_count')->latest();
+            $query->orderByRaw('(shares_count + comments_count) DESC')->latest();
         } elseif ($sort === 'oldest') {
             $query->oldest();
         } else {
