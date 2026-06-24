@@ -140,8 +140,8 @@
                 <input type="hidden" name="spotify_track_id" x-bind:value="selectedTrack ? selectedTrack.id : ''">
 
                 <div class="mt-4">
-                    <label for="caption" class="block font-medium text-sm text-gray-700">Caption</label>
-                    <textarea id="caption" name="caption" placeholder="Write a caption..." class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
+                    <label for="caption" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Caption</label>
+                    <textarea id="caption" name="caption" placeholder="Write a caption..." class="block w-full border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
                 </div>
 
                 <x-primary-button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 border-none" x-bind:disabled="!selectedTrack">

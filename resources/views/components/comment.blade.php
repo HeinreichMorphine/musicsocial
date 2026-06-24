@@ -235,7 +235,7 @@
                     @csrf
                     @method('PATCH')
                     {{-- Bind to bodyText --}}
-                    <textarea x-model="bodyText" name="body" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
+                    <textarea x-model="bodyText" name="body" class="block w-full border-gray-300 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"></textarea>
                     <div class="mt-2 space-x-2">
                         <x-primary-button type="submit" class="bg-custom-mid-blue">Save</x-primary-button>
                         <button type="button" @click="openEdit = false" class="text-gray-500">Cancel</button>
@@ -381,13 +381,13 @@
                             <div 
                                 x-show="showMentions" 
                                 x-transition
-                                class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-[#141414] border border-gray-300 dark:border-white/10 rounded-md shadow-lg max-h-48 overflow-y-auto"
                             >
                                 <template x-for="(user, index) in mentionSuggestions" :key="user.id">
                                     <div 
                                         @click="selectMention(user.name)"
-                                        :class="{ 'bg-blue-100': index === selectedIndex }"
-                                        class="px-4 py-2 cursor-pointer hover:bg-blue-50 flex items-center space-x-2"
+                                        :class="{ 'bg-blue-100 dark:bg-white/10': index === selectedIndex }"
+                                        class="px-4 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-white/5 flex items-center space-x-2 text-gray-900 dark:text-gray-200"
                                     >
                                     <div class="h-6 w-6 relative inline-block shrink-0" x-data="{ avatarError: false }">
                                         <img x-show="user.profile_picture && !avatarError"
@@ -400,8 +400,8 @@
                                             <span x-text="user.name.charAt(0).toUpperCase()"></span>
                                         </div>
                                     </div>
-                                        <span x-text="user.name" class="text-sm font-medium text-gray-800"></span>
-                                        <span x-show="user.is_parent_author" class="text-xs text-gray-500">(OP)</span>
+                                        <span x-text="user.name" class="text-sm font-medium"></span>
+                                        <span x-show="user.is_parent_author" class="text-xs text-gray-500 dark:text-gray-400">(OP)</span>
                                     </div>
                                 </template>
                             </div>

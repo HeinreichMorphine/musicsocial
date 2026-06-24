@@ -193,7 +193,7 @@ class PlaylistController extends Controller
             return response()->json(['error' => 'Song already in playlist'], 400);
         }
 
-        PlaylistSong::create([
+        $playlistSong = PlaylistSong::create([
             'playlist_id' => $playlist->id,
             'song_id' => $validated['spotify_track_id'],
             'added_by_user_id' => $user->id

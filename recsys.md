@@ -41,9 +41,9 @@ The system uses a **Hybrid** approach, splitting logic into two distinct paths:
 skinparam packageStyle rectangle
 
 package "1. Input & Decision" {
-  [User Data] -> [Has History?] : validates
-  [Has History?] --> [Active User Path] : Yes (>5)
-  [Has History?] --> [Cold Start Path] : No (<5)
+  [User Data] -> [Evaluate History] : effective_interactions\nmax(interactions, onboarding_shelf_songs)
+  [Evaluate History] --> [Active User Path] : HOT (≥ 10)
+  [Evaluate History] --> [Cold Start Path] : COLD (< 10)
 }
 
 package "2a. Active User (SVD Brain)" {
@@ -105,32 +105,32 @@ The final score is a result of fusing two distinct "brains":
     *   **How it works**: This part *does* look at metadata. *"You liked 'Taylor Swift' (Pop), so here is 'Ariana Grande' (Pop)."*
 
 ### B. The Formula
-This conceptual split acts as the input for our master equation:
+The final score is computed by scaling the Base Score (algorithmic preference) and the Social Trust score (peer engagement):
 
 **Total Score = ((Base Score) × 0.7) + (Social Trust × 0.3)**
 
-Depending on the user's history, the **"Base Score"** comes from a different brain:
+Depending on the user's history and onboarding status, the system evaluates **effective interactions** — calculated as `max(interactions, onboarding_shelf_songs)`. Since onboarding is mandatory and forces users to pick at least 5 songs, every user starts with at least 5 effective interactions. The **"Base Score"** then comes from one of two primary scenarios:
 
-### Scenario A: The Active User (Hybrid)
-*   **Condition**: User has >5 interactions.
-*   **Base Source**: `SVD Score + 0.4 (Context Boost)`
+### Scenario A: The Active User (Hybrid SVD)
+*   **Condition**: User has `≥ 10` effective interactions.
+*   **Base Source**: `SVD Score + 0.4 (Context Boost)` (where SVD predicts user ratings on a 1-5 scale, and +0.4 is added for explicit artist matches).
 *   **Example Calculation**:
     *   **SVD Prediction**: `4.5`
     *   **Context Boost**: `+0.4` (Explicit Artist Match)
     *   **Adjusted Base**: `4.9`
     *   **Final Score**: `(4.9 × 0.7) + (Social Trust × 0.3)`
 
-### Scenario B: The Cold Start (Content-Based)
-*   **Condition**: User has <5 interactions (e.g., a new user who just liked their first song).
-*   **Base Source**: `TF-IDF Cosine Similarity`
+### Scenario B: The Onboarding / Cold Start (Content-Based)
+*   **Condition**: User has `< 10` effective interactions (typically `5 to 9` interactions, including new users who just completed onboarding with exactly 5 shelf songs).
+*   **Base Source**: `TF-IDF Cosine Similarity` (compares candidate songs to the user's taste profile vectors; yields scores from 0.0 to 1.0).
 *   **Example Calculation**:
-    *   **User History**: Liked a song by *Metallica* (Tags: "Thrash Metal", "Heavy Metal").
+    *   **User History**: Liked/shelved a song by *Metallica* (Tags: "Thrash Metal", "Heavy Metal").
     *   **Candidate Song**: A song by *Megadeth* (Tags: "Thrash Metal", "Speed Metal").
-    *   **TF-IDF Similarity**: **0.85** (High score because unique keywords like "Thrash Metal" overlap significantly).
+    *   **TF-IDF Similarity**: **0.85** (High score because unique keywords overlap significantly).
     *   **Context Boost**: **0.0** (Implicit in the similarity score).
     *   **Final Score**: `(0.85 × 0.7) + (Social Trust × 0.3)`
 
-> **Key Difference**: Active users get an *explicit* math boost (+0.4) to override pure collaborative filtering. New users get an *implicit* boost because text matching naturally yields high scores for artist matches.
+> **Key Difference**: Active users (≥ 10 interactions) get an *explicit* math boost (+0.4) on top of collaborative filtering SVD predictions to prioritize favorite artists. Onboarding and cold-start users (< 10 interactions) get an *implicit* boost because TF-IDF text matching naturally yields high similarity scores for direct genre/artist keyword overlaps. (Note: A global popularity fallback exists in the code as a database safety net for `< 5` interactions, but is unreachable under normal operation due to forced onboarding).
 
 ---
 

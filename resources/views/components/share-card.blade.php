@@ -223,7 +223,7 @@
 
                 <!-- Edit Mode -->
                 <div x-show="editing" class="mt-2" style="display: none;" x-on:click.stop>
-                    <textarea x-model="editCaption" class="w-full rounded-xl border-gray-200 focus:border-custom-mid-blue focus:ring focus:ring-custom-mid-blue/20 transition-shadow" rows="2"></textarea>
+                    <textarea x-model="editCaption" class="w-full rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-black text-gray-900 dark:text-white focus:border-custom-mid-blue focus:ring focus:ring-custom-mid-blue/20 transition-shadow" rows="2"></textarea>
                     <div class="flex justify-end space-x-2 mt-2">
                         <button @click="editing = false; editCaption = originalCaption" class="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
                         <button @click="
