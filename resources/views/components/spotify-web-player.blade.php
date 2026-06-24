@@ -1,5 +1,6 @@
-@if(auth()->check() && auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
-<div x-data="spotifyWebPlayer()" 
+@if(auth()->check() && auth()->user()->spotify_token)
+@php $isPremiumUser = auth()->user()->isSpotifyPremium(); @endphp
+<div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
      x-show="playerVisible"
      class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
      style="display:none;"
@@ -22,14 +23,23 @@
             </button>
 
             <!-- Full close -->
-            <button @click="playerVisible = false; player?.pause()" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-colors" title="Close player">
+            <button @click="closePlayer()" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-colors" title="Close player">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
             </button>
         </div>
 
         <!-- Collapsible body: timeline + controls -->
         <div x-show="!collapsed" x-transition>
-            <!-- White progress timeline -->
+
+            <!-- Preview banner for free users -->
+            <template x-if="!isPremium">
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                    <span x-text="noPreview ? 'No preview available (Spotify licensing)' : 'Playing 30s preview (Free Account)'"></span>
+                    <a href="https://spotify.com/premium" target="_blank" class="underline font-bold hover:opacity-80 shrink-0 ml-2">Upgrade</a>
+                </div>
+            </template>
+
+            <!-- Progress timeline -->
             <div class="mt-3">
                 <div class="relative h-1.5 bg-slate-200 dark:bg-white/20 rounded-full cursor-pointer group"
                      @click="seekTo($event)">
@@ -44,12 +54,15 @@
                 </div>
             </div>
 
+            <!-- Hidden HTML5 audio for free users -->
+            <audio x-ref="nativePlayer" @timeupdate="onNativeTimeUpdate()" @ended="onNativeEnded()" style="display:none;"></audio>
+
             <!-- Controls: back 10s, play/pause, forward 10s -->
             <div class="flex items-center justify-center gap-6 mt-3">
                 <button @click="seekRelative(-10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
                 </button>
-                <button @click="togglePlay" class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center">
+                <button @click="togglePlay()" class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center" :class="noPreview && !isPremium ? 'opacity-40 cursor-not-allowed' : ''">
                     <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
                     <svg x-show="isPaused" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
                 </button>
@@ -63,10 +76,16 @@
 
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('spotifyWebPlayer', () => ({
+        Alpine.data('spotifyWebPlayer', (config) => ({
+            // Mode
+            isPremium: config.isPremium,
+
+            // SDK state (premium only)
             player: null,
             deviceId: null,
-            deviceReady: false,       // True only after SDK 'ready' + registration delay
+            deviceReady: false,
+
+            // Shared UI state
             isPlaying: false,
             isPaused: true,
             playerVisible: false,
@@ -74,15 +93,15 @@
             positionMs: 0,
             durationMs: 0,
             progressInterval: null,
+            noPreview: false,
 
-            // Preloaded metadata from database (shown instantly in UI)
+            // Preloaded metadata from DB
             trackName: null,
             artistName: null,
             albumArt: null,
 
             // Pending play request
             pendingTrackUri: null,
-            pendingMeta: null,
 
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
@@ -97,45 +116,49 @@
             },
 
             init() {
-                console.log('Spotify Player initializing...');
+                console.log('Spotify Player initializing... isPremium:', this.isPremium);
 
-                // Global function called by share-card, discovery-card, comment etc.
-                // Signature: toggleSpotifyPlayer(spotifyUri, meta?)
-                //   meta = { name, artist, art }  (optional, for instant UI)
+                // Global function: toggleSpotifyPlayer(uri, meta?)
+                // meta = { name, artist, art, previewUrl }
                 window.toggleSpotifyPlayer = (spotifyUri, meta) => {
                     this.playerVisible = true;
                     this.collapsed = false;
+                    this.noPreview = false;
 
-                    // Preload UI instantly from database metadata
+                    // Preload UI from DB metadata
                     if (meta) {
                         this.trackName = meta.name || null;
                         this.artistName = meta.artist || null;
                         this.albumArt = meta.art || null;
                     }
 
-                    this._doPlay(spotifyUri);
+                    this._doPlay(spotifyUri, meta);
                 };
 
-                window.onSpotifyWebPlaybackSDKReady = () => {
-                    this.connectPlayer();
-                };
+                // Only boot the Widevine SDK for premium users
+                if (this.isPremium) {
+                    window.onSpotifyWebPlaybackSDKReady = () => {
+                        this.connectPlayer();
+                    };
 
-                // Guard: If SDK is already loaded, connect immediately
-                if (typeof Spotify !== 'undefined' && typeof Spotify.Player !== 'undefined') {
-                    this.connectPlayer();
+                    if (typeof Spotify !== 'undefined' && typeof Spotify.Player !== 'undefined') {
+                        this.connectPlayer();
+                    }
                 }
             },
 
+            // =============================================
+            // PREMIUM: SDK Polling
+            // =============================================
             startPolling() {
                 this.stopPolling();
                 this.progressInterval = setInterval(() => {
-                    if (this.player && !this.isPaused) {
+                    if (this.isPremium && this.player && !this.isPaused) {
                         this.player.getCurrentState().then(state => {
                             if (state) {
                                 this.positionMs = state.position;
                                 this.durationMs = state.duration;
                                 this.isPaused = state.paused;
-                                // Update metadata from Spotify once playback starts
                                 const ct = state.track_window.current_track;
                                 if (ct) {
                                     this.trackName = ct.name;
@@ -155,6 +178,9 @@
                 }
             },
 
+            // =============================================
+            // PREMIUM: SDK Connection
+            // =============================================
             connectPlayer() {
                 if (this.player) return;
 
@@ -181,7 +207,6 @@
                     this.positionMs = state.position;
                     this.durationMs = state.duration;
 
-                    // Update metadata from actual Spotify state
                     const ct = state.track_window.current_track;
                     if (ct) {
                         this.trackName = ct.name;
@@ -198,20 +223,15 @@
                     this.deviceId = device_id;
                     this.player = player;
 
-                    // CRITICAL: The device_id is NOT immediately usable on Spotify's servers.
-                    // The SDK fires 'ready' before the device fully registers upstream.
-                    // We must wait ~2s before sending any API calls targeting this device.
-                    console.log('Waiting 2s for device to register with Spotify servers...');
+                    // Device needs time to register on Spotify servers
+                    console.log('Waiting 2s for device registration...');
                     setTimeout(() => {
-                        console.log('Device now considered fully registered:', device_id);
+                        console.log('Device registered:', device_id);
                         this.deviceReady = true;
 
-                        // Flush any pending track
                         if (this.pendingTrackUri) {
                             const uri = this.pendingTrackUri;
-                            const meta = this.pendingMeta;
                             this.pendingTrackUri = null;
-                            this.pendingMeta = null;
                             this._doPlay(uri);
                         }
                     }, 2000);
@@ -225,95 +245,184 @@
                 player.connect();
             },
 
-            async _doPlay(spotifyUri, retryCount = 0) {
-                console.log(`_doPlay: uri=${spotifyUri}, deviceId=${this.deviceId}, ready=${this.deviceReady}, retry=${retryCount}`);
+            // =============================================
+            // DUAL-MODE: Play
+            // =============================================
+            async _doPlay(spotifyUri, meta, retryCount = 0) {
+                console.log(`_doPlay: uri=${spotifyUri}, premium=${this.isPremium}, ready=${this.deviceReady}, retry=${retryCount}`);
 
-                // If player/device not ready yet, queue the track
-                if (!this.deviceId || !this.deviceReady) {
-                    console.log('Player not ready yet. Queuing track:', spotifyUri);
-                    this.pendingTrackUri = spotifyUri;
-                    this.connectPlayer();
-                    return;
-                }
-
-                try {
-                    const tokenRes = await fetch('/spotify/token');
-                    const tokenData = await tokenRes.json();
-                    if (!tokenData.token) throw new Error('No token returned');
-
-                    const headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenData.token}`
-                    };
-
-                    // Step 1: Transfer playback to wake up the device
-                    console.log('Transferring playback to device:', this.deviceId);
-                    const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
-                        method: 'PUT',
-                        body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
-                        headers
-                    });
-
-                    // If transfer returns 404, the device still isn't registered — retry with backoff
-                    if (!transferRes.ok && transferRes.status === 404) {
-                        if (retryCount < 4) {
-                            const delay = 1500 * (retryCount + 1); // 1.5s, 3s, 4.5s, 6s
-                            console.log(`Transfer 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/4)`);
-                            setTimeout(() => this._doPlay(spotifyUri, retryCount + 1), delay);
-                            return;
-                        }
-                        console.error('Transfer playback failed after all retries. Device may not be available.');
+                // ==========================================
+                // MODE A: PREMIUM USER (Widevine SDK)
+                // ==========================================
+                if (this.isPremium) {
+                    if (!this.deviceId || !this.deviceReady) {
+                        console.log('Player not ready yet. Queuing track:', spotifyUri);
+                        this.pendingTrackUri = spotifyUri;
+                        this.connectPlayer();
                         return;
                     }
 
-                    // Step 2: Small delay to let transfer settle
-                    await new Promise(r => setTimeout(r, 300));
+                    try {
+                        const tokenRes = await fetch('/spotify/token');
+                        const tokenData = await tokenRes.json();
+                        if (!tokenData.token) throw new Error('No token returned');
 
-                    // Step 3: Play the track
-                    const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ uris: [spotifyUri] }),
-                        headers,
-                    });
+                        const headers = {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${tokenData.token}`
+                        };
 
-                    if (!res.ok) {
-                        const errBody = await res.text();
-                        console.error('Spotify play request failed:', res.status, errBody);
+                        // Step 1: Transfer playback to wake up the device
+                        console.log('Transferring playback to device:', this.deviceId);
+                        const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
+                            method: 'PUT',
+                            body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
+                            headers
+                        });
 
-                        if (res.status === 404 && retryCount < 4) {
-                            const delay = 1500 * (retryCount + 1);
-                            console.log(`Play 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
-                            setTimeout(() => this._doPlay(spotifyUri, retryCount + 1), delay);
+                        if (!transferRes.ok && transferRes.status === 404) {
+                            if (retryCount < 4) {
+                                const delay = 1500 * (retryCount + 1);
+                                console.log(`Transfer 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
+                                setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
+                                return;
+                            }
+                            console.error('Transfer playback failed after all retries.');
+                            return;
                         }
-                    } else {
-                        console.log('Spotify play request succeeded.');
-                        this.isPaused = false;
-                        this.startPolling();
+
+                        // Step 2: Small settle delay
+                        await new Promise(r => setTimeout(r, 300));
+
+                        // Step 3: Play the track
+                        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ uris: [spotifyUri] }),
+                            headers,
+                        });
+
+                        if (!res.ok) {
+                            const errBody = await res.text();
+                            console.error('Spotify play failed:', res.status, errBody);
+
+                            if (res.status === 404 && retryCount < 4) {
+                                const delay = 1500 * (retryCount + 1);
+                                console.log(`Play 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
+                                setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
+                            }
+                        } else {
+                            console.log('Spotify play succeeded.');
+                            this.isPaused = false;
+                            this.startPolling();
+                        }
+                    } catch (err) {
+                        console.error('Failed to play track:', err);
                     }
-                } catch (err) {
-                    console.error('Failed to play track:', err);
+                    return;
+                }
+
+                // ==========================================
+                // MODE B: FREE USER (HTML5 <audio> preview)
+                // ==========================================
+                const previewUrl = meta?.previewUrl || null;
+
+                if (!previewUrl) {
+                    console.log('No preview_url available for this track.');
+                    this.noPreview = true;
+                    this.isPaused = true;
+                    this.positionMs = 0;
+                    this.durationMs = 0;
+                    return;
+                }
+
+                this.noPreview = false;
+                const audio = this.$refs.nativePlayer;
+                audio.src = previewUrl;
+                audio.load();
+
+                audio.play().then(() => {
+                    this.isPaused = false;
+                    this.durationMs = 30000; // Spotify previews are always 30s
+                }).catch(err => {
+                    console.error('Browser blocked autoplay:', err);
+                    this.isPaused = true;
+                });
+            },
+
+            // =============================================
+            // DUAL-MODE: Toggle Play/Pause
+            // =============================================
+            togglePlay() {
+                if (this.noPreview && !this.isPremium) return;
+
+                if (this.isPremium && this.player) {
+                    this.player.togglePlay();
+                } else if (!this.isPremium) {
+                    const audio = this.$refs.nativePlayer;
+                    if (!audio || !audio.src) return;
+                    if (audio.paused) {
+                        audio.play().then(() => { this.isPaused = false; }).catch(() => {});
+                    } else {
+                        audio.pause();
+                        this.isPaused = true;
+                    }
                 }
             },
 
-            togglePlay() {
-                if (this.player) this.player.togglePlay();
+            // =============================================
+            // FREE USER: Native audio event handlers
+            // =============================================
+            onNativeTimeUpdate() {
+                if (!this.isPremium && this.$refs.nativePlayer) {
+                    this.positionMs = this.$refs.nativePlayer.currentTime * 1000;
+                }
             },
 
+            onNativeEnded() {
+                this.isPaused = true;
+                this.positionMs = 0;
+            },
+
+            // =============================================
+            // SHARED: Seek
+            // =============================================
             seekRelative(deltaMs) {
-                const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
-                this.player?.seek(newPos).then(() => {
-                    this.positionMs = newPos;
-                });
+                if (this.isPremium && this.player) {
+                    const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
+                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
+                } else if (!this.isPremium && this.$refs.nativePlayer) {
+                    const audio = this.$refs.nativePlayer;
+                    const newTime = Math.max(0, Math.min(audio.duration || 30, audio.currentTime + (deltaMs / 1000)));
+                    audio.currentTime = newTime;
+                    this.positionMs = newTime * 1000;
+                }
             },
 
             seekTo(event) {
                 const bar = event.currentTarget;
                 const rect = bar.getBoundingClientRect();
                 const ratio = (event.clientX - rect.left) / rect.width;
-                const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
-                this.player?.seek(newPos).then(() => {
-                    this.positionMs = newPos;
-                });
+
+                if (this.isPremium && this.player) {
+                    const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
+                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
+                } else if (!this.isPremium && this.$refs.nativePlayer) {
+                    const audio = this.$refs.nativePlayer;
+                    const newTime = Math.max(0, Math.min(audio.duration || 30, ratio * (audio.duration || 30)));
+                    audio.currentTime = newTime;
+                    this.positionMs = newTime * 1000;
+                }
+            },
+
+            closePlayer() {
+                this.playerVisible = false;
+                if (this.isPremium && this.player) {
+                    this.player.pause();
+                } else if (this.$refs.nativePlayer) {
+                    this.$refs.nativePlayer.pause();
+                }
+                this.isPaused = true;
+                this.stopPolling();
             }
         }));
     });

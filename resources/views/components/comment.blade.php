@@ -84,11 +84,11 @@
                                         $isLinked = auth()->check() && auth()->user()->spotify_token;
                                         $isPremium = auth()->check() && auth()->user()->isSpotifyPremium();
                                     @endphp
-                                    @if($isPremium)
+                                    @if($isLinked)
                                         <button type="button"
                                             @click.prevent.stop="
                                                 if(window.toggleSpotifyPlayer) {
-                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url});
+                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url, previewUrl: songData.preview_url || ''});
                                                 }
                                             "
                                             title="Play on Spotify"

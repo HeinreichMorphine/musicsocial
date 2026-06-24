@@ -270,9 +270,9 @@
                                 @endphp
                                  <button type="button"
                                      x-on:click.stop.prevent="
-                                         @if($isPremium)
+                                         @if($isLinked)
                                              if(window.toggleSpotifyPlayer) {
-                                                 window.toggleSpotifyPlayer('spotify:track:{{ $share->song->spotify_track_id }}', {name: '{{ addslashes($share->song->track_name) }}', artist: '{{ addslashes($share->song->artist_name) }}', art: '{{ $share->song->album_art_url }}'});
+                                                 window.toggleSpotifyPlayer('spotify:track:{{ $share->song->spotify_track_id }}', {name: '{{ addslashes($share->song->track_name) }}', artist: '{{ addslashes($share->song->artist_name) }}', art: '{{ $share->song->album_art_url }}', previewUrl: '{{ $share->song->preview_url }}'});
                                              }
                                          @else
                                              playerOpen = !playerOpen;
@@ -556,11 +556,11 @@
                                                         
                                                         <div class="flex items-center space-x-3 mt-2">
                                                             {{-- Spotify Link --}}
-                                                            @if($isPremium)
+                                                            @if($isLinked)
                                                                 <button type="button"
                                                                     x-on:click.stop.prevent="
                                                                         if(window.toggleSpotifyPlayer) {
-                                                                            window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url});
+                                                                            window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url, previewUrl: songData.preview_url || ''});
                                                                         }
                                                                     "
                                                                     title="Play on Spotify"
