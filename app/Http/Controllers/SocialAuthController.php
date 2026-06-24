@@ -26,7 +26,10 @@ class SocialAuthController extends Controller
                     'playlist-read-private',
                     'playlist-read-collaborative',
                     'playlist-modify-public',
-                    'playlist-modify-private'
+                    'playlist-modify-private',
+                    'streaming',
+                    'user-read-playback-state',
+                    'user-modify-playback-state'
                 ])
                 // ->with(['show_dialog' => 'true']) // Removed to prevent infinite "Agree" loops on retries
                 ->redirect();
