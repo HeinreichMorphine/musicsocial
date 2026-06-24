@@ -12,11 +12,11 @@
     --}}
     <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
          x-show="playerVisible"
-         class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
+         class="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 md:left-auto md:right-4 md:w-96 z-50 pointer-events-none px-3 pb-3 md:p-0"
          style="display:none;"
          x-transition>
 
-        <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
+        <div class="bg-white/95 dark:bg-[#141414]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.3)] pointer-events-auto transition-colors duration-200 w-full">
             
             <div class="flex items-center gap-4">
                 <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art" :class="isLoading ? 'opacity-50 animate-pulse' : ''">
