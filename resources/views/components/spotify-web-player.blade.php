@@ -89,7 +89,7 @@
             },
 
             init() {
-                // With @persist, this init runs strictly ONCE.
+                // With @@persist, this init runs strictly ONCE.
                 console.log('Spotify Player initializing...');
 
                 window.toggleSpotifyPlayer = (spotifyUri) => {
