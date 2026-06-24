@@ -213,12 +213,12 @@
             <div x-show="openEdit" x-transition class="mt-2" style="display: none;">
                 <form @submit.prevent="
                     fetch('{{ route('shares.comments.update', ['share' => $comment->share, 'comment' => $comment]) }}', {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({ body: bodyText, _method: 'PATCH' })
+                        body: JSON.stringify({ body: bodyText })
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -259,12 +259,11 @@
                     <form @submit.prevent="
                         if (!confirm('Are you sure you want to delete this comment?')) return;
                         fetch('{{ route('shares.comments.destroy', ['share' => $comment->share, 'comment' => $comment]) }}', {
-                            method: 'POST',
+                            method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({ _method: 'DELETE' })
+                            }
                         })
                         .then(response => response.json())
                         .then(data => {

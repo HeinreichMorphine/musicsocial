@@ -114,7 +114,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function shares()
     {
-        return $this->hasMany(Share::class)->latest();
+        return $this->hasMany(Share::class)->where('is_deleted', false)->latest();
     }
 
     /**

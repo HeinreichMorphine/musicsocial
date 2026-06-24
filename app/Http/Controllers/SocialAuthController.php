@@ -102,6 +102,7 @@ class SocialAuthController extends Controller
 
             if ($provider === 'spotify') {
                 session()->forget('spotify_retry_count');
+                return redirect()->route('settings.index');
             }
 
             return redirect()->route('dashboard');

@@ -77,7 +77,7 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 text-center">
-                        <a href="{{ route('social.redirect', 'spotify') }}" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline underline-offset-2 decoration-gray-300 dark:decoration-gray-600 transition-colors">
+                        <a href="{{ route('social.redirect', 'spotify') }}" class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:underline transition-colors">
                             Whitelisted beta tester? Proceed anyway &rarr;
                         </a>
                     </div>

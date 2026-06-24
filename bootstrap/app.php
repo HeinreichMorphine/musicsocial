@@ -19,7 +19,15 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         // Automatically log out and block any user whose is_banned flag is set
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckBanned::class);
+        $middleware->alias([
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return redirect()->route('admin.login')->with('error', 'Your session has expired. Please log in again.');
+            }
+            return redirect()->route('login')->with('error', 'Your session has expired. Please log in again.');
+        });
     })->create();

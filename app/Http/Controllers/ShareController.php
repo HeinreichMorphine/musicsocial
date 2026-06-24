@@ -315,24 +315,14 @@ class ShareController extends Controller
         }
 
         try {
-            // 1. Manually detach all pivot relationships to prevent SQL foreign key locks
-            $share->likes()->detach();
-            $share->dislikes()->detach();
+            // Skeleton deletion: mark as deleted, clear caption to '[deleted]'
+            // This preserves the comments structure, replies, and song metadata.
+            $share->update([
+                'is_deleted' => true,
+                'caption' => '[deleted]',
+            ]);
             
-            // Check if bookmarks relation exists (using DB if model relation is missing)
-            if (method_exists($share, 'bookmarks')) {
-                $share->bookmarks()->detach();
-            } else {
-                \DB::table('bookmarks')->where('share_id', $share->id)->delete();
-            }
-            
-            // 2. Delete all attached comments
-            $share->comments()->delete(); 
-
-            // 3. Now it is safe to delete the post
-            $share->delete();
-            
-            \Log::info("Share ID: {$share->id} deleted successfully by User ID {$userId}");
+            \Log::info("Share ID: {$share->id} marked as deleted successfully by User ID {$userId}");
             return response()->json(['message' => 'Share deleted successfully.']);
             
         } catch (\Exception $e) {

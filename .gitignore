@@ -43,4 +43,8 @@ surprise_model.pkl
 !recsys.md
 !presentation_technical.md
 
+# Scratch and test files
+/scratch/
+/test_admin_rendering.php
+
 

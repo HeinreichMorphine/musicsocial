@@ -183,7 +183,7 @@ class SpotifyImportController extends Controller
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('profile.show', $user->name)
+        return redirect()->route('playlists.show', $playlist->id)
             ->with('success', "Successfully imported {$addedCount} tracks to your new playlist '{$playlist->name}'!");
     }
 

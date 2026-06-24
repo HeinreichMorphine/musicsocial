@@ -9,7 +9,7 @@
     @click="Livewire.navigate('{{ route('shares.show', $share) }}')" style="cursor:pointer;"
     
          x-data="{ 
-            commentsOpen: false, 
+            commentsOpen: {{ $share->is_deleted ? 'true' : 'false' }}, 
             editing: false, 
             playerOpen: false,
             isPlayingPreview: false,
@@ -36,17 +36,26 @@
             
             <!-- Mobile Header Row (Visible Only on Mobile) -->
             <div class="flex md:hidden items-center mb-3 space-x-3 w-full">
-                <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
-                    <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" />
-                </a>
-                <div class="flex-1 min-w-0">
-                    <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
-                </div>
-                <div x-data="{ open: false }" class="relative" x-on:click.stop>
-                    <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                    </button>
+                @if($share->is_deleted)
+                    <div class="shrink-0">
+                        <img src="{{ asset('icons/reso.png') }}" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm rounded-full" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <span class="font-bold text-gray-400 dark:text-gray-500 text-base">[deleted]</span>
+                        <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
+                    </div>
+                @else
+                    <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
+                        <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" />
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
+                        <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
+                    </div>
+                    <div x-data="{ open: false }" class="relative" x-on:click.stop>
+                        <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+                        </button>
                     <!-- Copy Dropdown from below for mobile -->
                     <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 py-1 ring-1 ring-black/5 dark:ring-white/10" style="display: none;" x-transition>
                         @if ($share->user->is(auth()->user()))
@@ -58,12 +67,11 @@
                             <form @submit.prevent="
                                 if (!confirm('Are you sure you want to delete this share?')) return;
                                 fetch('{{ route('shares.destroy', $share) }}', {
-                                    method: 'POST',
+                                    method: 'DELETE',
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    },
-                                    body: JSON.stringify({ _method: 'DELETE' })
+                                    }
                                 })
                                 .then(response => {
                                     if (response.ok) {
@@ -122,17 +130,29 @@
             </div>
 
             <!-- Desktop Avatar (Hidden on Mobile) -->
-            <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
-                <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm" />
-            </a>
+            @if($share->is_deleted)
+                <div class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm rounded-full overflow-hidden shrink-0">
+                    <img src="{{ asset('icons/reso.png') }}" class="w-full h-full object-cover" />
+                </div>
+            @else
+                <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
+                    <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm" />
+                </a>
+            @endif
 
             <!-- Main Content Area (Stretches full width on mobile) -->
             <div class="flex-1 min-w-0 w-full">
                 <!-- Desktop Header Row (Hidden on Mobile) -->
                 <div class="hidden md:flex items-center">
-                    <div class="text-left">
-                        <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
-                        <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
+                    @if($share->is_deleted)
+                        <div class="text-left">
+                            <span class="font-bold text-gray-400 dark:text-gray-500">[deleted]</span>
+                            <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
+                        </div>
+                    @else
+                        <div class="text-left">
+                            <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
+                            <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
                         @if($share->type === 'recommendation_request')
                             <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50 uppercase tracking-wider">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1">
@@ -140,82 +160,82 @@
                                 </svg>
                                 SEEKING RECOMMENDATIONS
                             </span>
-                        @endif
-                    </div>
-                    <div x-data="{ open: false }" class="relative ml-auto" x-on:click.stop>
-                        <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
-                        </button>
-                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 py-1 ring-1 ring-black/5 dark:ring-white/10" style="display: none;" x-transition>
-                            @if ($share->user->is(auth()->user()))
-                                <!-- Edit Button -->
-                                <button @click="editing = true; open = false;" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    Edit Caption
-                                </button>
-                                
-                                <form @submit.prevent="
-                                    if (!confirm('Are you sure you want to delete this share?')) return;
-                                    fetch('{{ route('shares.destroy', $share) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                        },
-                                        body: JSON.stringify({ _method: 'DELETE' })
-                                    })
-                                    .then(response => {
-                                        if (response.ok) {
-                                            window.reloadWithScroll();
-                                        }
-                                    })
-                                ">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                        Delete Share
-                                    </button>
-                                </form>
-                            @else
-                                <!-- Not for me / Dislike -->
-                                <button @click="
-                                    open = false;
-                                    disliked = !disliked;
-                                    if (disliked) {
-                                        if (typeof liked !== 'undefined' && liked) {
-                                            liked = false;
-                                            likesCount--;
-                                        }
-                                    }
-                                    
-                                    fetch('{{ route('shares.dislike', $share) }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                        }
-                                    })
-                                    .then(response => {
-                                        if (!response.ok) throw new Error('Failed');
-                                        return response.json();
-                                    })
-                                    .then(data => {
-                                        disliked = data.disliked;
-                                        liked = data.liked;
-                                        likesCount = data.likesCount;
-                                    })
-                                    .catch(err => {
-                                        window.location.reload(); 
-                                    });
-                                " class="w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors"
-                                :class="disliked ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                    <span x-text="disliked ? 'Undo Not For Me' : 'Not for me'"></span>
-                                </button>
                             @endif
                         </div>
-                    </div>
+                        <div x-data="{ open: false }" class="relative ml-auto" x-on:click.stop>
+                            <button @click="open = !open" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg z-50 py-1 ring-1 ring-black/5 dark:ring-white/10" style="display: none;" x-transition>
+                                @if ($share->user->is(auth()->user()))
+                                    <!-- Edit Button -->
+                                    <button @click="editing = true; open = false;" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                        Edit Caption
+                                    </button>
+                                    
+                                    <form @submit.prevent="
+                                        if (!confirm('Are you sure you want to delete this share?')) return;
+                                        fetch('{{ route('shares.destroy', $share) }}', {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            }
+                                        })
+                                        .then(response => {
+                                            if (response.ok) {
+                                                window.reloadWithScroll();
+                                            }
+                                        })
+                                    ">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                            Delete Share
+                                        </button>
+                                    </form>
+                                @else
+                                    <!-- Not for me / Dislike -->
+                                    <button @click="
+                                        open = false;
+                                        disliked = !disliked;
+                                        if (disliked) {
+                                            if (typeof liked !== 'undefined' && liked) {
+                                                liked = false;
+                                                likesCount--;
+                                            }
+                                        }
+                                        
+                                        fetch('{{ route('shares.dislike', $share) }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            }
+                                        })
+                                        .then(response => {
+                                            if (!response.ok) throw new Error('Failed');
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            disliked = data.disliked;
+                                            liked = data.liked;
+                                            likesCount = data.likesCount;
+                                        })
+                                        .catch(err => {
+                                            window.location.reload(); 
+                                        });
+                                    " class="w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors"
+                                    :class="disliked ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                        <span x-text="disliked ? 'Undo Not For Me' : 'Not for me'"></span>
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Display Mode -->
@@ -261,6 +281,7 @@
                     </div>
                 </div>
 
+                @if(!$share->is_deleted)
                 <div class="mt-3 md:mt-4 relative rounded-2xl md:rounded-3xl p-4 md:p-6 group">
                      {{-- Background blur/gradient wrapper to allow child elements (like the playlist dropdown) to overflow --}}
                      <div class="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden pointer-events-none">
@@ -395,7 +416,9 @@
                         style="border-radius:12px; display:block;">
                     </iframe>
                 </div>
+                @endif
 
+                @if(!$share->is_deleted)
                 <div class="mt-3 md:mt-5 border-t border-gray-100/50 pt-2 md:pt-3" x-on:click.stop>
                     
                     <div class="grid grid-cols-3 gap-1 md:gap-2 w-full mt-1 md:mt-2">
@@ -496,7 +519,7 @@
                             </form>
                         </div>
                     </div>
-                </div>
+                @endif
 
                 <div x-on:click.stop>
                     @php
@@ -665,6 +688,7 @@
                     @endif
 
                     <div x-show="commentsOpen" x-transition class="mt-4 px-4 pl-6 border-l-2 border-gray-100" style="display: none;" x-data="{ newComment: '' }">
+                        @if(!$share->is_deleted)
                         <form @submit.prevent="
                             fetch('{{ route('shares.comments.store', $share) }}', {
                                 method: 'POST',
@@ -702,8 +726,8 @@
                             <!-- Search Overlay (Mini) -->
                             <div x-show="isSearching" class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 border border-gray-200 dark:border-gray-700 shadow-inner" x-transition>
                                 <div class="flex items-center gap-2 mb-2">
-                                    <input type="text" x-model.debounce.300ms="commentSearch" 
-                                        @input="if(commentSearch.length > 2) { 
+                                    <input type="text" x-model="commentSearch" 
+                                        @input.debounce.300ms="if(commentSearch.length > 2) { 
                                             fetch('{{ route('spotify.search') }}?query=' + encodeURIComponent(commentSearch))
                                             .then(r => r.json()).then(d => commentResults = d)
                                         }"
@@ -754,7 +778,7 @@
                                     </svg>
                                 </button>
                             </div>
-                        </form>
+                        @endif
 
                         <div class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                             @php

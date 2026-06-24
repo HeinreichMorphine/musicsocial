@@ -29,7 +29,7 @@ class UserProfileController extends Controller
         $recommendedShareIds = collect($recommendations)->pluck('share_id')->all();
         $recommendationData = collect($recommendations)->keyBy('share_id');
 
-        $recommendedShares = Share::whereIn('id', $recommendedShareIds)->get();
+        $recommendedShares = Share::whereIn('id', $recommendedShareIds)->where('is_deleted', false)->get();
 
         // Sort the recommended shares by score
         $recommendedShares = $recommendedShares->sortByDesc(function ($share) use ($recommendationData) {

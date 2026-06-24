@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="mt-6 pt-6 border-t border-gray-100 text-center">
-                        <a href="{{ route('social.redirect', 'spotify') }}" class="text-[13px] text-gray-400 hover:text-gray-600 underline decoration-gray-300 underline-offset-4 transition-colors font-medium">
+                        <a href="{{ route('social.redirect', 'spotify') }}" class="text-[13px] text-gray-400 hover:text-gray-600 hover:underline transition-colors font-medium">
                             Whitelisted beta tester? Proceed anyway &rarr;
                         </a>
                     </div>

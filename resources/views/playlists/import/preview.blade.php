@@ -76,7 +76,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('playlists.import.process') }}" method="POST" id="importForm" class="space-y-6 pb-24">
+                <form action="{{ route('playlists.import.process') }}" method="POST" id="importForm" class="space-y-6 pb-24" @submit="isImporting = true">
                     @csrf
                     <input type="hidden" name="playlist_image" value="{{ $playlist_image }}">
                     
@@ -177,7 +177,6 @@
                                 <a href="{{ route('playlists.import.index') }}" class="flex-1 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-900 dark:text-white font-bold py-3 rounded-2xl text-center transition">Cancel</a>
                                 <button type="submit" 
                                         :disabled="selectedTracks.length === 0 || isImporting"
-                                        @click="isImporting = true"
                                         :class="selectedTracks.length > 0 ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-50'"
                                         class="flex-[2] text-white font-black py-3 rounded-2xl shadow-xl transition transform hover:-translate-y-1 disabled:transform-none flex items-center justify-center gap-3">
                                     <template x-if="!isImporting">

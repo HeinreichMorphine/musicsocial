@@ -46,11 +46,8 @@ class FeedController extends Controller
         $feedType = request('feed', 'following');
 
         if ($feedType === 'explore') {
-            $shares = Share::inRandomOrder()
-                // User requested to NOT hide disliked posts
-                // ->whereDoesntHave('dislikes', function ($query) use ($user) {
-                //     $query->where('user_id', $user->id);
-                // })
+            $shares = Share::where('is_deleted', false)
+                ->inRandomOrder()
                 ->with(['user', 'song', 'likes'])
                 ->paginate(20)
                 ->appends(['feed' => 'explore']);
@@ -59,14 +56,11 @@ class FeedController extends Controller
             $followingIds = $user->following()->pluck('id');
 
             // Get shares from those users, plus the current user's own shares
-            $shares = Share::where(function ($query) use ($followingIds, $user) {
+            $shares = Share::where('is_deleted', false)
+                           ->where(function ($query) use ($followingIds, $user) {
                                $query->whereIn('user_id', $followingIds)
                                      ->orWhere('user_id', $user->id);
                            })
-                           // User requested to NOT hide disliked posts, just use them for algo
-                           // .whereDoesntHave('dislikes', function ($query) use ($user) {
-                           //    $query->where('user_id', $user->id);
-                           // })
                            ->with(['user', 'song', 'likes'])
                            ->latest()
                            ->paginate(20)
@@ -82,7 +76,8 @@ class FeedController extends Controller
             $recommendedShareIds = collect($rawRecommendations)->pluck('share_id')->all();
             $recommendationData = collect($rawRecommendations)->keyBy('share_id');
 
-            $recommendedShares = Share::whereIn('id', $recommendedShareIds)
+            $recommendedShares = Share::where('is_deleted', false)
+                                      ->whereIn('id', $recommendedShareIds)
                                       ->whereDoesntHave('dislikes', function ($query) use ($user) {
                                           $query->where('user_id', $user->id);
                                       })

@@ -31,6 +31,7 @@ class Share extends Model
         'song_id',
         'caption',
         'type',
+        'is_deleted',
     ];
 
     /**

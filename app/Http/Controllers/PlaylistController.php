@@ -317,6 +317,9 @@ class PlaylistController extends Controller
         $isOwner = $playlist->collaborators()->where('user_id', $user->id)->where('role', 'owner')->exists();
         
         if ($playlistSong->added_by_user_id !== $user->id && !$isOwner) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'You are not authorized to remove this song.'], 403);
+            }
             return back()->with('error', 'You are not authorized to remove this song.');
         }
 

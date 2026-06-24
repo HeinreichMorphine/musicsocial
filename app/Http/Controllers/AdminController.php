@@ -113,7 +113,27 @@ class AdminController extends Controller
 
     public function deleteUser($id)
     {
-        User::destroy($id);
+        $user = User::find($id);
+        if ($user) {
+            // Find all playlists where this user is the owner (role = owner)
+            $ownedPlaylistIds = \DB::table('playlist_collaborators')
+                ->where('user_id', $user->id)
+                ->where('role', 'owner')
+                ->pluck('playlist_id');
+
+            foreach ($ownedPlaylistIds as $playlistId) {
+                $playlist = \App\Models\Playlist::find($playlistId);
+                if ($playlist) {
+                    // Delete collaborators and playlist songs
+                    \App\Models\PlaylistCollaborator::where('playlist_id', $playlist->id)->delete();
+                    \App\Models\PlaylistSong::where('playlist_id', $playlist->id)->delete();
+                    $playlist->delete();
+                }
+            }
+
+            // Delete the user
+            $user->delete();
+        }
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
 

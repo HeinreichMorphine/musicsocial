@@ -16,6 +16,9 @@ use App\Http\Controllers\UserSearchController;
 use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
+    if (Auth::guard('admin')->check()) {
+        return redirect()->route('admin.dashboard');
+    }
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }

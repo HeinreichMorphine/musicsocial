@@ -99,7 +99,7 @@
                                 Go back
                             </button>
                             <div class="text-center pt-1 border-t border-slate-100">
-                                <a href="{{ route('social.redirect', 'spotify') }}" class="text-xs text-slate-400 hover:text-slate-600 transition-colors underline decoration-dashed">
+                                <a href="{{ route('social.redirect', 'spotify') }}" class="text-xs text-slate-400 hover:text-slate-600 transition-colors hover:underline">
                                     Whitelisted beta tester? Proceed anyway →
                                 </a>
                             </div>

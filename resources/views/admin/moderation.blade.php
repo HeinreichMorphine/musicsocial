@@ -210,7 +210,7 @@
                     @forelse($playlists as $playlist)
                     <tr>
                         <td>
-                            <span class="author-chip">{{ $playlist->creator->user->name ?? 'Unknown' }}</span>
+                            <span class="author-chip">{{ $playlist->creator?->user?->name ?? 'Unknown' }}</span>
                         </td>
                         <td>
                             <div class="content-preview">{{ Str::limit($playlist->name ?? '—', 70) }}</div>
