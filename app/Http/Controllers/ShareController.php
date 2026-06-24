@@ -190,7 +190,7 @@ class ShareController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Share $share)
+    public function show(Request $request, Share $share)
     {
         /** @var User $user */
         $user = Auth::user();
