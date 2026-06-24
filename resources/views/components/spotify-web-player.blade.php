@@ -10,9 +10,20 @@
         This component just reads from those globals and dispatches playback commands.
         No @persist needed — Alpine state is re-hydrated from window on every init().
     --}}
+    <style>
+        .spotify-player-container {
+            bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
+        }
+        @media (min-width: 768px) {
+            .spotify-player-container {
+                bottom: 1rem !important;
+            }
+        }
+    </style>
+
     <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
          x-show="playerVisible"
-         class="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 md:left-auto md:right-4 md:w-96 z-50 pointer-events-none px-3 pb-3 md:p-0"
+         class="fixed inset-x-0 spotify-player-container md:left-auto md:right-4 md:w-96 z-50 pointer-events-none px-3 pb-3 md:p-0"
          style="display:none;"
          x-transition>
 
