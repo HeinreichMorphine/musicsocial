@@ -277,29 +277,9 @@
                             'Authorization': `Bearer ${tokenData.token}`
                         };
 
-                        // Step 1: Transfer playback to wake up the device
-                        console.log('Transferring playback to device:', this.deviceId);
-                        const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
-                            method: 'PUT',
-                            body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
-                            headers
-                        });
-
-                        if (!transferRes.ok && transferRes.status === 404) {
-                            if (retryCount < 4) {
-                                const delay = 1500 * (retryCount + 1);
-                                console.log(`Transfer 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
-                                setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
-                                return;
-                            }
-                            console.error('Transfer playback failed after all retries.');
-                            return;
-                        }
-
-                        // Step 2: Small settle delay
-                        await new Promise(r => setTimeout(r, 300));
-
-                        // Step 3: Play the track
+                        // Send play request directly to the device. Spotify automatically
+                        // transfers playback and starts playing, avoiding redundant PUT /player calls.
+                        console.log('Sending play request to device:', this.deviceId);
                         const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
                             method: 'PUT',
                             body: JSON.stringify({ uris: [spotifyUri] }),
@@ -310,10 +290,15 @@
                             const errBody = await res.text();
                             console.error('Spotify play failed:', res.status, errBody);
 
-                            if (res.status === 404 && retryCount < 4) {
-                                const delay = 1500 * (retryCount + 1);
-                                console.log(`Play 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
+                            // 404: Device is connected but Spotify backend hasn't registered/activated it yet.
+                            if (res.status === 404 && retryCount < 5) {
+                                const delay = 1000 * (retryCount + 1);
+                                console.log(`Play 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/5)`);
                                 setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
+                            } else if (res.status === 403) {
+                                // 403 Forbidden: Premium required or restriction issue. Fall back to preview.
+                                console.warn('Play returned 403 Forbidden. Falling back to HTML5 preview...');
+                                this._playNativePreview(meta);
                             }
                         } else {
                             console.log('Spotify play succeeded.');
@@ -329,6 +314,10 @@
                 // ==========================================
                 // MODE B: FREE USER (HTML5 <audio> preview)
                 // ==========================================
+                this._playNativePreview(meta);
+            },
+
+            _playNativePreview(meta) {
                 const previewUrl = meta?.previewUrl || null;
 
                 if (!previewUrl) {
