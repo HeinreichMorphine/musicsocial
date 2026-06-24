@@ -345,6 +345,7 @@ class AdminController extends Controller
     public function songs()
     {
         $sort = request('sort', 'latest');
+        $search = request('search');
         
         $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
         $likeExpression = $driver === 'sqlite'
@@ -357,6 +358,14 @@ class AdminController extends Controller
                     ->whereRaw("comments.body LIKE {$likeExpression}")
             ])
             ->withCount('shares');
+        
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('track_name', 'like', "%{$search}%")
+                  ->orWhere('artist_name', 'like', "%{$search}%")
+                  ->orWhere('genres', 'like', "%{$search}%");
+            });
+        }
         
         if ($sort === 'untagged') {
             $query->where(function ($q) {
@@ -377,7 +386,7 @@ class AdminController extends Controller
 
         $songs = $query->paginate(15)->withQueryString();
 
-        return view('admin.songs.index', compact('songs', 'sort'));
+        return view('admin.songs.index', compact('songs', 'sort', 'search'));
     }
 
     public function createSong()

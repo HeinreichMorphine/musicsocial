@@ -81,10 +81,14 @@
                             </div>
                         
                         <div class="relative flex items-center space-x-4 z-10">
-                            <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-xl transition-transform duration-300 group-hover/card:scale-105 shrink-0">
+                            <a :href="songData.spotify_url && songData.spotify_url !== '#' ? songData.spotify_url : `https://open.spotify.com/track/${songData.spotify_track_id}`" target="_blank" rel="noopener noreferrer" class="shrink-0 hover:opacity-90 transition-opacity">
+                                <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-xl transition-transform duration-300 group-hover/card:scale-105">
+                            </a>
                             <div class="flex-1 min-w-0">
-                                <p class="text-lg font-bold text-white truncate drop-shadow-md" x-text="songData.track_name"></p>
-                                <p class="text-sm text-gray-200 truncate drop-shadow-sm" x-text="songData.artist_name"></p>
+                                <a :href="songData.spotify_url && songData.spotify_url !== '#' ? songData.spotify_url : `https://open.spotify.com/track/${songData.spotify_track_id}`" target="_blank" rel="noopener noreferrer" class="hover:underline hover:opacity-90 transition-opacity block">
+                                    <p class="text-lg font-bold text-white truncate drop-shadow-md" x-text="songData.track_name"></p>
+                                    <p class="text-sm text-gray-200 truncate drop-shadow-sm" x-text="songData.artist_name"></p>
+                                </a>
                                 
                                 <div class="flex items-center space-x-3 mt-2">
                                     {{-- Spotify Link --}}

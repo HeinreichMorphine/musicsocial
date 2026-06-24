@@ -268,10 +268,14 @@
                          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                      </div>
                      <div class="relative flex items-center space-x-4 md:space-x-6 z-10">
-                        <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl md:rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105 shrink-0">
+                        <a href="{{ $share->song->spotify_url && $share->song->spotify_url !== '#' ? $share->song->spotify_url : 'https://open.spotify.com/track/'.$share->song->spotify_track_id }}" target="_blank" rel="noopener noreferrer" class="shrink-0 hover:opacity-90 transition-opacity" @click.stop>
+                            <img src="{{ $share->song->album_art_url }}" alt="Album Art" class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl md:rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105">
+                        </a>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xl md:text-2xl font-bold text-white truncate drop-shadow-md">{{ $share->song->track_name }}</p>
-                            <p class="text-base md:text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
+                            <a href="{{ $share->song->spotify_url && $share->song->spotify_url !== '#' ? $share->song->spotify_url : 'https://open.spotify.com/track/'.$share->song->spotify_track_id }}" target="_blank" rel="noopener noreferrer" class="hover:underline hover:opacity-90 transition-opacity block" @click.stop>
+                                <p class="text-xl md:text-2xl font-bold text-white truncate drop-shadow-md">{{ $share->song->track_name }}</p>
+                                <p class="text-base md:text-lg text-gray-200 truncate drop-shadow-sm">{{ $share->song->artist_name }}</p>
+                            </a>
                             
                             <div class="flex items-center flex-wrap gap-3 mt-2 md:mt-3">
                                 {{-- Inline player toggle button instead of external link --}}
