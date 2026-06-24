@@ -140,7 +140,9 @@
                     mutations.forEach((mutation) => {
                         mutation.addedNodes.forEach((node) => {
                             if (node.nodeType === 1 && node.tagName === 'IFRAME' &&
-                                (node.src || '').includes('spotify')) {
+                                (node.id === 'spotify-playback-sdk-iframe' || 
+                                 (node.src || '').includes('spotify') || 
+                                 (node.src || '').includes('scdn.co'))) {
                                 node.setAttribute('wire:ignore', '');
                                 console.log('[SpotifySDK] Stamped wire:ignore on Spotify iframe');
                                 
