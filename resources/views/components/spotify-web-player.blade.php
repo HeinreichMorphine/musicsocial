@@ -26,6 +26,40 @@
             isPaused: true,
             currentTrack: null,
             initPlayer() {
+                window._spotifyReady = false;
+                window._pendingTrackUri = null;
+
+                // Define playSpotifyTrack immediately — don't wait for `ready`
+                window.playSpotifyTrack = async (spotifyUri) => {
+                    if (!window._spotifyReady || !this.deviceId) {
+                        console.warn('Spotify player not ready yet — queuing track');
+                        window._pendingTrackUri = spotifyUri;
+                        return;
+                    }
+                    try {
+                        const tokenRes = await fetch('/spotify/token');
+                        const tokenData = await tokenRes.json();
+                        if (!tokenData.token) throw new Error('No token returned');
+
+                        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ uris: [spotifyUri] }),
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${tokenData.token}`
+                            },
+                        });
+
+                        if (!res.ok) {
+                            const errBody = await res.text();
+                            console.error('Spotify play request failed:', res.status, errBody);
+                            // Common causes: 404 = stale device_id, 403 = restricted/non-premium, 401 = expired token
+                        }
+                    } catch (err) {
+                        console.error('Failed to play track:', err);
+                    }
+                };
+
                 window.onSpotifyWebPlaybackSDKReady = () => {
                     const player = new Spotify.Player({
                         name: 'Reso Web Player',
@@ -46,13 +80,11 @@
 
                     this.player = player;
 
-                    // Error handling
-                    player.addListener('initialization_error', ({ message }) => { console.error(message); });
-                    player.addListener('authentication_error', ({ message }) => { console.error(message); });
-                    player.addListener('account_error', ({ message }) => { console.error(message); });
-                    player.addListener('playback_error', ({ message }) => { console.error(message); });
+                    player.addListener('initialization_error', ({ message }) => { console.error('init_error:', message); });
+                    player.addListener('authentication_error', ({ message }) => { console.error('auth_error:', message); });
+                    player.addListener('account_error', ({ message }) => { console.error('account_error:', message); });
+                    player.addListener('playback_error', ({ message }) => { console.error('playback_error:', message); });
 
-                    // Playback status updates
                     player.addListener('player_state_changed', state => {
                         if (!state) return;
                         this.currentTrack = state.track_window.current_track;
@@ -60,37 +92,24 @@
                         this.isPlaying = true;
                     });
 
-                    // Ready
                     player.addListener('ready', ({ device_id }) => {
                         console.log('Spotify Web Playback SDK is Ready with Device ID', device_id);
                         this.deviceId = device_id;
-                        // Expose a global method to play a track
-                        window.playSpotifyTrack = async (spotifyUri) => {
-                            try {
-                                const tokenRes = await fetch('/spotify/token');
-                                const tokenData = await tokenRes.json();
-                                if(!tokenData.token) throw new Error("No token");
-                                
-                                await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
-                                    method: 'PUT',
-                                    body: JSON.stringify({ uris: [spotifyUri] }),
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${tokenData.token}`
-                                    },
-                                });
-                            } catch (err) {
-                                console.error('Failed to play track:', err);
-                            }
-                        };
+                        window._spotifyReady = true;
+
+                        // Flush any track that was clicked before we were ready
+                        if (window._pendingTrackUri) {
+                            const uri = window._pendingTrackUri;
+                            window._pendingTrackUri = null;
+                            window.playSpotifyTrack(uri);
+                        }
                     });
 
-                    // Not Ready
                     player.addListener('not_ready', ({ device_id }) => {
                         console.log('Device ID has gone offline', device_id);
+                        window._spotifyReady = false;
                     });
 
-                    // Connect to the player!
                     player.connect();
                 };
             },
