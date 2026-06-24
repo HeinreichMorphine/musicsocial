@@ -59,9 +59,6 @@
                 </div>
             </div>
 
-            <!-- Hidden HTML5 audio for free users -->
-            <audio x-ref="nativePlayer" @timeupdate="onNativeTimeUpdate()" @ended="onNativeEnded()" style="display:none;"></audio>
-
             <!-- Controls: back 10s, play/pause, forward 10s -->
             <div class="flex items-center justify-center gap-6 mt-3">
                 <button @click="seekRelative(-10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
@@ -81,381 +78,370 @@
 
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('spotifyWebPlayer', (config) => ({
-            // Mode
-            isPremium: config.isPremium,
-
-            // SDK state (premium only)
-            player: null,
-            deviceId: null,
-            deviceReady: false,
-
-            // Shared UI state
-            isPlaying: false,
-            isPaused: true,
-            playerVisible: false,
-            collapsed: false,
-            positionMs: 0,
-            durationMs: 0,
-            progressInterval: null,
-            noPreview: false,
-
-            // Preloaded metadata from DB
-            trackName: null,
-            artistName: null,
-            albumArt: null,
-
-            // Pending play request
-            pendingTrackUri: null,
-
-            get progressPercent() {
-                return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
-            },
-
-            formatTime(ms) {
-                if (!ms) return '0:00';
-                const totalSec = Math.floor(ms / 1000);
-                const min = Math.floor(totalSec / 60);
-                const sec = totalSec % 60;
-                return `${min}:${sec.toString().padStart(2, '0')}`;
-            },
-
-            init() {
-                console.log('Spotify Player initializing... isPremium:', this.isPremium);
-
-                // Global function: toggleSpotifyPlayer(uri, meta?)
-                // meta = { name, artist, art, previewUrl }
-                window.toggleSpotifyPlayer = (spotifyUri, meta) => {
-                    this.playerVisible = true;
-                    this.collapsed = false;
-                    this.noPreview = false;
-
-                    // Preload UI from DB metadata
-                    if (meta) {
-                        this.trackName = meta.name || null;
-                        this.artistName = meta.artist || null;
-                        this.albumArt = meta.art || null;
-                    }
-
-                    this._doPlay(spotifyUri, meta);
-                };
-
-                // Only boot the Widevine SDK for premium users
-                if (this.isPremium) {
-                    window.onSpotifyWebPlaybackSDKReady = () => {
-                        this.connectPlayer();
-                    };
-
-                    if (typeof Spotify !== 'undefined' && typeof Spotify.Player !== 'undefined') {
-                        this.connectPlayer();
-                    }
+        // Initialize the global native audio if not present
+        if (!window.__spotifyNativeAudio) {
+            window.__spotifyNativeAudio = new Audio();
+            
+            window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
+                if (window.__spotifyPlayerState && !window.__spotifyPlayerState.isPremium) {
+                    window.__spotifyPlayerState.positionMs = window.__spotifyNativeAudio.currentTime * 1000;
                 }
-            },
-
-            // =============================================
-            // PREMIUM: SDK Polling
-            // =============================================
-            startPolling() {
-                this.stopPolling();
-                this.progressInterval = setInterval(() => {
-                    if (this.isPremium && this.player && !this.isPaused) {
-                        this.player.getCurrentState().then(state => {
-                            if (state) {
-                                this.positionMs = state.position;
-                                this.durationMs = state.duration;
-                                this.isPaused = state.paused;
-                                const ct = state.track_window.current_track;
-                                if (ct) {
-                                    this.trackName = ct.name;
-                                    this.artistName = ct.artists?.map(a => a.name).join(', ');
-                                    this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
-                                }
-                            }
-                        }).catch(() => {});
-                    }
-                }, 500);
-            },
-
-            stopPolling() {
-                if (this.progressInterval) {
-                    clearInterval(this.progressInterval);
-                    this.progressInterval = null;
+            });
+            
+            window.__spotifyNativeAudio.addEventListener('ended', () => {
+                if (window.__spotifyPlayerState) {
+                    window.__spotifyPlayerState.isPaused = true;
+                    window.__spotifyPlayerState.positionMs = 0;
                 }
-            },
+            });
+        }
 
-            // =============================================
-            // PREMIUM: SDK Connection
-            // =============================================
-            connectPlayer() {
-                if (this.player) return;
+        Alpine.data('spotifyWebPlayer', (config) => {
+            if (!window.__spotifyPlayerState) {
+                window.__spotifyPlayerState = Alpine.reactive({
+                    // Mode
+                    isPremium: config.isPremium,
 
-                console.log('Creating new Spotify.Player instance...');
-                const player = new Spotify.Player({
-                    name: 'Reso Web Player',
-                    getOAuthToken: cb => {
-                        fetch('/spotify/token')
-                            .then(res => res.json())
-                            .then(data => { if (data.token) cb(data.token); })
-                            .catch(err => console.error('Token fetch error:', err));
+                    // SDK state (premium only)
+                    player: null,
+                    deviceId: null,
+                    deviceReady: false,
+
+                    // Shared UI state
+                    isPlaying: false,
+                    isPaused: true,
+                    playerVisible: false,
+                    collapsed: false,
+                    positionMs: 0,
+                    durationMs: 0,
+                    progressInterval: null,
+                    noPreview: false,
+
+                    // Preloaded metadata
+                    trackName: null,
+                    artistName: null,
+                    albumArt: null,
+
+                    // Pending play request
+                    pendingTrackUri: null,
+
+                    get progressPercent() {
+                        return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
                     },
-                    volume: 0.5
-                });
 
-                player.addListener('initialization_error', ({ message }) => { console.error('init_error:', message); });
-                player.addListener('authentication_error', ({ message }) => { console.error('auth_error:', message); });
-                player.addListener('account_error', ({ message }) => { console.error('account_error:', message); });
-                player.addListener('playback_error', ({ message }) => { console.error('playback_error:', message); });
+                    formatTime(ms) {
+                        if (!ms) return '0:00';
+                        const totalSec = Math.floor(ms / 1000);
+                        const min = Math.floor(totalSec / 60);
+                        const sec = totalSec % 60;
+                        return `${min}:${sec.toString().padStart(2, '0')}`;
+                    },
 
-                player.addListener('player_state_changed', state => {
-                    if (!state) return;
-                    this.isPaused = state.paused;
-                    this.positionMs = state.position;
-                    this.durationMs = state.duration;
+                    init() {
+                        console.log('Spotify Player initializing... isPremium:', this.isPremium);
 
-                    const ct = state.track_window.current_track;
-                    if (ct) {
-                        this.trackName = ct.name;
-                        this.artistName = ct.artists?.map(a => a.name).join(', ');
-                        this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
-                    }
+                        // Global function: toggleSpotifyPlayer(uri, meta?)
+                        window.toggleSpotifyPlayer = (spotifyUri, meta) => {
+                            this.playerVisible = true;
+                            this.collapsed = false;
+                            this.noPreview = false;
 
-                    if (!this.isPaused) this.startPolling();
-                    else this.stopPolling();
-                });
+                            if (meta) {
+                                this.trackName = meta.name || null;
+                                this.artistName = meta.artist || null;
+                                this.albumArt = meta.art || null;
+                            }
 
-                player.addListener('ready', ({ device_id }) => {
-                    console.log('Spotify SDK Ready (raw):', device_id);
-                    this.deviceId = device_id;
-                    this.player = player;
-
-                    // Device needs time to register on Spotify servers
-                    console.log('Waiting 2s for device registration...');
-                    setTimeout(() => {
-                        console.log('Device registered:', device_id);
-                        this.deviceReady = true;
-
-                        if (this.pendingTrackUri) {
-                            const uri = this.pendingTrackUri;
-                            this.pendingTrackUri = null;
-                            this._doPlay(uri);
-                        }
-                    }, 2000);
-                });
-
-                player.addListener('not_ready', ({ device_id }) => {
-                    console.log('Device ID has gone offline', device_id);
-                    this.deviceReady = false;
-                });
-
-                console.log('Connecting to Spotify (with DOM Interceptor)...');
-                
-                const originalBodyAppend = document.body.appendChild;
-                const originalBodyInsertBefore = document.body.insertBefore;
-
-                const interceptor = function(element) {
-                    if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
-                        console.log('Intercepted Spotify SDK iframe. Placing inside document.documentElement (html root) to prevent Livewire body swap destruction...');
-                        element.style.display = 'none';
-                        element.style.width = '0px';
-                        element.style.height = '0px';
-                        element.style.position = 'absolute';
-                        document.documentElement.appendChild(element);
-                        return element;
-                    }
-                    return null;
-                };
-
-                document.body.appendChild = function(element) {
-                    const intercepted = interceptor(element);
-                    if (intercepted) return intercepted;
-                    return originalBodyAppend.apply(this, arguments);
-                };
-
-                document.body.insertBefore = function(element, reference) {
-                    const intercepted = interceptor(element);
-                    if (intercepted) return intercepted;
-                    return originalBodyInsertBefore.apply(this, arguments);
-                };
-
-                player.connect();
-
-                // Restore original methods
-                setTimeout(() => {
-                    document.body.appendChild = originalBodyAppend;
-                    document.body.insertBefore = originalBodyInsertBefore;
-                    console.log('Restored original document.body DOM methods.');
-                }, 2000);
-            },
-
-            // =============================================
-            // DUAL-MODE: Play
-            // =============================================
-            async _doPlay(spotifyUri, meta, retryCount = 0) {
-                console.log(`_doPlay: uri=${spotifyUri}, premium=${this.isPremium}, ready=${this.deviceReady}, retry=${retryCount}`);
-
-                // ==========================================
-                // MODE A: PREMIUM USER (Widevine SDK)
-                // ==========================================
-                if (this.isPremium) {
-                    if (!this.deviceId || !this.deviceReady) {
-                        console.log('Player not ready yet. Queuing track:', spotifyUri);
-                        this.pendingTrackUri = spotifyUri;
-                        this.connectPlayer();
-                        return;
-                    }
-
-                    try {
-                        const tokenRes = await fetch('/spotify/token');
-                        const tokenData = await tokenRes.json();
-                        if (!tokenData.token) throw new Error('No token returned');
-
-                        const headers = {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${tokenData.token}`
+                            this._doPlay(spotifyUri, meta);
                         };
 
-                        // Send play request directly to the device. Spotify automatically
-                        // transfers playback and starts playing, avoiding redundant PUT /player calls.
-                        console.log('Sending play request to device:', this.deviceId);
-                        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ uris: [spotifyUri] }),
-                            headers,
-                        });
+                        // Only boot the Widevine SDK for premium users
+                        if (this.isPremium) {
+                            window.onSpotifyWebPlaybackSDKReady = () => {
+                                this.connectPlayer();
+                            };
 
-                        if (!res.ok) {
-                            const errBody = await res.text();
-                            console.error('Spotify play failed:', res.status, errBody);
-
-                            // 404: Device is connected but Spotify backend hasn't registered/activated it yet.
-                            if (res.status === 404 && retryCount < 5) {
-                                const delay = 1000 * (retryCount + 1);
-                                console.log(`Play 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/5)`);
-                                setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
-                            } else if (res.status === 403) {
-                                // 403 Forbidden: Premium required or restriction issue. Fall back to preview.
-                                console.warn('Play returned 403 Forbidden. Falling back to HTML5 preview...');
-                                this._playNativePreview(meta);
+                            if (typeof Spotify !== 'undefined' && typeof Spotify.Player !== 'undefined') {
+                                this.connectPlayer();
                             }
-                        } else {
-                            console.log('Spotify play succeeded.');
-                            this.isPaused = false;
+                        }
+
+                        // If already playing, ensure polling is running
+                        if (this.isPremium && this.player && !this.isPaused) {
                             this.startPolling();
                         }
-                    } catch (err) {
-                        console.error('Failed to play track:', err);
-                    }
-                    return;
-                }
+                    },
 
-                // ==========================================
-                // MODE B: FREE USER (HTML5 <audio> preview)
-                // ==========================================
-                this._playNativePreview(meta);
-            },
+                    startPolling() {
+                        this.stopPolling();
+                        this.progressInterval = setInterval(() => {
+                            if (this.isPremium && this.player && !this.isPaused) {
+                                this.player.getCurrentState().then(state => {
+                                    if (state) {
+                                        this.positionMs = state.position;
+                                        this.durationMs = state.duration;
+                                        this.isPaused = state.paused;
+                                        const ct = state.track_window.current_track;
+                                        if (ct) {
+                                            this.trackName = ct.name;
+                                            this.artistName = ct.artists?.map(a => a.name).join(', ');
+                                            this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
+                                        }
+                                    }
+                                }).catch(() => {});
+                            }
+                        }, 500);
+                    },
 
-            _playNativePreview(meta) {
-                const previewUrl = meta?.previewUrl || null;
+                    stopPolling() {
+                        if (this.progressInterval) {
+                            clearInterval(this.progressInterval);
+                            this.progressInterval = null;
+                        }
+                    },
 
-                if (!previewUrl) {
-                    console.log('No preview_url available for this track.');
-                    this.noPreview = true;
-                    this.isPaused = true;
-                    this.positionMs = 0;
-                    this.durationMs = 0;
-                    return;
-                }
+                    connectPlayer() {
+                        if (this.player) return;
 
-                this.noPreview = false;
-                const audio = this.$refs.nativePlayer;
-                audio.src = previewUrl;
-                audio.load();
+                        console.log('Creating new Spotify.Player instance...');
+                        const player = new Spotify.Player({
+                            name: 'Reso Web Player',
+                            getOAuthToken: cb => {
+                                fetch('/spotify/token')
+                                    .then(res => res.json())
+                                    .then(data => { if (data.token) cb(data.token); })
+                                    .catch(err => console.error('Token fetch error:', err));
+                            },
+                            volume: 0.5
+                        });
 
-                audio.play().then(() => {
-                    this.isPaused = false;
-                    this.durationMs = 30000; // Spotify previews are always 30s
-                }).catch(err => {
-                    console.error('Browser blocked autoplay:', err);
-                    this.isPaused = true;
-                });
-            },
+                        player.addListener('initialization_error', ({ message }) => { console.error('init_error:', message); });
+                        player.addListener('authentication_error', ({ message }) => { console.error('auth_error:', message); });
+                        player.addListener('account_error', ({ message }) => { console.error('account_error:', message); });
+                        player.addListener('playback_error', ({ message }) => { console.error('playback_error:', message); });
 
-            // =============================================
-            // DUAL-MODE: Toggle Play/Pause
-            // =============================================
-            togglePlay() {
-                if (this.noPreview && !this.isPremium) return;
+                        player.addListener('player_state_changed', state => {
+                            if (!state) return;
+                            this.isPaused = state.paused;
+                            this.positionMs = state.position;
+                            this.durationMs = state.duration;
 
-                if (this.isPremium && this.player) {
-                    this.player.togglePlay();
-                } else if (!this.isPremium) {
-                    const audio = this.$refs.nativePlayer;
-                    if (!audio || !audio.src) return;
-                    if (audio.paused) {
-                        audio.play().then(() => { this.isPaused = false; }).catch(() => {});
-                    } else {
-                        audio.pause();
+                            const ct = state.track_window.current_track;
+                            if (ct) {
+                                this.trackName = ct.name;
+                                this.artistName = ct.artists?.map(a => a.name).join(', ');
+                                this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
+                            }
+
+                            if (!this.isPaused) this.startPolling();
+                            else this.stopPolling();
+                        });
+
+                        player.addListener('ready', ({ device_id }) => {
+                            console.log('Spotify SDK Ready (raw):', device_id);
+                            this.deviceId = device_id;
+                            this.player = player;
+
+                            console.log('Waiting 2s for device registration...');
+                            setTimeout(() => {
+                                console.log('Device registered:', device_id);
+                                this.deviceReady = true;
+
+                                if (this.pendingTrackUri) {
+                                    const uri = this.pendingTrackUri;
+                                    this.pendingTrackUri = null;
+                                    this._doPlay(uri);
+                                }
+                            }, 2000);
+                        });
+
+                        player.addListener('not_ready', ({ device_id }) => {
+                            console.log('Device ID has gone offline', device_id);
+                            this.deviceReady = false;
+                        });
+
+                        console.log('Connecting to Spotify (with DOM Interceptor)...');
+                        
+                        const originalBodyAppend = document.body.appendChild;
+                        const originalBodyInsertBefore = document.body.insertBefore;
+
+                        const interceptor = function(element) {
+                            if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
+                                console.log('Intercepted Spotify SDK iframe. Placing inside document.documentElement (html root) to prevent Livewire body swap destruction...');
+                                element.style.display = 'none';
+                                element.style.width = '0px';
+                                element.style.height = '0px';
+                                element.style.position = 'absolute';
+                                document.documentElement.appendChild(element);
+                                return element;
+                            }
+                            return null;
+                        };
+
+                        document.body.appendChild = function(element) {
+                            const intercepted = interceptor(element);
+                            if (intercepted) return intercepted;
+                            return originalBodyAppend.apply(this, arguments);
+                        };
+
+                        document.body.insertBefore = function(element, reference) {
+                            const intercepted = interceptor(element);
+                            if (intercepted) return intercepted;
+                            return originalBodyInsertBefore.apply(this, arguments);
+                        };
+
+                        player.connect();
+
+                        setTimeout(() => {
+                            document.body.appendChild = originalBodyAppend;
+                            document.body.insertBefore = originalBodyInsertBefore;
+                            console.log('Restored original document.body DOM methods.');
+                        }, 2000);
+                    },
+
+                    async _doPlay(spotifyUri, meta, retryCount = 0) {
+                        console.log(`_doPlay: uri=${spotifyUri}, premium=${this.isPremium}, ready=${this.deviceReady}, retry=${retryCount}`);
+
+                        if (this.isPremium) {
+                            if (!this.deviceId || !this.deviceReady) {
+                                console.log('Player not ready yet. Queuing track:', spotifyUri);
+                                this.pendingTrackUri = spotifyUri;
+                                this.connectPlayer();
+                                return;
+                            }
+
+                            try {
+                                const tokenRes = await fetch('/spotify/token');
+                                const tokenData = await tokenRes.json();
+                                if (!tokenData.token) throw new Error('No token returned');
+
+                                const headers = {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${tokenData.token}`
+                                };
+
+                                console.log('Sending play request to device:', this.deviceId);
+                                const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
+                                    method: 'PUT',
+                                    body: JSON.stringify({ uris: [spotifyUri] }),
+                                    headers,
+                                });
+
+                                if (!res.ok) {
+                                    const errBody = await res.text();
+                                    console.error('Spotify play failed:', res.status, errBody);
+
+                                    if (res.status === 404 && retryCount < 5) {
+                                        const delay = 1000 * (retryCount + 1);
+                                        console.log(`Play 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/5)`);
+                                        setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
+                                    } else if (res.status === 403) {
+                                        console.warn('Play returned 403 Forbidden. Falling back to HTML5 preview...');
+                                        this._playNativePreview(meta);
+                                    }
+                                } else {
+                                    console.log('Spotify play succeeded.');
+                                    this.isPaused = false;
+                                    this.startPolling();
+                                }
+                            } catch (err) {
+                                console.error('Failed to play track:', err);
+                            }
+                            return;
+                        }
+
+                        this._playNativePreview(meta);
+                    },
+
+                    _playNativePreview(meta) {
+                        const previewUrl = meta?.previewUrl || null;
+
+                        if (!previewUrl) {
+                            console.log('No preview_url available for this track.');
+                            this.noPreview = true;
+                            this.isPaused = true;
+                            this.positionMs = 0;
+                            this.durationMs = 0;
+                            return;
+                        }
+
+                        this.noPreview = false;
+                        const audio = window.__spotifyNativeAudio;
+                        audio.src = previewUrl;
+                        audio.load();
+
+                        audio.play().then(() => {
+                            this.isPaused = false;
+                            this.durationMs = 30000;
+                        }).catch(err => {
+                            console.error('Browser blocked autoplay:', err);
+                            this.isPaused = true;
+                        });
+                    },
+
+                    togglePlay() {
+                        if (this.noPreview && !this.isPremium) return;
+
+                        if (this.isPremium && this.player) {
+                            this.player.togglePlay();
+                        } else if (!this.isPremium) {
+                            const audio = window.__spotifyNativeAudio;
+                            if (!audio || !audio.src) return;
+                            if (audio.paused) {
+                                audio.play().then(() => { this.isPaused = false; }).catch(() => {});
+                            } else {
+                                audio.pause();
+                                this.isPaused = true;
+                            }
+                        }
+                    },
+
+                    seekRelative(deltaMs) {
+                        if (this.isPremium && this.player) {
+                            const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
+                            this.player.seek(newPos).then(() => { this.positionMs = newPos; });
+                        } else if (!this.isPremium) {
+                            const audio = window.__spotifyNativeAudio;
+                            const newTime = Math.max(0, Math.min(audio.duration || 30, audio.currentTime + (deltaMs / 1000)));
+                            audio.currentTime = newTime;
+                            this.positionMs = newTime * 1000;
+                        }
+                    },
+
+                    seekTo(event) {
+                        const bar = event.currentTarget;
+                        const rect = bar.getBoundingClientRect();
+                        const ratio = (event.clientX - rect.left) / rect.width;
+
+                        if (this.isPremium && this.player) {
+                            const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
+                            this.player.seek(newPos).then(() => { this.positionMs = newPos; });
+                        } else if (!this.isPremium) {
+                            const audio = window.__spotifyNativeAudio;
+                            const newTime = Math.max(0, Math.min(audio.duration || 30, ratio * (audio.duration || 30)));
+                            audio.currentTime = newTime;
+                            this.positionMs = newTime * 1000;
+                        }
+                    },
+
+                    closePlayer() {
+                        this.playerVisible = false;
+                        if (this.isPremium && this.player) {
+                            this.player.pause();
+                        } else {
+                            window.__spotifyNativeAudio.pause();
+                        }
                         this.isPaused = true;
+                        this.stopPolling();
                     }
-                }
-            },
-
-            // =============================================
-            // FREE USER: Native audio event handlers
-            // =============================================
-            onNativeTimeUpdate() {
-                if (!this.isPremium && this.$refs.nativePlayer) {
-                    this.positionMs = this.$refs.nativePlayer.currentTime * 1000;
-                }
-            },
-
-            onNativeEnded() {
-                this.isPaused = true;
-                this.positionMs = 0;
-            },
-
-            // =============================================
-            // SHARED: Seek
-            // =============================================
-            seekRelative(deltaMs) {
-                if (this.isPremium && this.player) {
-                    const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
-                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
-                } else if (!this.isPremium && this.$refs.nativePlayer) {
-                    const audio = this.$refs.nativePlayer;
-                    const newTime = Math.max(0, Math.min(audio.duration || 30, audio.currentTime + (deltaMs / 1000)));
-                    audio.currentTime = newTime;
-                    this.positionMs = newTime * 1000;
-                }
-            },
-
-            seekTo(event) {
-                const bar = event.currentTarget;
-                const rect = bar.getBoundingClientRect();
-                const ratio = (event.clientX - rect.left) / rect.width;
-
-                if (this.isPremium && this.player) {
-                    const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
-                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
-                } else if (!this.isPremium && this.$refs.nativePlayer) {
-                    const audio = this.$refs.nativePlayer;
-                    const newTime = Math.max(0, Math.min(audio.duration || 30, ratio * (audio.duration || 30)));
-                    audio.currentTime = newTime;
-                    this.positionMs = newTime * 1000;
-                }
-            },
-
-            closePlayer() {
-                this.playerVisible = false;
-                if (this.isPremium && this.player) {
-                    this.player.pause();
-                } else if (this.$refs.nativePlayer) {
-                    this.$refs.nativePlayer.pause();
-                }
-                this.isPaused = true;
-                this.stopPolling();
+                });
+            } else {
+                // Ensure isPremium is updated
+                window.__spotifyPlayerState.isPremium = config.isPremium;
             }
-        }));
+
+            return window.__spotifyPlayerState;
+        });
     });
 </script>
 @endif
