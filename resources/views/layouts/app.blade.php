@@ -142,7 +142,9 @@
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
         <x-add-to-reso-playlist-modal />
-        <x-spotify-web-player />
+        @persist('spotify-player')
+            <x-spotify-web-player />
+        @endpersist
 
         {{-- =====================================================
              Global Playback Chooser Modal
