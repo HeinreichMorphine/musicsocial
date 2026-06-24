@@ -63,7 +63,9 @@ class Comment extends Model
      */
     public function getCleanBody()
     {
-        $body = preg_replace('/[\[\(]SONG:[a-zA-Z0-9]+[\]\)]/i', '', $this->body);
+        // Strip raw Spotify track URLs (including optional query parameters)
+        $body = preg_replace('/(?:https?:\/\/)?open\.spotify\.com\/track\/[a-zA-Z0-9]+(?:\?[^\s\]\)]*)?/i', '', $this->body);
+        $body = preg_replace('/[\[\(]SONG:[a-zA-Z0-9]+[\]\)]/i', '', $body);
         $body = preg_replace('/\[UPVOTES:.*?\]/i', '', $body);
         return trim($body);
     }
