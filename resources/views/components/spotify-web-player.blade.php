@@ -134,13 +134,7 @@
                 }
 
                 if (this.isPremium) {
-                    if (window.SpotifySDKLoaded) {
-                        this.connectPlayer();
-                    } else {
-                        window.addEventListener('spotify-sdk-loaded', () => {
-                            this.connectPlayer();
-                        });
-                    }
+                    this.initializePlayer();
                 }
 
                 // Register global play trigger
@@ -160,8 +154,53 @@
                 };
             },
 
+            initializePlayer() {
+                if (!this.isPremium) return;
+
+                console.log('[SpotifyPlayer] Running initializePlayer (nuclear reset & script injection)');
+
+                // 1. Remove previous script tag if present
+                const existingScript = document.getElementById('spotify-sdk-script');
+                if (existingScript) {
+                    console.log('[SpotifyPlayer] Removing existing script tag');
+                    existingScript.remove();
+                }
+
+                // 2. Remove lingering Spotify playback SDK iframe if present
+                const existingIframe = document.getElementById('spotify-playback-sdk-iframe');
+                if (existingIframe) {
+                    console.log('[SpotifyPlayer] Removing lingering playback iframe');
+                    existingIframe.remove();
+                }
+
+                // 3. Clear window namespaces and state flags
+                if (window.Spotify) {
+                    delete window.Spotify;
+                }
+                window.SpotifySDKLoaded = false;
+                window.isSpotifyReady = false;
+
+                // 4. Register the SDK ready callback globally
+                window.onSpotifyWebPlaybackSDKReady = () => {
+                    console.log('[SpotifyPlayer] onSpotifyWebPlaybackSDKReady callback fired');
+                    window.SpotifySDKLoaded = true;
+                    this.connectPlayer();
+                };
+
+                // 5. Inject a fresh Spotify SDK script tag dynamically into the head
+                const script = document.createElement('script');
+                script.id = 'spotify-sdk-script';
+                script.src = 'https://sdk.scdn.co/spotify-player.js';
+                script.async = true;
+                document.head.appendChild(script);
+            },
+
             connectPlayer() {
                 if (this.player) return;
+                if (!window.Spotify) {
+                    console.warn('[SpotifyPlayer] connectPlayer called but window.Spotify is undefined. Waiting for script to load.');
+                    return;
+                }
 
                 console.log('[SpotifyPlayer] Initializing new Spotify Player instance inside component');
                 const player = new Spotify.Player({

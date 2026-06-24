@@ -122,18 +122,6 @@
              Alpine UI component can read them without managing SDK
              lifecycle at all.
         ============================================================ --}}
-        @auth
-        @if(auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
-        <script>
-            window.SpotifySDKLoaded = false;
-            window.onSpotifyWebPlaybackSDKReady = () => {
-                window.SpotifySDKLoaded = true;
-                window.dispatchEvent(new Event('spotify-sdk-loaded'));
-            };
-        </script>
-        <script src="https://sdk.scdn.co/spotify-player.js"></script>
-        @endif
-        @endauth
     </head>
     <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
         <div class="min-h-screen">
