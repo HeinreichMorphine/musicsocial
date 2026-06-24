@@ -268,27 +268,32 @@
                                     $isLinked = auth()->check() && auth()->user()->spotify_token;
                                     $isPremium = auth()->check() && auth()->user()->isSpotifyPremium();
                                 @endphp
-                                 <button type="button"
-                                     x-on:click.stop.prevent="
-                                         @if($isLinked)
-                                             if(window.toggleSpotifyPlayer) {
-                                                 window.toggleSpotifyPlayer('spotify:track:{{ $share->song->spotify_track_id }}', {name: '{{ addslashes($share->song->track_name) }}', artist: '{{ addslashes($share->song->artist_name) }}', art: '{{ $share->song->album_art_url }}', previewUrl: '{{ $share->song->preview_url }}'});
-                                             }
-                                         @else
-                                             playerOpen = !playerOpen;
-                                             if (playerOpen) {
-                                                 const audio = $el.closest('[x-data]').querySelector('audio');
-                                                 if (audio && audio.src) {
-                                                     audio.play().catch(e => console.error('Auto-play failed:', e));
-                                                 }
-                                             } else {
-                                                 const audio = $el.closest('[x-data]').querySelector('audio');
-                                                 if(audio) audio.pause();
-                                             }
-                                         @endif
-                                     "
-                                     title="Play track"
-                                     class="shrink-0 flex items-center justify-center hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
+                                
+                                <button type="button"
+                                    x-data="{ isReady: window.isSpotifyReady || false }"
+                                    @spotify-ready.window="isReady = true"
+                                    @spotify-not-ready.window="isReady = false"
+                                    x-on:click.stop.prevent="
+                                        @if($isPremium)
+                                            if(isReady && window.toggleSpotifyPlayer) {
+                                                window.toggleSpotifyPlayer('spotify:track:{{ $share->song->spotify_track_id }}', {name: '{{ addslashes($share->song->track_name) }}', artist: '{{ addslashes($share->song->artist_name) }}', art: '{{ $share->song->album_art_url }}', previewUrl: '{{ $share->song->preview_url }}'});
+                                            }
+                                        @else
+                                            playerOpen = !playerOpen;
+                                            if (playerOpen) {
+                                                const audio = $el.closest('[x-data]').querySelector('audio');
+                                                if (audio && audio.src) {
+                                                    audio.play().catch(e => console.error('Auto-play failed:', e));
+                                                }
+                                            } else {
+                                                const audio = $el.closest('[x-data]').querySelector('audio');
+                                                if(audio) audio.pause();
+                                            }
+                                        @endif
+                                    "
+                                    :title="@if($isPremium) isReady ? 'Play track' : 'Connecting to Spotify...' @else 'Play 30s preview' @endif"
+                                    :class="@if($isPremium) isReady ? 'hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] cursor-pointer' : 'opacity-40 grayscale cursor-not-allowed' @else 'hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] cursor-pointer' @endif"
+                                    class="shrink-0 flex items-center justify-center transition-all duration-300 relative">
                                      {{-- Spotify logo --}}
                                      <svg class="w-8 h-8 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
                                  </button>
@@ -555,17 +560,31 @@
                                                         <p class="text-sm text-gray-200 truncate drop-shadow-sm" x-text="songData.artist_name"></p>
                                                         
                                                         <div class="flex items-center space-x-3 mt-2">
+                                                            @php
+                                                                $isLinked = auth()->check() && auth()->user()->spotify_token;
+                                                                $isPremium = auth()->check() && auth()->user()->isSpotifyPremium();
+                                                            @endphp
                                                             {{-- Spotify Link --}}
                                                             @if($isLinked)
                                                                 <button type="button"
+                                                                    x-data="{ isReady: window.isSpotifyReady || false }"
+                                                                    @spotify-ready.window="isReady = true"
+                                                                    @spotify-not-ready.window="isReady = false"
                                                                     x-on:click.stop.prevent="
-                                                                        if(window.toggleSpotifyPlayer) {
-                                                                            window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url, previewUrl: songData.preview_url || ''});
-                                                                        }
+                                                                        @if($isPremium)
+                                                                            if(isReady && window.toggleSpotifyPlayer) {
+                                                                                window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url, previewUrl: songData.preview_url || ''});
+                                                                            }
+                                                                        @else
+                                                                            if(window.toggleSpotifyPlayer) {
+                                                                                window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url, previewUrl: songData.preview_url || ''});
+                                                                            }
+                                                                        @endif
                                                                     "
-                                                                    title="Play on Spotify"
-                                                                    class="hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] relative">
-                                                                    <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.84.241 1.2zM20.04 9.72c-3.96-2.34-10.44-2.58-14.22-1.44-.6.18-1.2-.12-1.38-.72-.18-.6.12-1.2.72-1.38 4.26-1.26 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.26.36z"/></svg>
+                                                                    :title="@if($isPremium) isReady ? 'Play on Spotify' : 'Connecting to Spotify...' @else 'Play 30s preview' @endif"
+                                                                    :class="@if($isPremium) isReady ? 'hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] cursor-pointer' : 'opacity-40 grayscale cursor-not-allowed' @else 'hover:scale-110 transition-transform hover:drop-shadow-[0_0_10px_rgba(30,215,96,0.6)] cursor-pointer' @endif"
+                                                                    class="shrink-0 flex items-center justify-center transition-all duration-300 relative">
+                                                                    <svg class="w-7 h-7 drop-shadow-lg" fill="#1DB954" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 4.32-1.38 9.841-.719 13.44 1.5.42.3.6.84.3 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
                                                                 </button>
                                                             @else
                                                                 <button type="button"
