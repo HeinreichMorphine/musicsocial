@@ -90,14 +90,53 @@
             },
 
             initPlayer() {
-                window._spotifyReady = false;
-                window._pendingTrackUri = null;
+                // Restore state from global cache if a running player already exists
+                if (window.__spotifyPlayer) {
+                    this.player = window.__spotifyPlayer;
+                    this.deviceId = window.__spotifyPlayerDeviceId;
+                    this.sdkInitialized = true;
+                    window._spotifyReady = true;
+
+                    // Restore UI states
+                    this.playerVisible = !!window.__spotifyPlayerVisible;
+                    this.collapsed = !!window.__spotifyPlayerCollapsed;
+
+                    // Restore play status and metadata
+                    if (window.__spotifyPlayerState) {
+                        this.currentTrack = window.__spotifyPlayerState.currentTrack;
+                        this.isPaused = window.__spotifyPlayerState.isPaused;
+                        this.isPlaying = window.__spotifyPlayerState.isPlaying;
+                        this.positionMs = window.__spotifyPlayerState.positionMs;
+                        this.durationMs = window.__spotifyPlayerState.durationMs;
+                    }
+
+                    // Start polling position if playing
+                    if (!this.isPaused) {
+                        this.startPolling();
+                    }
+                } else {
+                    window._spotifyReady = false;
+                    window._pendingTrackUri = null;
+                }
+
+                // Register this instance to receive live updates from the global player
+                window.__activeSpotifyPlayerComponent = this;
+
+                // Watchers to update global UI state
+                this.$watch('collapsed', value => {
+                    window.__spotifyPlayerCollapsed = value;
+                });
+                this.$watch('playerVisible', value => {
+                    window.__spotifyPlayerVisible = value;
+                });
 
                 // Global toggle — called by every song card's Spotify icon
                 window.toggleSpotifyPlayer = (spotifyUri) => {
                     this.playerVisible = !this.playerVisible;
+                    window.__spotifyPlayerVisible = this.playerVisible;
                     if (this.playerVisible) {
                         this.collapsed = false; // always show controls when reopened
+                        window.__spotifyPlayerCollapsed = false;
                         window.playSpotifyTrack(spotifyUri);
                     } else {
                         if (this.player) this.player.pause();
@@ -106,6 +145,7 @@
 
                 window.playSpotifyTrack = async (spotifyUri) => {
                     this.playerVisible = true;
+                    window.__spotifyPlayerVisible = true;
                     if (!this.sdkInitialized) {
                         this.connectPlayer();
                         window._pendingTrackUri = spotifyUri;
@@ -122,11 +162,67 @@
                 window.onSpotifyWebPlaybackSDKReady = () => {
                     if (window._pendingTrackUri) this.connectPlayer();
                 };
+
+                // Register cleanup
+                this.$cleanup(() => {
+                    this.cleanupPlayer();
+                });
+            },
+
+            cleanupPlayer() {
+                if (window.__activeSpotifyPlayerComponent === this) {
+                    window.__activeSpotifyPlayerComponent = null;
+                }
+                this.stopPolling();
+            },
+
+            destroy() {
+                this.cleanupPlayer();
+            },
+
+            startPolling() {
+                this.stopPolling();
+                this.progressInterval = setInterval(() => {
+                    if (this.player && !this.isPaused) {
+                        this.player.getCurrentState().then(state => {
+                            if (state) {
+                                this.positionMs = state.position;
+                                this.durationMs = state.duration;
+                                this.isPaused = state.paused;
+                                this.currentTrack = state.track_window.current_track;
+
+                                window.__spotifyPlayerState = {
+                                    currentTrack: this.currentTrack,
+                                    isPaused: this.isPaused,
+                                    isPlaying: this.isPlaying,
+                                    positionMs: this.positionMs,
+                                    durationMs: this.durationMs
+                                };
+                            }
+                        }).catch(() => {});
+                    }
+                }, 500);
+            },
+
+            stopPolling() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
             },
 
             connectPlayer() {
-                if (this.sdkInitialized) return;
+                if (this.sdkInitialized && window.__spotifyPlayer) return;
                 this.sdkInitialized = true;
+
+                if (window.__spotifyPlayer) {
+                    this.player = window.__spotifyPlayer;
+                    this.deviceId = window.__spotifyPlayerDeviceId;
+                    if (!this.isPaused) {
+                        this.startPolling();
+                    }
+                    return;
+                }
 
                 const player = new Spotify.Player({
                     name: 'Reso Web Player',
@@ -146,6 +242,7 @@
                 });
 
                 this.player = player;
+                window.__spotifyPlayer = player;
 
                 player.addListener('initialization_error', ({ message }) => { console.error('init_error:', message); });
                 player.addListener('authentication_error', ({ message }) => { console.error('auth_error:', message); });
@@ -154,16 +251,36 @@
 
                 player.addListener('player_state_changed', state => {
                     if (!state) return;
-                    this.currentTrack = state.track_window.current_track;
-                    this.isPaused = state.paused;
-                    this.isPlaying = true;
-                    this.positionMs = state.position;
-                    this.durationMs = state.duration;
+                    
+                    const data = {
+                        currentTrack: state.track_window.current_track,
+                        isPaused: state.paused,
+                        isPlaying: true,
+                        positionMs: state.position,
+                        durationMs: state.duration
+                    };
+
+                    window.__spotifyPlayerState = data;
+
+                    if (window.__activeSpotifyPlayerComponent) {
+                        window.__activeSpotifyPlayerComponent.currentTrack = data.currentTrack;
+                        window.__activeSpotifyPlayerComponent.isPaused = data.isPaused;
+                        window.__activeSpotifyPlayerComponent.isPlaying = data.isPlaying;
+                        window.__activeSpotifyPlayerComponent.positionMs = data.positionMs;
+                        window.__activeSpotifyPlayerComponent.durationMs = data.durationMs;
+
+                        if (!data.isPaused) {
+                            window.__activeSpotifyPlayerComponent.startPolling();
+                        } else {
+                            window.__activeSpotifyPlayerComponent.stopPolling();
+                        }
+                    }
                 });
 
                 player.addListener('ready', ({ device_id }) => {
                     console.log('Spotify Web Playback SDK is Ready with Device ID', device_id);
                     this.deviceId = device_id;
+                    window.__spotifyPlayerDeviceId = device_id;
                     window._spotifyReady = true;
 
                     // Flush any track that was clicked before we were ready
@@ -181,19 +298,9 @@
 
                 player.connect();
 
-                // Poll for live position updates (Spotify only fires state_changed on discrete events)
-                this.progressInterval = setInterval(() => {
-                    if (this.player && !this.isPaused) {
-                        this.player.getCurrentState().then(state => {
-                            if (state) {
-                                this.positionMs = state.position;
-                                this.durationMs = state.duration;
-                                this.isPaused = state.paused;
-                                this.currentTrack = state.track_window.current_track;
-                            }
-                        }).catch(() => {});
-                    }
-                }, 500);
+                if (!this.isPaused) {
+                    this.startPolling();
+                }
             },
 
             async _doPlay(spotifyUri) {
@@ -228,7 +335,12 @@
 
             seekRelative(deltaMs) {
                 const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
-                this.player?.seek(newPos).then(() => { this.positionMs = newPos; });
+                this.player?.seek(newPos).then(() => {
+                    this.positionMs = newPos;
+                    if (window.__spotifyPlayerState) {
+                        window.__spotifyPlayerState.positionMs = newPos;
+                    }
+                });
             },
 
             seekTo(event) {
@@ -236,7 +348,12 @@
                 const rect = bar.getBoundingClientRect();
                 const ratio = (event.clientX - rect.left) / rect.width;
                 const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
-                this.player?.seek(newPos).then(() => { this.positionMs = newPos; });
+                this.player?.seek(newPos).then(() => {
+                    this.positionMs = newPos;
+                    if (window.__spotifyPlayerState) {
+                        window.__spotifyPlayerState.positionMs = newPos;
+                    }
+                });
             }
         }));
     });
