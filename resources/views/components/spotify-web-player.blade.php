@@ -11,7 +11,7 @@
              style="display:none;"
              x-transition>
              
-            <div id="spotify-safe-house" style="display:none;"></div>
+            {{-- SDK iframe anchor: moved to <body> in init() so Livewire DOM swaps never touch it --}}
 
             <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
                 
@@ -166,6 +166,37 @@
                     }
 
                     if (this.isPremium && this.player && !this.isPaused) this.startPolling();
+
+                    // After every wire:navigate, check if our device is still alive.
+                    // If the SDK dropped the connection during the DOM swap, reconnect.
+                    if (!window.__spotifyNavListenerAttached) {
+                        window.__spotifyNavListenerAttached = true;
+                        document.addEventListener('livewire:navigated', () => {
+                            if (!this.isPremium) return;
+                            console.log('[SpotifyPlayer] livewire:navigated — checking device health...');
+                            // Give the DOM swap 300ms to fully settle before probing
+                            setTimeout(() => {
+                                if (!this.player || !this.deviceReady) {
+                                    console.log('[SpotifyPlayer] Device lost after navigation — reconnecting');
+                                    this.connectPlayer();
+                                } else {
+                                    // Device exists — verify it's still real on Spotify's API
+                                    this._waitForDevice(this.deviceId, 3).then(ok => {
+                                        if (!ok) {
+                                            console.warn('[SpotifyPlayer] Device not confirmed after nav — reconnecting');
+                                            if (this.player) { try { this.player.disconnect(); } catch(e){} }
+                                            this.player = null;
+                                            this.deviceId = null;
+                                            this.deviceReady = false;
+                                            this.connectPlayer();
+                                        } else {
+                                            console.log('[SpotifyPlayer] Device still alive after navigation ✓');
+                                        }
+                                    });
+                                }
+                            }, 300);
+                        });
+                    }
                 },
 
                 startPolling() {
@@ -243,14 +274,21 @@
                         });
                     });
 
-                    player.addListener('not_ready', () => { 
+                    player.addListener('not_ready', ({ device_id }) => {
+                        console.warn('[SpotifyPlayer] not_ready fired — device went offline, will reconnect');
                         this.deviceReady = false;
                         this.deviceId = null;
-                        this.player = null;   // must null so connectPlayer() doesn't bail at its guard
-
-                        // Broadcast offline status
+                        this.player = null;
                         window.isSpotifyReady = false;
                         window.dispatchEvent(new Event('spotify-not-ready'));
+                        // Auto-reconnect after a short delay — the SDK dropped because the
+                        // iframe context was disturbed during navigation. Give it 500ms to settle.
+                        setTimeout(() => {
+                            if (!this.player) {
+                                console.log('[SpotifyPlayer] Auto-reconnecting after not_ready...');
+                                this.connectPlayer();
+                            }
+                        }, 500);
                     });
 
                     player.addListener('initialization_error', ({ message }) => {
@@ -284,27 +322,35 @@
                         console.error('Spotify SDK playback error:', message);
                     });
                     
-                    // Safe-House DOM Interceptor — permanent, never torn down.
-                    // Ensures the SDK's hidden iframe always lands inside #spotify-safe-house
-                    // (inside the @persist boundary) regardless of network speed or navigation timing.
-                    const originalBodyAppend = document.body.appendChild;
-                    const originalBodyInsertBefore = document.body.insertBefore;
-                    
-                    document.body.appendChild = function(element) {
-                        if (element && element.tagName === 'IFRAME' && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
-                            document.getElementById('spotify-safe-house').appendChild(element);
-                            return element;
-                        }
-                        return originalBodyAppend.apply(this, arguments);
-                    };
-                    
-                    document.body.insertBefore = function(element, reference) {
-                        if (element && element.tagName === 'IFRAME' && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
-                            document.getElementById('spotify-safe-house').appendChild(element);
-                            return element;
-                        }
-                        return originalBodyInsertBefore.apply(this, arguments);
-                    };
+                    // Create a permanent safe-house div directly on <body> — completely
+                    // outside Livewire's managed DOM so it is NEVER touched during wire:navigate.
+                    // This is the key fix: the SDK iframe must not be inside any Livewire-managed
+                    // node, otherwise the DOM swap during navigation detaches it and kills the device.
+                    if (!document.getElementById('spotify-safe-house')) {
+                        const safeHouse = document.createElement('div');
+                        safeHouse.id = 'spotify-safe-house';
+                        safeHouse.style.display = 'none';
+                        document.body.appendChild(safeHouse);
+                    }
+
+                    // Intercept SDK iframe injection — always route to safe-house.
+                    if (!window.__spotifyIframeIntercepted) {
+                        window.__spotifyIframeIntercepted = true;
+                        const _origAppend = document.body.appendChild.bind(document.body);
+                        const _origInsert = document.body.insertBefore.bind(document.body);
+                        document.body.appendChild = function(el) {
+                            if (el && el.tagName === 'IFRAME' && (el.src || '').includes('sdk.scdn.co')) {
+                                return document.getElementById('spotify-safe-house').appendChild(el);
+                            }
+                            return _origAppend(el);
+                        };
+                        document.body.insertBefore = function(el, ref) {
+                            if (el && el.tagName === 'IFRAME' && (el.src || '').includes('sdk.scdn.co')) {
+                                return document.getElementById('spotify-safe-house').appendChild(el);
+                            }
+                            return _origInsert(el, ref);
+                        };
+                    }
 
                     player.connect();
                 },
