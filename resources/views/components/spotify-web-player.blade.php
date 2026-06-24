@@ -175,14 +175,11 @@
             },
 
             cleanupPlayer() {
-                if (window.__activeSpotifyPlayerComponent === this) {
-                    window.__activeSpotifyPlayerComponent = null;
-                }
-                this.stopPolling();
+                console.log('cleanupPlayer called (no-op to prevent transition freezes).');
             },
 
             destroy() {
-                this.cleanupPlayer();
+                console.log('destroy called (no-op to prevent transition freezes).');
             },
 
             startPolling() {
