@@ -125,94 +125,10 @@
         @auth
         @if(auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
         <script>
-            window.SpotifyPlayerInstance = null;
-            window.SpotifyDeviceId       = null;
-            window.SpotifyDeviceReady    = false;
-
+            window.SpotifySDKLoaded = false;
             window.onSpotifyWebPlaybackSDKReady = () => {
-                // --- Iframe Bodyguard ---
-                // Spotify secretly injects a hidden <iframe src="...scdn.co..."> into <body>.
-                // Livewire's DOM morph during wire:navigate sees it as an orphan and DELETES it,
-                // cutting the SDK's vocal cords while window.SpotifyPlayerInstance stays alive.
-                // MutationObserver catches it the millisecond it lands and stamps wire:ignore on it
-                // so Livewire's morphing engine treats it as completely invisible.
-                const _spotifyIframeGuard = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        mutation.addedNodes.forEach((node) => {
-                            if (node.nodeType === 1 && node.tagName === 'IFRAME' &&
-                                (node.id === 'spotify-playback-sdk-iframe' || 
-                                 (node.src || '').includes('spotify') || 
-                                 (node.src || '').includes('scdn.co'))) {
-                                node.setAttribute('wire:ignore', '');
-                                console.log('[SpotifySDK] Stamped wire:ignore on Spotify iframe');
-                                
-                                let safeHouse = document.getElementById('spotify-safe-house');
-                                if (!safeHouse) {
-                                    safeHouse = document.createElement('div');
-                                    safeHouse.id = 'spotify-safe-house';
-                                    safeHouse.style.display = 'none';
-                                    document.documentElement.appendChild(safeHouse);
-                                    console.log('[SpotifySDK] Created persistent Safe House on document.documentElement');
-                                }
-                                safeHouse.appendChild(node);
-                                console.log('[SpotifySDK] Relocated iframe to persistent Safe House');
-                                _spotifyIframeGuard.disconnect(); // one-time job done
-                            }
-                        });
-                    });
-                });
-                _spotifyIframeGuard.observe(document.body, { childList: true, subtree: true });
-                // ------------------------
-
-                const player = new Spotify.Player({
-                    name: 'Reso Web Player',
-                    getOAuthToken: cb => {
-                        fetch('/spotify/token')
-                            .then(r => r.json())
-                            .then(d => { if (d.token) cb(d.token); })
-                            .catch(err => console.error('[SpotifySDK] token fetch failed:', err));
-                    },
-                    volume: 0.5
-                });
-
-                player.addListener('ready', ({ device_id }) => {
-                    console.log('[SpotifySDK] ready — device_id:', device_id);
-                    window.SpotifyPlayerInstance = player;
-                    window.SpotifyDeviceId       = device_id;
-                    window.SpotifyDeviceReady    = true;
-                    window.dispatchEvent(new CustomEvent('spotify-ready', { detail: { device_id } }));
-                });
-
-                player.addListener('not_ready', ({ device_id }) => {
-                    console.warn('[SpotifySDK] not_ready — device offline:', device_id);
-                    window.SpotifyDeviceReady = false;
-                    window.dispatchEvent(new Event('spotify-not-ready'));
-                });
-
-                player.addListener('player_state_changed', state => {
-                    if (state) window.dispatchEvent(new CustomEvent('spotify-state', { detail: state }));
-                });
-
-                player.addListener('initialization_error', ({ message }) => {
-                    console.error('[SpotifySDK] initialization_error:', message);
-                    window.isSpotifySupported = false;
-                    window.dispatchEvent(new Event('spotify-unsupported'));
-                });
-                player.addListener('authentication_error', ({ message }) => {
-                    console.error('[SpotifySDK] authentication_error:', message);
-                    window.isSpotifySupported = false;
-                    window.dispatchEvent(new Event('spotify-unsupported'));
-                });
-                player.addListener('account_error', ({ message }) => {
-                    console.error('[SpotifySDK] account_error:', message);
-                    window.isSpotifySupported = false;
-                    window.dispatchEvent(new Event('spotify-unsupported'));
-                });
-                player.addListener('playback_error', ({ message }) => {
-                    console.error('[SpotifySDK] playback_error:', message);
-                });
-
-                player.connect();
+                window.SpotifySDKLoaded = true;
+                window.dispatchEvent(new Event('spotify-sdk-loaded'));
             };
         </script>
         <script src="https://sdk.scdn.co/spotify-player.js"></script>
@@ -246,9 +162,7 @@
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
         <x-add-to-reso-playlist-modal />
-        @persist('reso-web-player')
-            <x-spotify-web-player />
-        @endpersist
+        <x-spotify-web-player />
 
         {{-- =====================================================
              Global Playback Chooser Modal

@@ -105,10 +105,10 @@
             pendingTrackUri: null,
             pendingMeta: null,
 
-            // References to store our bound window listeners so we can destroy them precisely
-            _onReadyHandler: null,
-            _onStateHandler: null,
-            _onNotReadyHandler: null,
+            // Self-contained player properties
+            player: null,
+            deviceId: null,
+            deviceReady: false,
 
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
@@ -121,7 +121,7 @@
             },
 
             init() {
-                console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium, '| Warm SDK:', window.SpotifyDeviceReady);
+                console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium);
 
                 if (!window.__spotifyAudioListenersAttached) {
                     window.__spotifyAudioListenersAttached = true;
@@ -133,60 +133,17 @@
                     });
                 }
 
-                // 1. Define stable event listeners locked to this instance's memory scope
-                this._onReadyHandler = (e) => {
-                    console.log('[SpotifyPlayer] spotify-ready caught, device_id:', e.detail?.device_id);
-                    this.isLoading = false;
-                    if (this.pendingTrackUri) {
-                        const uri  = this.pendingTrackUri;
-                        const meta = this.pendingMeta;
-                        this.pendingTrackUri = null;
-                        this.pendingMeta     = null;
-                        this._doPlay(uri, meta);
+                if (this.isPremium) {
+                    if (window.SpotifySDKLoaded) {
+                        this.connectPlayer();
+                    } else {
+                        window.addEventListener('spotify-sdk-loaded', () => {
+                            this.connectPlayer();
+                        });
                     }
-                };
-
-                this._onStateHandler = (e) => {
-                    const state = e.detail;
-                    if (!state) return;
-                    this.isPaused   = state.paused;
-                    this.positionMs = state.position;
-                    this.durationMs = state.duration;
-                    if (!this.isPaused) this.startPolling();
-                    else this.stopPolling();
-                };
-
-                this._onNotReadyHandler = () => {
-                    console.warn('[SpotifyPlayer] spotify-not-ready received');
-                    this.isLoading = false;
-                };
-
-                // Attach them
-                window.addEventListener('spotify-ready',     this._onReadyHandler);
-                window.addEventListener('spotify-state',     this._onStateHandler);
-                window.addEventListener('spotify-not-ready', this._onNotReadyHandler);
-
-                // --- FIX: Real Interrogation Catch-up ---
-                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyPlayerInstance) {
-                    console.log('[SpotifyPlayer] Catching the train — asking Spotify what is playing...');
-                    
-                    window.SpotifyPlayerInstance.getCurrentState().then(state => {
-                        if (state && !state.paused) {
-                            const track = state.track_window.current_track;
-                            this.trackName     = track.name;
-                            this.artistName    = track.artists.map(a => a.name).join(', ');
-                            this.albumArt      = track.album.images[0]?.url || null;
-                            this.positionMs    = state.position;
-                            this.durationMs    = state.duration;
-                            this.isPaused      = false;
-                            this.playerVisible = true;
-                            this.startPolling();
-                            console.log('[SpotifyPlayer] Train caught! UI fully restored.');
-                        }
-                    });
                 }
 
-                // 3. Register the global playback trigger
+                // Register global play trigger
                 window.toggleSpotifyPlayer = (spotifyUri, meta) => {
                     this.playerVisible = true;
                     this.collapsed     = false;
@@ -203,20 +160,105 @@
                 };
             },
 
-            // NATIVE ALPINE HOOK: Fires the millisecond Livewire tears this DOM node down
+            connectPlayer() {
+                if (this.player) return;
+
+                console.log('[SpotifyPlayer] Initializing new Spotify Player instance inside component');
+                const player = new Spotify.Player({
+                    name: 'Reso Web Player',
+                    getOAuthToken: cb => {
+                        fetch('/spotify/token')
+                            .then(r => r.json())
+                            .then(d => { if (d.token) cb(d.token); })
+                            .catch(err => console.error('[SpotifyPlayer] token fetch failed:', err));
+                    },
+                    volume: 0.5
+                });
+
+                player.addListener('ready', ({ device_id }) => {
+                    console.log('[SpotifyPlayer] SDK ready, device_id:', device_id);
+                    this.deviceId = device_id;
+                    this.deviceReady = true;
+                    this.isLoading = false;
+
+                    if (this.pendingTrackUri) {
+                        const uri = this.pendingTrackUri;
+                        const meta = this.pendingMeta;
+                        this.pendingTrackUri = null;
+                        this.pendingMeta = null;
+                        this._doPlay(uri, meta);
+                    }
+                });
+
+                player.addListener('not_ready', ({ device_id }) => {
+                    console.warn('[SpotifyPlayer] SDK device offline:', device_id);
+                    this.deviceReady = false;
+                    this.isLoading = false;
+                });
+
+                player.addListener('player_state_changed', state => {
+                    if (!state) return;
+                    this.isPaused = state.paused;
+                    this.positionMs = state.position;
+                    this.durationMs = state.duration;
+
+                    // Update metadata if available from the state
+                    const currentTrack = state.track_window?.current_track;
+                    if (currentTrack) {
+                        this.trackName = currentTrack.name;
+                        this.artistName = currentTrack.artists.map(a => a.name).join(', ');
+                        this.albumArt = currentTrack.album.images[0]?.url || null;
+                    }
+
+                    if (!this.isPaused) this.startPolling();
+                    else this.stopPolling();
+                });
+
+                player.addListener('initialization_error', ({ message }) => {
+                    console.error('[SpotifyPlayer] initialization_error:', message);
+                    this.isLoading = false;
+                });
+                player.addListener('authentication_error', ({ message }) => {
+                    console.error('[SpotifyPlayer] authentication_error:', message);
+                    this.isLoading = false;
+                });
+                player.addListener('account_error', ({ message }) => {
+                    console.error('[SpotifyPlayer] account_error:', message);
+                    this.isLoading = false;
+                });
+                player.addListener('playback_error', ({ message }) => {
+                    console.error('[SpotifyPlayer] playback_error:', message);
+                    this.isLoading = false;
+                });
+
+                this.player = player;
+                player.connect();
+            },
+
             destroy() {
-                console.log('[SpotifyPlayer] Livewire navigated away. Tearing down component listeners.');
-                window.removeEventListener('spotify-ready',     this._onReadyHandler);
-                window.removeEventListener('spotify-state',     this._onStateHandler);
-                window.removeEventListener('spotify-not-ready', this._onNotReadyHandler);
+                console.log('[SpotifyPlayer] Component unmounting. Disconnecting player.');
+                if (this.player) {
+                    try {
+                        this.player.disconnect();
+                    } catch (e) {}
+                    this.player = null;
+                }
+                this.deviceId = null;
+                this.deviceReady = false;
                 this.stopPolling();
+
+                if (window.__spotifyNativeAudio) {
+                    try {
+                        window.__spotifyNativeAudio.pause();
+                    } catch (e) {}
+                }
             },
 
             startPolling() {
                 this.stopPolling();
                 this.progressInterval = setInterval(() => {
-                    if (window.SpotifyPlayerInstance && !this.isPaused) {
-                        window.SpotifyPlayerInstance.getCurrentState().then(state => {
+                    if (this.player && !this.isPaused) {
+                        this.player.getCurrentState().then(state => {
                             if (state) {
                                 this.positionMs = state.position;
                                 this.durationMs = state.duration;
@@ -236,11 +278,12 @@
 
             async _doPlay(spotifyUri, meta) {
                 if (this.isPremium) {
-                    if (!window.SpotifyDeviceReady || !window.SpotifyDeviceId) {
-                        console.log('[SpotifyPlayer] Device not ready — queuing track');
+                    if (!this.deviceReady || !this.deviceId) {
+                        console.log('[SpotifyPlayer] Device not ready yet — queuing track');
                         this.pendingTrackUri = spotifyUri;
                         this.pendingMeta     = meta;
                         this.isLoading       = true;
+                        this.connectPlayer();
                         return;
                     }
 
@@ -256,11 +299,11 @@
 
                         await fetch('https://api.spotify.com/v1/me/player', {
                             method: 'PUT',
-                            body: JSON.stringify({ device_ids: [window.SpotifyDeviceId], play: false }),
+                            body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
                             headers
                         }).catch(() => {});
 
-                        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${window.SpotifyDeviceId}`, {
+                        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
                             method: 'PUT',
                             body: JSON.stringify({ uris: [spotifyUri] }),
                             headers
@@ -309,8 +352,8 @@
             togglePlay() {
                 if (this.isLoading || (this.noPreview && !this.isPremium)) return;
 
-                if (this.isPremium && window.SpotifyPlayerInstance) {
-                    window.SpotifyPlayerInstance.togglePlay();
+                if (this.isPremium && this.player) {
+                    this.player.togglePlay();
                 } else if (!this.isPremium) {
                     const audio = window.__spotifyNativeAudio;
                     if (!audio?.src) return;
@@ -320,9 +363,9 @@
             },
 
             seekRelative(deltaMs) {
-                if (this.isPremium && window.SpotifyPlayerInstance) {
+                if (this.isPremium && this.player) {
                     const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
-                    window.SpotifyPlayerInstance.seek(newPos).then(() => { this.positionMs = newPos; });
+                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
                 } else if (!this.isPremium) {
                     const audio   = window.__spotifyNativeAudio;
                     const newTime = Math.max(0, Math.min(audio.duration || 30, audio.currentTime + (deltaMs / 1000)));
@@ -335,9 +378,9 @@
                 const rect  = event.currentTarget.getBoundingClientRect();
                 const ratio = (event.clientX - rect.left) / rect.width;
 
-                if (this.isPremium && window.SpotifyPlayerInstance) {
+                if (this.isPremium && this.player) {
                     const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
-                    window.SpotifyPlayerInstance.seek(newPos).then(() => { this.positionMs = newPos; });
+                    this.player.seek(newPos).then(() => { this.positionMs = newPos; });
                 } else if (!this.isPremium) {
                     const audio   = window.__spotifyNativeAudio;
                     const newTime = Math.max(0, Math.min(audio.duration || 30, ratio * (audio.duration || 30)));
@@ -348,7 +391,7 @@
 
             closePlayer() {
                 this.playerVisible = false;
-                if (this.isPremium && window.SpotifyPlayerInstance) window.SpotifyPlayerInstance.pause();
+                if (this.isPremium && this.player) this.player.pause();
                 else window.__spotifyNativeAudio?.pause();
                 this.isPaused  = true;
                 this.isLoading = false;
