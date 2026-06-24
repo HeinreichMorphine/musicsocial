@@ -73,10 +73,12 @@
                 {{-- Mini Song Card for Recommendations (Dynamic) --}}
                 <template x-if="songData">
                     <div class="mt-3">
-                        <div class="relative rounded-2xl p-4 group/card overflow-hidden">
-                            {{-- Background blur/gradient --}}
-                        <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover/card:scale-125" :style="`background-image: url('${songData.album_art_url || '/images/default-album-art.png'}');`"></div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                        <div class="relative rounded-2xl p-4 group/card">
+                            {{-- Background blur/gradient wrapper to allow child elements (like the playlist dropdown) to overflow --}}
+                            <div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+                                <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-90 transform scale-110 transition-transform duration-700 group-hover/card:scale-125" :style="`background-image: url('${songData.album_art_url || '/images/default-album-art.png'}');`"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                            </div>
                         
                         <div class="relative flex items-center space-x-4 z-10">
                             <img :src="songData.album_art_url || '/images/default-album-art.png'" alt="Album Art" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-xl transition-transform duration-300 group-hover/card:scale-105 shrink-0">
