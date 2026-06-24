@@ -73,16 +73,16 @@
                                 <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <p class="text-xs text-amber-800 leading-relaxed">
-                                    <strong>Not on the allowlist?</strong> Your Spotify login will be rejected with a 403 error. Please use Google or Email instead.
+                                <p class="text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed">
+                                    <strong class="text-amber-900 dark:text-amber-200">Not on the allowlist?</strong> Your Spotify login will be rejected with a 403 error. Please use Google or Email instead.
                                 </p>
                             </div>
                             <div class="flex items-start gap-3 p-3.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-500/20">
                                 <svg class="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
-                                <p class="text-xs text-blue-800 leading-relaxed">
-                                    <strong>Want access?</strong> Email <a href="mailto:adamakib507@gmail.com" class="font-bold underline decoration-blue-300 hover:text-blue-900 transition-colors">adamakib507@gmail.com</a> to request whitelist approval.
+                                <p class="text-xs text-blue-800 dark:text-blue-300/90 leading-relaxed">
+                                    <strong class="text-blue-900 dark:text-blue-200">Want access?</strong> Email <a href="mailto:adamakib507@gmail.com" class="font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors">adamakib507@gmail.com</a> to request whitelist approval.
                                 </p>
                             </div>
                         </div>

@@ -65,7 +65,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
                             <div class="text-sm text-blue-800 dark:text-blue-200 leading-snug">
-                                <strong class="text-blue-900 dark:text-blue-100 font-semibold">Want access?</strong> Email <a href="mailto:adamakib507@gmail.com" class="font-bold underline hover:text-blue-600 dark:hover:text-blue-300 transition-colors">adamakib507@gmail.com</a> to request whitelist approval.
+                                <strong class="text-blue-900 dark:text-blue-100 font-semibold">Want access?</strong> Email <a href="mailto:adamakib507@gmail.com" class="font-bold text-blue-600 dark:text-blue-400 hover:underline transition-colors">adamakib507@gmail.com</a> to request whitelist approval.
                             </div>
                         </div>
                     </div>
