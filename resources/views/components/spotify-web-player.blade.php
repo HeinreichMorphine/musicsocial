@@ -12,11 +12,15 @@
     --}}
     <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
          x-show="playerVisible"
-         class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
+         @touchstart="startDrag($event)"
+         @touchmove.window="dragging($event)"
+         @touchend.window="endDrag()"
+         :style="isMobile ? `transform: translate3d(calc(-50% + ${dragX}px), ${dragY}px, 0);` : ''"
+         class="fixed bottom-20 left-1/2 w-[92%] max-w-sm md:translate-x-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none transition-shadow will-change-transform"
          style="display:none;"
          x-transition>
 
-        <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
+        <div class="bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-full md:rounded-2xl p-2.5 md:p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
             
             <div class="flex items-center gap-4">
                 <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art" :class="isLoading ? 'opacity-50 animate-pulse' : ''">
@@ -110,6 +114,41 @@
             deviceId: null,
             deviceReady: false,
 
+            // --- NEW: Mobile Drag State ---
+            dragX: 0,
+            dragY: 0,
+            startY: 0,
+            startX: 0,
+            isDragging: false,
+            isMobile: false,
+
+            startDrag(e) {
+                // Only drag on mobile touch devices
+                if (window.innerWidth > 768) return; 
+                
+                // Ignore drags if they are touching buttons or the seekbar
+                if (e.target.closest('button') || e.target.closest('.group')) return;
+
+                this.isDragging = true;
+                const touch = e.touches[0];
+                this.startX = touch.clientX - this.dragX;
+                this.startY = touch.clientY - this.dragY;
+            },
+
+            dragging(e) {
+                if (!this.isDragging) return;
+                const touch = e.touches[0];
+                
+                // Allow free dragging across the screen
+                this.dragX = touch.clientX - this.startX;
+                this.dragY = touch.clientY - this.startY;
+            },
+
+            endDrag() {
+                if (!this.isDragging) return;
+                this.isDragging = false;
+            },
+
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
             },
@@ -122,6 +161,11 @@
 
             init() {
                 console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium);
+
+                this.isMobile = window.innerWidth <= 768;
+                window.addEventListener('resize', () => {
+                    this.isMobile = window.innerWidth <= 768;
+                });
 
                 if (!window.__spotifyAudioListenersAttached) {
                     window.__spotifyAudioListenersAttached = true;
