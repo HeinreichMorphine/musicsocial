@@ -247,7 +247,44 @@
                     this.deviceReady = false;
                 });
 
+                console.log('Connecting to Spotify (with DOM Interceptor)...');
+                
+                const originalBodyAppend = document.body.appendChild;
+                const originalBodyInsertBefore = document.body.insertBefore;
+
+                const interceptor = function(element) {
+                    if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
+                        console.log('Intercepted Spotify SDK iframe. Placing inside document.documentElement (html root) to prevent Livewire body swap destruction...');
+                        element.style.display = 'none';
+                        element.style.width = '0px';
+                        element.style.height = '0px';
+                        element.style.position = 'absolute';
+                        document.documentElement.appendChild(element);
+                        return element;
+                    }
+                    return null;
+                };
+
+                document.body.appendChild = function(element) {
+                    const intercepted = interceptor(element);
+                    if (intercepted) return intercepted;
+                    return originalBodyAppend.apply(this, arguments);
+                };
+
+                document.body.insertBefore = function(element, reference) {
+                    const intercepted = interceptor(element);
+                    if (intercepted) return intercepted;
+                    return originalBodyInsertBefore.apply(this, arguments);
+                };
+
                 player.connect();
+
+                // Restore original methods
+                setTimeout(() => {
+                    document.body.appendChild = originalBodyAppend;
+                    document.body.insertBefore = originalBodyInsertBefore;
+                    console.log('Restored original document.body DOM methods.');
+                }, 2000);
             },
 
             // =============================================
