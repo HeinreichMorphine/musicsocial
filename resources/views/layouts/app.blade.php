@@ -130,6 +130,27 @@
             window.SpotifyDeviceReady    = false;
 
             window.onSpotifyWebPlaybackSDKReady = () => {
+                // --- Iframe Bodyguard ---
+                // Spotify secretly injects a hidden <iframe src="...scdn.co..."> into <body>.
+                // Livewire's DOM morph during wire:navigate sees it as an orphan and DELETES it,
+                // cutting the SDK's vocal cords while window.SpotifyPlayerInstance stays alive.
+                // MutationObserver catches it the millisecond it lands and stamps wire:ignore on it
+                // so Livewire's morphing engine treats it as completely invisible.
+                const _spotifyIframeGuard = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === 1 && node.tagName === 'IFRAME' &&
+                                (node.src || '').includes('spotify')) {
+                                node.setAttribute('wire:ignore', '');
+                                console.log('[SpotifySDK] Stamped wire:ignore on Spotify iframe');
+                                _spotifyIframeGuard.disconnect(); // one-time job done
+                            }
+                        });
+                    });
+                });
+                _spotifyIframeGuard.observe(document.body, { childList: true, subtree: false });
+                // ------------------------
+
                 const player = new Spotify.Player({
                     name: 'Reso Web Player',
                     getOAuthToken: cb => {

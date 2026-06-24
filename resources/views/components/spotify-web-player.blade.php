@@ -116,9 +116,9 @@
             },
 
             init() {
-                console.log('[SpotifyPlayer] Alpine init() — isPremium:', this.isPremium, '| SDK ready:', window.SpotifyDeviceReady);
+                console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium, '| SDK already warm:', window.SpotifyDeviceReady);
 
-                // --- Free-user audio listeners (attach once) ---
+                // --- Free-user audio listeners (attach once globally) ---
                 if (!window.__spotifyAudioListenersAttached) {
                     window.__spotifyAudioListenersAttached = true;
                     window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
@@ -129,11 +129,24 @@
                     });
                 }
 
-                // --- Listen for SDK events dispatched from <head> script ---
-                window.addEventListener('spotify-ready', (e) => {
-                    console.log('[SpotifyPlayer] spotify-ready event, device_id:', e.detail?.device_id);
+                // --- FIX 1: Instant catch-up ---
+                // wire:navigate only swaps <body> — the <head> already fired spotify-ready
+                // long ago. If Alpine mounts on Page B after navigation, grab the warm
+                // SDK immediately instead of waiting for an event that will never fire again.
+                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyDeviceId) {
+                    console.log('[SpotifyPlayer] Catching the train — SDK already warm!');
                     this.isLoading = false;
-                    // Fire pending track that was clicked before device was ready
+                    if (window.SpotifyPlayerInstance && !this.isPaused) {
+                        this.startPolling();
+                    }
+                }
+
+                // --- FIX 2: Safe listeners with $cleanup auto-teardown ---
+                // Without $cleanup, every wire:navigate stacks another copy of these
+                // handlers — producing N ghost components all answering one event.
+                const handleReady = (e) => {
+                    console.log('[SpotifyPlayer] spotify-ready caught, device_id:', e.detail?.device_id);
+                    this.isLoading = false;
                     if (this.pendingTrackUri) {
                         const uri  = this.pendingTrackUri;
                         const meta = this.pendingMeta;
@@ -141,21 +154,33 @@
                         this.pendingMeta     = null;
                         this._doPlay(uri, meta);
                     }
-                });
+                };
 
-                window.addEventListener('spotify-state', (e) => {
+                const handleState = (e) => {
                     const state = e.detail;
                     if (!state) return;
-                    this.isPaused  = state.paused;
+                    this.isPaused   = state.paused;
                     this.positionMs = state.position;
                     this.durationMs = state.duration;
                     if (!this.isPaused) this.startPolling();
                     else this.stopPolling();
-                });
+                };
 
-                window.addEventListener('spotify-not-ready', () => {
+                const handleNotReady = () => {
                     console.warn('[SpotifyPlayer] spotify-not-ready received');
                     this.isLoading = false;
+                };
+
+                window.addEventListener('spotify-ready',     handleReady);
+                window.addEventListener('spotify-state',     handleState);
+                window.addEventListener('spotify-not-ready', handleNotReady);
+
+                // Auto-teardown when Livewire destroys this element during navigation.
+                this.$cleanup(() => {
+                    window.removeEventListener('spotify-ready',     handleReady);
+                    window.removeEventListener('spotify-state',     handleState);
+                    window.removeEventListener('spotify-not-ready', handleNotReady);
+                    this.stopPolling();
                 });
 
                 // --- Global play trigger (called by song cards / playlist rows) ---
@@ -173,11 +198,6 @@
 
                     this._doPlay(spotifyUri, meta);
                 };
-
-                // Resume polling if audio was playing before this component re-mounted
-                if (this.isPremium && window.SpotifyPlayerInstance && !this.isPaused) {
-                    this.startPolling();
-                }
             },
 
             startPolling() {
