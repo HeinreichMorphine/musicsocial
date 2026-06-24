@@ -15,8 +15,8 @@
          @touchstart="startDrag($event)"
          @touchmove.window="dragging($event)"
          @touchend.window="endDrag()"
-         :style="isMobile ? `transform: translate3d(calc(-50% + ${dragX}px), ${dragY}px, 0);` : ''"
-         class="fixed bottom-20 left-1/2 w-[92%] max-w-sm md:translate-x-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none transition-shadow will-change-transform"
+         :style="isMobile ? 'transform: translate3d(' + dragX + 'px, ' + dragY + 'px, 0);' : ''"
+         class="fixed bottom-24 left-4 right-4 md:left-auto md:right-4 md:bottom-4 md:w-96 z-[9999] pointer-events-none transition-shadow will-change-transform"
          style="display:none;"
          x-transition>
 
