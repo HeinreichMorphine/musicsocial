@@ -8,10 +8,10 @@
         
         <!-- Header row: track info + collapse toggle + close -->
         <div class="flex items-center gap-4">
-            <img :src="currentTrack?.album?.images[0]?.url" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
+            <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
             <div class="flex-1 min-w-0">
-                <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="currentTrack?.name"></p>
-                <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="currentTrack?.artists?.map(a => a.name).join(', ')"></p>
+                <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="trackName || 'Select a track'"></p>
+                <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="artistName || ''"></p>
             </div>
 
             <!-- Collapse/expand toggle -->
@@ -66,15 +66,23 @@
         Alpine.data('spotifyWebPlayer', () => ({
             player: null,
             deviceId: null,
+            deviceReady: false,       // True only after SDK 'ready' + registration delay
             isPlaying: false,
             isPaused: true,
-            currentTrack: null,
             playerVisible: false,
             collapsed: false,
             positionMs: 0,
             durationMs: 0,
             progressInterval: null,
+
+            // Preloaded metadata from database (shown instantly in UI)
+            trackName: null,
+            artistName: null,
+            albumArt: null,
+
+            // Pending play request
             pendingTrackUri: null,
+            pendingMeta: null,
 
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
@@ -89,12 +97,22 @@
             },
 
             init() {
-                // With @@persist, this init runs strictly ONCE.
                 console.log('Spotify Player initializing...');
 
-                window.toggleSpotifyPlayer = (spotifyUri) => {
+                // Global function called by share-card, discovery-card, comment etc.
+                // Signature: toggleSpotifyPlayer(spotifyUri, meta?)
+                //   meta = { name, artist, art }  (optional, for instant UI)
+                window.toggleSpotifyPlayer = (spotifyUri, meta) => {
                     this.playerVisible = true;
                     this.collapsed = false;
+
+                    // Preload UI instantly from database metadata
+                    if (meta) {
+                        this.trackName = meta.name || null;
+                        this.artistName = meta.artist || null;
+                        this.albumArt = meta.art || null;
+                    }
+
                     this._doPlay(spotifyUri);
                 };
 
@@ -117,7 +135,13 @@
                                 this.positionMs = state.position;
                                 this.durationMs = state.duration;
                                 this.isPaused = state.paused;
-                                this.currentTrack = state.track_window.current_track;
+                                // Update metadata from Spotify once playback starts
+                                const ct = state.track_window.current_track;
+                                if (ct) {
+                                    this.trackName = ct.name;
+                                    this.artistName = ct.artists?.map(a => a.name).join(', ');
+                                    this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
+                                }
                             }
                         }).catch(() => {});
                     }
@@ -154,36 +178,58 @@
                 player.addListener('player_state_changed', state => {
                     if (!state) return;
                     this.isPaused = state.paused;
-                    this.currentTrack = state.track_window.current_track;
                     this.positionMs = state.position;
                     this.durationMs = state.duration;
+
+                    // Update metadata from actual Spotify state
+                    const ct = state.track_window.current_track;
+                    if (ct) {
+                        this.trackName = ct.name;
+                        this.artistName = ct.artists?.map(a => a.name).join(', ');
+                        this.albumArt = ct.album?.images?.[0]?.url || this.albumArt;
+                    }
 
                     if (!this.isPaused) this.startPolling();
                     else this.stopPolling();
                 });
 
                 player.addListener('ready', ({ device_id }) => {
-                    console.log('Spotify SDK Ready:', device_id);
+                    console.log('Spotify SDK Ready (raw):', device_id);
                     this.deviceId = device_id;
                     this.player = player;
 
-                    if (this.pendingTrackUri) {
-                        const uri = this.pendingTrackUri;
-                        this.pendingTrackUri = null;
-                        this._doPlay(uri);
-                    }
+                    // CRITICAL: The device_id is NOT immediately usable on Spotify's servers.
+                    // The SDK fires 'ready' before the device fully registers upstream.
+                    // We must wait ~2s before sending any API calls targeting this device.
+                    console.log('Waiting 2s for device to register with Spotify servers...');
+                    setTimeout(() => {
+                        console.log('Device now considered fully registered:', device_id);
+                        this.deviceReady = true;
+
+                        // Flush any pending track
+                        if (this.pendingTrackUri) {
+                            const uri = this.pendingTrackUri;
+                            const meta = this.pendingMeta;
+                            this.pendingTrackUri = null;
+                            this.pendingMeta = null;
+                            this._doPlay(uri);
+                        }
+                    }, 2000);
                 });
 
                 player.addListener('not_ready', ({ device_id }) => {
                     console.log('Device ID has gone offline', device_id);
+                    this.deviceReady = false;
                 });
 
                 player.connect();
             },
 
             async _doPlay(spotifyUri, retryCount = 0) {
-                console.log(`_doPlay called for URI: ${spotifyUri}, deviceId: ${this.deviceId}, retryCount: ${retryCount}`);
-                if (!this.deviceId) {
+                console.log(`_doPlay: uri=${spotifyUri}, deviceId=${this.deviceId}, ready=${this.deviceReady}, retry=${retryCount}`);
+
+                // If player/device not ready yet, queue the track
+                if (!this.deviceId || !this.deviceReady) {
                     console.log('Player not ready yet. Queuing track:', spotifyUri);
                     this.pendingTrackUri = spotifyUri;
                     this.connectPlayer();
@@ -195,39 +241,54 @@
                     const tokenData = await tokenRes.json();
                     if (!tokenData.token) throw new Error('No token returned');
 
-                    // 1. Wake up the device by transferring playback to it first (prevents the 404)
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenData.token}`
+                    };
+
+                    // Step 1: Transfer playback to wake up the device
                     console.log('Transferring playback to device:', this.deviceId);
-                    await fetch('https://api.spotify.com/v1/me/player', {
+                    const transferRes = await fetch('https://api.spotify.com/v1/me/player', {
                         method: 'PUT',
                         body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${tokenData.token}`
-                        }
+                        headers
                     });
 
-                    // 2. Play the track
+                    // If transfer returns 404, the device still isn't registered — retry with backoff
+                    if (!transferRes.ok && transferRes.status === 404) {
+                        if (retryCount < 4) {
+                            const delay = 1500 * (retryCount + 1); // 1.5s, 3s, 4.5s, 6s
+                            console.log(`Transfer 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/4)`);
+                            setTimeout(() => this._doPlay(spotifyUri, retryCount + 1), delay);
+                            return;
+                        }
+                        console.error('Transfer playback failed after all retries. Device may not be available.');
+                        return;
+                    }
+
+                    // Step 2: Small delay to let transfer settle
+                    await new Promise(r => setTimeout(r, 300));
+
+                    // Step 3: Play the track
                     const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
                         method: 'PUT',
                         body: JSON.stringify({ uris: [spotifyUri] }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${tokenData.token}`
-                        },
+                        headers,
                     });
 
                     if (!res.ok) {
                         const errBody = await res.text();
                         console.error('Spotify play request failed:', res.status, errBody);
 
-                        if (res.status === 404 && retryCount < 3) {
-                            console.log(`Device sleeping/dormant, retrying... (${retryCount + 1}/3)`);
-                            setTimeout(() => {
-                                this._doPlay(spotifyUri, retryCount + 1);
-                            }, 1500);
+                        if (res.status === 404 && retryCount < 4) {
+                            const delay = 1500 * (retryCount + 1);
+                            console.log(`Play 404 — retrying in ${delay}ms (${retryCount + 1}/4)`);
+                            setTimeout(() => this._doPlay(spotifyUri, retryCount + 1), delay);
                         }
                     } else {
                         console.log('Spotify play request succeeded.');
+                        this.isPaused = false;
+                        this.startPolling();
                     }
                 } catch (err) {
                     console.error('Failed to play track:', err);

@@ -88,7 +88,7 @@
                                         <button type="button"
                                             @click.prevent.stop="
                                                 if(window.toggleSpotifyPlayer) {
-                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id);
+                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, {name: songData.track_name, artist: songData.artist_name, art: songData.album_art_url});
                                                 }
                                             "
                                             title="Play on Spotify"
