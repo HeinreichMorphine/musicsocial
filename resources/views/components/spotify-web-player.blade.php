@@ -4,79 +4,80 @@
         $isPremiumUser = $hasToken && auth()->user()->isSpotifyPremium(); 
     @endphp
 
-    <!-- Pass the safe boolean down to Alpine -->
-    <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
-         x-show="playerVisible"
-         class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
-         style="display:none;"
-         x-transition>
-    <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
-        
-        <!-- Header row: track info + collapse toggle + close -->
-        <div class="flex items-center gap-4">
-            <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
-            <div class="flex-1 min-w-0">
-                <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="trackName || 'Select a track'"></p>
-                <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="artistName || ''"></p>
+    @persist('global-spotify-player')
+        <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
+             x-show="playerVisible"
+             class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
+             style="display:none;"
+             x-transition>
+            <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
+                
+                <!-- Header row: track info + collapse toggle + close -->
+                <div class="flex items-center gap-4">
+                    <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="trackName || 'Select a track'"></p>
+                        <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="artistName || ''"></p>
+                    </div>
+
+                    <!-- Collapse/expand toggle -->
+                    <button @click="collapsed = !collapsed" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-all" :class="collapsed ? '' : 'rotate-180'" title="Collapse/Expand">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <!-- Full close -->
+                    <button @click="closePlayer()" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-colors" title="Close player">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Collapsible body: timeline + controls -->
+                <div x-show="!collapsed" x-transition>
+
+                    <!-- Preview banner for free users -->
+                    <template x-if="!isPremium">
+                        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                            <span x-text="noPreview ? 'No preview available (Spotify licensing)' : 'Playing 30s preview (Free Account)'"></span>
+                            <a href="https://spotify.com/premium" target="_blank" class="underline font-bold hover:opacity-80 shrink-0 ml-2">Upgrade</a>
+                        </div>
+                    </template>
+
+                    <!-- Progress timeline -->
+                    <div class="mt-3">
+                        <div class="relative h-1.5 bg-slate-200 dark:bg-white/20 rounded-full cursor-pointer group"
+                             @click="seekTo($event)">
+                            <div class="absolute top-0 left-0 h-full bg-slate-800 dark:bg-white rounded-full transition-all"
+                                 :style="`width: ${progressPercent}%`"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-800 dark:bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                 :style="`left: calc(${progressPercent}% - 6px)`"></div>
+                        </div>
+                        <div class="flex justify-between mt-1 text-[11px] text-slate-500 dark:text-zinc-400">
+                            <span x-text="formatTime(positionMs)"></span>
+                            <span x-text="formatTime(durationMs)"></span>
+                        </div>
+                    </div>
+
+                    <!-- Controls: back 10s, play/pause, forward 10s -->
+                    <div class="flex items-center justify-center gap-6 mt-3">
+                        <button @click="seekRelative(-10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                        </button>
+                        <button @click="togglePlay()" class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center" :class="noPreview && !isPremium ? 'opacity-40 cursor-not-allowed' : ''">
+                            <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
+                            <svg x-show="isPaused" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <button @click="seekRelative(10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6" style="transform: scaleX(-1)"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            <!-- Collapse/expand toggle -->
-            <button @click="collapsed = !collapsed" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-all" :class="collapsed ? '' : 'rotate-180'" title="Collapse/Expand">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
-                </svg>
-            </button>
-
-            <!-- Full close -->
-            <button @click="closePlayer()" class="text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white p-1 transition-colors" title="Close player">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
-            </button>
         </div>
+    @endpersist
 
-        <!-- Collapsible body: timeline + controls -->
-        <div x-show="!collapsed" x-transition>
-
-            <!-- Preview banner for free users -->
-            <template x-if="!isPremium">
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mt-2 text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-between">
-                    <span x-text="noPreview ? 'No preview available (Spotify licensing)' : 'Playing 30s preview (Free Account)'"></span>
-                    <a href="https://spotify.com/premium" target="_blank" class="underline font-bold hover:opacity-80 shrink-0 ml-2">Upgrade</a>
-                </div>
-            </template>
-
-            <!-- Progress timeline -->
-            <div class="mt-3">
-                <div class="relative h-1.5 bg-slate-200 dark:bg-white/20 rounded-full cursor-pointer group"
-                     @click="seekTo($event)">
-                    <div class="absolute top-0 left-0 h-full bg-slate-800 dark:bg-white rounded-full transition-all"
-                         :style="`width: ${progressPercent}%`"></div>
-                    <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-800 dark:bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                         :style="`left: calc(${progressPercent}% - 6px)`"></div>
-                </div>
-                <div class="flex justify-between mt-1 text-[11px] text-slate-500 dark:text-zinc-400">
-                    <span x-text="formatTime(positionMs)"></span>
-                    <span x-text="formatTime(durationMs)"></span>
-                </div>
-            </div>
-
-            <!-- Controls: back 10s, play/pause, forward 10s -->
-            <div class="flex items-center justify-center gap-6 mt-3">
-                <button @click="seekRelative(-10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-                </button>
-                <button @click="togglePlay()" class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center" :class="noPreview && !isPremium ? 'opacity-40 cursor-not-allowed' : ''">
-                    <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
-                    <svg x-show="isPaused" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
-                </button>
-                <button @click="seekRelative(10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6" style="transform: scaleX(-1)"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
+    <script>
     document.addEventListener('alpine:init', () => {
         // Initialize the global native audio if not present
         if (!window.__spotifyNativeAudio) {
