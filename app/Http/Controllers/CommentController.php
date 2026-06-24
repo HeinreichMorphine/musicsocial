@@ -56,7 +56,7 @@ class CommentController extends Controller
 
         // Auto-Detect Spotify Track in Comment Body
         $songId = null;
-        if (preg_match('/https:\/\/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/', $validated['body'], $trackMatches)) {
+        if (preg_match('/(?:https?:\/\/)?(?:www\.)?open\.spotify\.com\/track\/([a-zA-Z0-9]+)/i', $validated['body'], $trackMatches)) {
             $spotifyTrackId = $trackMatches[1];
             $trackData = $this->spotifyService->getTrack($spotifyTrackId);
             if (!isset($trackData['error']) && isset($trackData['song'])) {
