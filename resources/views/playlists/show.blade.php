@@ -139,7 +139,23 @@
                                                         <div class="text-gray-900 dark:text-white font-bold truncate text-sm" x-text="track?.track_name || track?.name"></div>
                                                         <template x-if="track?.spotify_track_id || track?.id">
                                                             <button type="button" 
-                                                                @click.prevent.stop="window.toggleSpotifyPreview('ply-' + ps.song_id, (track?.spotify_track_id || track?.id))"
+                                                                @click.prevent.stop="
+                                                                    const isPremium = {{ (auth()->check() && auth()->user()->isSpotifyPremium()) ? 'true' : 'false' }};
+                                                                    const isSupported = window.isSpotifySupported !== false;
+                                                                    if (isPremium && isSupported) {
+                                                                        if (window.toggleSpotifyPlayer) {
+                                                                            const meta = {
+                                                                                name: track?.track_name || track?.name,
+                                                                                artist: track?.artist_name || track?.artists?.[0]?.name,
+                                                                                art: track?.album_art_url || track?.album?.images?.[0]?.url,
+                                                                                previewUrl: track?.preview_url || ''
+                                                                            };
+                                                                            window.toggleSpotifyPlayer('spotify:track:' + (track?.spotify_track_id || track?.id), meta);
+                                                                        }
+                                                                    } else {
+                                                                        window.toggleSpotifyPreview('ply-' + ps.song_id, (track?.spotify_track_id || track?.id));
+                                                                    }
+                                                                "
                                                                 class="text-green-500 hover:scale-110 transition-transform">
                                                                 <svg :id="'spe-icon-play-ply-' + ps.song_id" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
                                                                     <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />

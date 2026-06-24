@@ -283,6 +283,7 @@
                                 <button type="button"
                                     x-on:click.stop.prevent="
                                         playerOpen = !playerOpen;
+                                        console.log('isPremium:', isPremium, 'isSupported:', isSupported);
                                         if (isPremium && isSupported) {
                                             if (playerOpen) {
                                                 if(isReady && window.toggleSpotifyPlayer) {
@@ -381,7 +382,7 @@
                      class="mt-3 rounded-2xl overflow-hidden bg-black/40 border border-white/10"
                      style="display:none;">
                     <iframe class="share-spotify-frame"
-                        x-bind:src="playerOpen && (!isPremium || !isSupported) ? 'https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0' : ''"
+                        x-bind:src="(playerOpen && (!isPremium || !isSupported)) ? 'https://open.spotify.com/embed/track/{{ $share->song->spotify_track_id }}?utm_source=generator&theme=0' : ''"
                         width="100%"
                         height="80"
                         frameborder="0"

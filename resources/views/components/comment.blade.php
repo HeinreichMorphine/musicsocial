@@ -93,6 +93,7 @@
                                     <button type="button"
                                         @click.prevent.stop="
                                             playerOpen = !playerOpen;
+                                            console.log('isPremium:', isPremium, 'isSupported:', isSupported);
                                             if (isPremium && isSupported) {
                                                 if (playerOpen) {
                                                     if(isReady && window.toggleSpotifyPlayer) {
@@ -109,6 +110,8 @@
                                                         window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, null);
                                                     }
                                                 }
+                                            } else {
+                                                console.log('Using Inline Iframe Fallback for comment track');
                                             }
                                         "
                                         :title="isPremium && isSupported ? (isReady ? 'Play on Spotify' : 'Connecting to Spotify...') : 'Play 30s preview'"
@@ -186,7 +189,7 @@
                              class="mt-3 rounded-2xl overflow-hidden bg-black/40 border border-white/10"
                              style="display:none;">
                             <iframe class="share-spotify-frame"
-                                x-bind:src="playerOpen && songData && (!isPremium || !isSupported) ? 'https://open.spotify.com/embed/track/' + songData.spotify_track_id + '?utm_source=generator&theme=0' : ''"
+                                x-bind:src="(playerOpen && songData && (!isPremium || !isSupported)) ? 'https://open.spotify.com/embed/track/' + songData.spotify_track_id + '?utm_source=generator&theme=0' : ''"
                                 width="100%"
                                 height="80"
                                 frameborder="0"

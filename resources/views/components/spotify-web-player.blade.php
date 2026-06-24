@@ -82,6 +82,7 @@
     @endpersist
 
 <script>
+    window.isSpotifySupported = true;
     document.addEventListener('alpine:init', () => {
         if (!window.__spotifyNativeAudio) {
             window.__spotifyNativeAudio = new Audio();
@@ -255,15 +256,6 @@
                 player.addListener('playback_error', ({ message }) => {
                     console.error('Spotify SDK playback error:', message);
                 });
-
-                // Fallback timeout: If SDK doesn't initialize or connect within 5s, mark unsupported to allow iframe fallback
-                setTimeout(() => {
-                    if (!this.deviceReady) {
-                        console.warn('Spotify Web Playback SDK ready timeout exceeded. Falling back to inline players.');
-                        window.isSpotifySupported = false;
-                        window.dispatchEvent(new Event('spotify-unsupported'));
-                    }
-                }, 5000);
                 
                 // Safe-House DOM Interceptor
                 const originalBodyAppend = document.body.appendChild;
