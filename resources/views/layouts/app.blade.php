@@ -146,13 +146,16 @@
                                 node.setAttribute('wire:ignore', '');
                                 console.log('[SpotifySDK] Stamped wire:ignore on Spotify iframe');
                                 
-                                const safeHouse = document.getElementById('spotify-safe-house');
-                                if (safeHouse) {
-                                    safeHouse.appendChild(node);
-                                    console.log('[SpotifySDK] Relocated iframe to safe-house');
-                                } else {
-                                    console.warn('[SpotifySDK] spotify-safe-house container not found!');
+                                let safeHouse = document.getElementById('spotify-safe-house');
+                                if (!safeHouse) {
+                                    safeHouse = document.createElement('div');
+                                    safeHouse.id = 'spotify-safe-house';
+                                    safeHouse.style.display = 'none';
+                                    document.documentElement.appendChild(safeHouse);
+                                    console.log('[SpotifySDK] Created persistent Safe House on document.documentElement');
                                 }
+                                safeHouse.appendChild(node);
+                                console.log('[SpotifySDK] Relocated iframe to persistent Safe House');
                                 _spotifyIframeGuard.disconnect(); // one-time job done
                             }
                         });
@@ -337,8 +340,6 @@
                 </div>
             </div>
         </div>
-
-        <div id="spotify-safe-house" wire:ignore></div>
 
         @livewireScripts
     </body>
