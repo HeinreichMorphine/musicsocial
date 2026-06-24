@@ -1,10 +1,16 @@
-@if(auth()->check() && auth()->user()->spotify_token)
-@php $isPremiumUser = auth()->user()->isSpotifyPremium(); @endphp
-<div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
-     x-show="playerVisible"
-     class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
-     style="display:none;"
-     x-transition>
+@if(auth()->check())
+    @persist('global-spotify-player')
+        @php 
+            $hasToken = !empty(auth()->user()->spotify_token);
+            $isPremiumUser = $hasToken && auth()->user()->isSpotifyPremium(); 
+        @endphp
+
+        <!-- Pass the safe boolean down to Alpine -->
+        <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
+             x-show="playerVisible"
+             class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
+             style="display:none;"
+             x-transition>
     <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
         
         <!-- Header row: track info + collapse toggle + close -->
@@ -73,6 +79,7 @@
         </div>
     </div>
 </div>
+@endpersist
 
 <script>
     document.addEventListener('alpine:init', () => {
