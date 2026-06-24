@@ -174,7 +174,8 @@ class AdminController extends Controller
             // Call Flask API to get recommendations
             try {
                 $client = new \GuzzleHttp\Client();
-                $response = $client->request('GET', "http://127.0.0.1:5000/recommendations/{$userId}");
+                $recommenderUrl = env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000');
+                $response = $client->request('GET', rtrim($recommenderUrl, '/') . "/recommendations/{$userId}");
                 $data = json_decode($response->getBody(), true);
                 if (isset($data['recommendations'])) {
                     $rawRecommendations = $data['recommendations'];
@@ -277,7 +278,8 @@ class AdminController extends Controller
     {
         try {
             $client = new \GuzzleHttp\Client();
-            $response = $client->request('POST', "http://127.0.0.1:5000/retrain");
+            $recommenderUrl = env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000');
+            $response = $client->request('POST', rtrim($recommenderUrl, '/') . "/retrain");
             
             if ($response->getStatusCode() == 200) {
                 return redirect()->back()->with('success', 'Model retraining initiated successfully.');
@@ -315,7 +317,8 @@ class AdminController extends Controller
 
     public function algoTestSuiteApi(Request $request, $endpoint = '')
     {
-        $url = 'http://127.0.0.1:5000/' . $endpoint;
+        $recommenderUrl = env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000');
+        $url = rtrim($recommenderUrl, '/') . '/' . $endpoint;
         $query = $request->getQueryString();
         if ($query) {
             $url .= '?' . $query;

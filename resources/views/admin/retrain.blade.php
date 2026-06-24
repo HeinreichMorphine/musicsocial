@@ -128,7 +128,7 @@
                 <span id="api-version" style="font-size:.75rem;color:#94a3b8;"></span>
             </div>
             <p style="font-size:.8rem;color:#64748b;margin-bottom:1rem;">
-                Flask service at <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;font-size:.75rem;">http://127.0.0.1:5000</code>
+                Flask service at <code style="background:#f1f5f9;padding:.1rem .35rem;border-radius:4px;font-size:.75rem;">{{ env('PYTHON_RECOMMENDER_URL', 'http://127.0.0.1:5000') }}</code>
                 handles SVD collaborative filtering, TF-IDF content similarity, and social trust scoring.
             </p>
             <form action="{{ route('admin.retrain.process') }}" method="POST" style="display:inline-block;">
@@ -253,7 +253,7 @@
     const badge = document.getElementById('api-status-badge');
     const verEl = document.getElementById('api-version');
     try {
-        const res = await fetch('http://127.0.0.1:5000/stats', { signal: AbortSignal.timeout(4000) });
+        const res = await fetch('{{ route("admin.algo-test-suite.api", ["endpoint" => "stats"]) }}', { signal: AbortSignal.timeout(4000) });
         if (res.ok) {
             const data = await res.json();
             badge.className = 'api-status online';
