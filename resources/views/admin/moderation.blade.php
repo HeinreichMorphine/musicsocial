@@ -92,7 +92,7 @@
                     @forelse($shares as $share)
                     <tr>
                         <td>
-                            <span class="author-chip">{{ $share->user->name ?? 'Unknown' }}</span>
+                            <span class="author-chip">{{ $share->user?->name ?? 'Unknown' }}</span>
                         </td>
                         <td>
                             <div class="content-preview">
@@ -156,7 +156,7 @@
                     @forelse($comments as $comment)
                     <tr>
                         <td>
-                            <span class="author-chip">{{ $comment->user->name ?? 'Unknown' }}</span>
+                            <span class="author-chip">{{ $comment->user?->name ?? 'Unknown' }}</span>
                         </td>
                         <td>
                             <div class="content-preview">{{ Str::limit($comment->body ?? '—', 70) }}</div>
