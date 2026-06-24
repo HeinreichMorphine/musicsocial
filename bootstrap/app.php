@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) =>
             $request->is('admin/*') ? route('admin.login') : route('login')
         );
+        // Automatically log out and block any user whose is_banned flag is set
+        $middleware->appendToGroup('web', \App\Http\Middleware\CheckBanned::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

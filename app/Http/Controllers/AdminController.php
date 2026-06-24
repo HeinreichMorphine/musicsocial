@@ -102,6 +102,11 @@ class AdminController extends Controller
         $user->is_banned = !$user->is_banned;
         $user->save();
 
+        // Force-logout: delete all active sessions for this user
+        if ($user->is_banned) {
+            \DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
+
         $status = $user->is_banned ? 'banned' : 'unbanned';
         return redirect()->back()->with('success', "User has been {$status}.");
     }
