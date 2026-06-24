@@ -9,8 +9,7 @@
              x-show="playerVisible"
              class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
              style="display:none;"
-             x-transition
-             wire:ignore>
+             x-transition>
              
             <div id="spotify-safe-house" style="display:none;"></div>
 
@@ -129,16 +128,19 @@
                 init() {
                     console.log('[SpotifyPlayer] init() called — player:', this.player ? 'EXISTS' : 'null', '| deviceId:', this.deviceId, '| deviceReady:', this.deviceReady, '| isPremium:', this.isPremium);
 
-                    // Audio listeners for Free Users
-                    window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
-                        if (!this.isPremium) this.positionMs = window.__spotifyNativeAudio.currentTime * 1000;
-                    });
-                    window.__spotifyNativeAudio.addEventListener('ended', () => {
-                        if (!this.isPremium) {
-                            this.isPaused = true;
-                            this.positionMs = 0;
-                        }
-                    });
+                    // Guard against stacking duplicate audio listeners if init() ever runs again
+                    if (!window.__spotifyAudioListenersAttached) {
+                        window.__spotifyAudioListenersAttached = true;
+                        window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
+                            if (!this.isPremium) this.positionMs = window.__spotifyNativeAudio.currentTime * 1000;
+                        });
+                        window.__spotifyNativeAudio.addEventListener('ended', () => {
+                            if (!this.isPremium) {
+                                this.isPaused = true;
+                                this.positionMs = 0;
+                            }
+                        });
+                    }
 
                     // Global trigger function
                     window.toggleSpotifyPlayer = (spotifyUri, meta) => {
@@ -164,16 +166,6 @@
                     }
 
                     if (this.isPremium && this.player && !this.isPaused) this.startPolling();
-
-                    // Safety-net: after every wire:navigate, check if the SDK player
-                    // needs to reconnect (e.g. if not_ready fired during navigation).
-                    document.addEventListener('livewire:navigated', () => {
-                        console.log('[SpotifyPlayer] livewire:navigated — player:', this.player ? 'EXISTS' : 'null', '| deviceId:', this.deviceId, '| deviceReady:', this.deviceReady);
-                        if (this.isPremium && !this.player) {
-                            console.log('[SpotifyPlayer] Player is null after navigation — reconnecting...');
-                            this.connectPlayer();
-                        }
-                    });
                 },
 
                 startPolling() {
@@ -199,7 +191,15 @@
                 },
 
                 connectPlayer() {
-                    if (this.player) return;
+                    // Skip only if we have a live, confirmed connection.
+                    // If player exists but device is dead (deviceReady: false), disconnect the
+                    // ghost and fall through to reconnect.
+                    if (this.player && this.deviceReady) return;
+                    if (this.player && !this.deviceReady) {
+                        try { this.player.disconnect(); } catch (e) {}
+                        this.player = null;
+                        this.deviceId = null;
+                    }
 
                     const player = new Spotify.Player({
                         name: 'Reso Web Player',
