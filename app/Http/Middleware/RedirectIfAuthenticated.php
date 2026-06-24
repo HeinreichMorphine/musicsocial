@@ -24,8 +24,13 @@ class RedirectIfAuthenticated
                 if ($guard === 'admin') {
                     return redirect()->route('admin.dashboard');
                 }
-                return redirect('/dashboard');
+                return redirect()->route('dashboard');
             }
+        }
+
+        // Also redirect logged-in regular users away from admin login
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
         }
 
         return $next($request);

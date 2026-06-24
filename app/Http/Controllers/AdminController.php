@@ -17,6 +17,14 @@ class AdminController extends Controller
 {
     public function loginForm()
     {
+        // Already-logged-in admin → go to dashboard
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
+        // Already-logged-in regular user → go to their dashboard
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
         return view('admin.login');
     }
 
