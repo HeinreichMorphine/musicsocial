@@ -143,6 +143,14 @@
                                 (node.src || '').includes('spotify')) {
                                 node.setAttribute('wire:ignore', '');
                                 console.log('[SpotifySDK] Stamped wire:ignore on Spotify iframe');
+                                
+                                const safeHouse = document.getElementById('spotify-safe-house');
+                                if (safeHouse) {
+                                    safeHouse.appendChild(node);
+                                    console.log('[SpotifySDK] Relocated iframe to safe-house');
+                                } else {
+                                    console.warn('[SpotifySDK] spotify-safe-house container not found!');
+                                }
                                 _spotifyIframeGuard.disconnect(); // one-time job done
                             }
                         });
@@ -233,7 +241,9 @@
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
         <x-add-to-reso-playlist-modal />
-        <x-spotify-web-player />
+        @persist('spotify-player')
+            <x-spotify-web-player />
+        @endpersist
 
         {{-- =====================================================
              Global Playback Chooser Modal
