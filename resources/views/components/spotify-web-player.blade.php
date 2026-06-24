@@ -93,8 +93,10 @@
             },
 
             init() {
+                console.log('Alpine spotifyWebPlayer component init() called. Global player exists:', !!window.__spotifyPlayer);
                 // Restore state from global cache if a running player already exists
                 if (window.__spotifyPlayer) {
+                    console.log('Restoring global player state.');
                     this.player = window.__spotifyPlayer;
                     this.deviceId = window.__spotifyPlayerDeviceId;
                     this.sdkInitialized = true;
@@ -215,12 +217,14 @@
             },
 
             connectPlayer() {
+                console.log('connectPlayer called. sdkInitialized:', this.sdkInitialized, 'hasGlobalPlayer:', !!window.__spotifyPlayer);
                 if (this.sdkInitialized && window.__spotifyPlayer) return;
 
                 if (!this.isSdkReady()) {
                     console.warn('Spotify SDK not loaded yet. Queuing connectPlayer...');
                     const prevOnReady = window.onSpotifyWebPlaybackSDKReady;
                     window.onSpotifyWebPlaybackSDKReady = () => {
+                        console.log('Deferred onSpotifyWebPlaybackSDKReady triggered.');
                         if (prevOnReady) prevOnReady();
                         this.connectPlayer();
                     };
@@ -230,6 +234,7 @@
                 this.sdkInitialized = true;
 
                 if (window.__spotifyPlayer) {
+                    console.log('Restoring global Spotify player instance.');
                     this.player = window.__spotifyPlayer;
                     this.deviceId = window.__spotifyPlayerDeviceId;
                     if (!this.isPaused) {
@@ -238,13 +243,16 @@
                     return;
                 }
 
+                console.log('Creating new Spotify.Player instance...');
                 const player = new Spotify.Player({
                     name: 'Reso Web Player',
                     getOAuthToken: cb => {
+                        console.log('Fetching Spotify OAuth token...');
                         fetch('/spotify/token')
                             .then(response => response.json())
                             .then(data => {
                                 if (data.token) {
+                                    console.log('OAuth token fetched successfully.');
                                     cb(data.token);
                                 } else {
                                     console.error('Failed to get Spotify token:', data);
@@ -264,6 +272,7 @@
                 player.addListener('playback_error', ({ message }) => { console.error('playback_error:', message); });
 
                 player.addListener('player_state_changed', state => {
+                    console.log('player_state_changed fired. State:', state);
                     if (!state) return;
                     
                     const data = {
@@ -277,6 +286,7 @@
                     window.__spotifyPlayerState = data;
 
                     if (window.__activeSpotifyPlayerComponent) {
+                        console.log('Updating active player component with state data.');
                         window.__activeSpotifyPlayerComponent.currentTrack = data.currentTrack;
                         window.__activeSpotifyPlayerComponent.isPaused = data.isPaused;
                         window.__activeSpotifyPlayerComponent.isPlaying = data.isPlaying;
@@ -292,7 +302,7 @@
                 });
 
                 player.addListener('ready', ({ device_id }) => {
-                    console.log('Spotify Web Playback SDK is Ready with Device ID', device_id);
+                    console.log('Spotify Web Playback SDK is Ready with Device ID:', device_id);
                     this.deviceId = device_id;
                     window.__spotifyPlayerDeviceId = device_id;
                     window._spotifyReady = true;
@@ -301,6 +311,7 @@
                     if (window._pendingTrackUri) {
                         const uri = window._pendingTrackUri;
                         window._pendingTrackUri = null;
+                        console.log('Flushing pending track uri:', uri);
                         this._doPlay(uri);
                     }
                 });
@@ -310,6 +321,7 @@
                     window._spotifyReady = false;
                 });
 
+                console.log('Connecting to Spotify...');
                 player.connect();
 
                 if (!this.isPaused) {
@@ -317,7 +329,8 @@
                 }
             },
 
-            async _doPlay(spotifyUri) {
+            async _doPlay(spotifyUri, retryCount = 0) {
+                console.log(`_doPlay called for URI: ${spotifyUri}, deviceId: ${this.deviceId}, retryCount: ${retryCount}`);
                 try {
                     const tokenRes = await fetch('/spotify/token');
                     const tokenData = await tokenRes.json();
@@ -335,6 +348,16 @@
                     if (!res.ok) {
                         const errBody = await res.text();
                         console.error('Spotify play request failed:', res.status, errBody);
+
+                        // If 404 (Device not found) and we haven't retried too many times, retry after a delay
+                        if (res.status === 404 && retryCount < 3) {
+                            console.log(`Device not found (404). Retrying play request in 1.5s (attempt ${retryCount + 1}/3)...`);
+                            setTimeout(() => {
+                                this._doPlay(spotifyUri, retryCount + 1);
+                            }, 1500);
+                        }
+                    } else {
+                        console.log('Spotify play request succeeded.');
                     }
                 } catch (err) {
                     console.error('Failed to play track:', err);
