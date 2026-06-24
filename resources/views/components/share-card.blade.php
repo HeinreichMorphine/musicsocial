@@ -270,16 +270,12 @@
                                 @endphp
                                  <button type="button"
                                      x-on:click.stop.prevent="
-                                         playerOpen = !playerOpen;
                                          @if($isPremium)
-                                             if (playerOpen) {
-                                                 if(window.playSpotifyTrack) {
-                                                     window.playSpotifyTrack('spotify:track:{{ $share->song->spotify_track_id }}');
-                                                 } else {
-                                                     console.error('Spotify Web Player not ready');
-                                                 }
+                                             if(window.toggleSpotifyPlayer) {
+                                                 window.toggleSpotifyPlayer('spotify:track:{{ $share->song->spotify_track_id }}');
                                              }
                                          @else
+                                             playerOpen = !playerOpen;
                                              if (playerOpen) {
                                                  const audio = $el.closest('[x-data]').querySelector('audio');
                                                  if (audio && audio.src) {
@@ -563,8 +559,8 @@
                                                             @if($isPremium)
                                                                 <button type="button"
                                                                     x-on:click.stop.prevent="
-                                                                        if(window.playSpotifyTrack) {
-                                                                            window.playSpotifyTrack('spotify:track:' + songData.spotify_track_id);
+                                                                        if(window.toggleSpotifyPlayer) {
+                                                                            window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id);
                                                                         }
                                                                     "
                                                                     title="Play on Spotify"

@@ -1,17 +1,62 @@
 @if(auth()->check() && auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
-<div x-data="spotifyWebPlayer()" x-init="initPlayer()" class="fixed bottom-0 right-0 w-full md:w-auto p-4 z-50 pointer-events-none">
-    <!-- Optional: Add a small floating player UI here if desired, otherwise we just use the SDK invisibly to stream audio -->
-    <div x-show="isPlaying" class="bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-4 shadow-2xl pointer-events-auto transform transition-all" x-transition>
-        <img :src="currentTrack?.album?.images[0]?.url" class="w-12 h-12 rounded-lg shadow-md" alt="Album Art">
-        <div class="flex-1 min-w-0 pr-4">
-            <p class="text-white font-bold text-sm truncate" x-text="currentTrack?.name"></p>
-            <p class="text-gray-400 text-xs truncate" x-text="currentTrack?.artists?.map(a => a.name).join(', ')"></p>
-        </div>
-        <div class="flex items-center gap-2">
-            <button @click="togglePlay" class="text-white hover:scale-110 transition-transform bg-white/10 p-2 rounded-full">
-                <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" /></svg>
-                <svg x-show="isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" /></svg>
+<div x-data="spotifyWebPlayer()" x-init="initPlayer()" 
+     x-show="playerVisible"
+     class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
+     style="display:none;"
+     x-transition>
+    <div class="bg-black/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto">
+        
+        <!-- Header row: track info + collapse toggle + close -->
+        <div class="flex items-center gap-4">
+            <img :src="currentTrack?.album?.images[0]?.url" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
+            <div class="flex-1 min-w-0">
+                <p class="text-white font-bold text-sm truncate" x-text="currentTrack?.name"></p>
+                <p class="text-gray-400 text-xs truncate" x-text="currentTrack?.artists?.map(a => a.name).join(', ')"></p>
+            </div>
+
+            <!-- Collapse/expand toggle -->
+            <button @click="collapsed = !collapsed" class="text-gray-400 hover:text-white p-1 transition-transform" :class="collapsed ? '' : 'rotate-180'" title="Collapse/Expand">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+                </svg>
             </button>
+
+            <!-- Full close -->
+            <button @click="playerVisible = false; player?.pause()" class="text-gray-400 hover:text-white p-1" title="Close player">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
+            </button>
+        </div>
+
+        <!-- Collapsible body: timeline + controls -->
+        <div x-show="!collapsed" x-transition>
+            <!-- White progress timeline -->
+            <div class="mt-3">
+                <div class="relative h-1.5 bg-white/20 rounded-full cursor-pointer group"
+                     @click="seekTo($event)">
+                    <div class="absolute top-0 left-0 h-full bg-white rounded-full transition-all"
+                         :style="`width: ${progressPercent}%`"></div>
+                    <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                         :style="`left: calc(${progressPercent}% - 6px)`"></div>
+                </div>
+                <div class="flex justify-between mt-1 text-[11px] text-gray-400">
+                    <span x-text="formatTime(positionMs)"></span>
+                    <span x-text="formatTime(durationMs)"></span>
+                </div>
+            </div>
+
+            <!-- Controls: back 10s, play/pause, forward 10s -->
+            <div class="flex items-center justify-center gap-6 mt-3">
+                <button @click="seekRelative(-10000)" class="text-white hover:scale-110 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                </button>
+                <button @click="togglePlay" class="text-black bg-white hover:scale-110 transition-transform rounded-full p-3">
+                    <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
+                    <svg x-show="isPaused" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
+                </button>
+                <button @click="seekRelative(10000)" class="text-white hover:scale-110 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6" style="transform: scaleX(-1)"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -26,13 +71,41 @@
             isPaused: true,
             currentTrack: null,
             sdkInitialized: false,
-            sdkReadyFired: false,
+            playerVisible: false,
+            collapsed: false,
+            positionMs: 0,
+            durationMs: 0,
+            progressInterval: null,
+
+            get progressPercent() {
+                return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
+            },
+
+            formatTime(ms) {
+                if (!ms) return '0:00';
+                const totalSec = Math.floor(ms / 1000);
+                const min = Math.floor(totalSec / 60);
+                const sec = totalSec % 60;
+                return `${min}:${sec.toString().padStart(2, '0')}`;
+            },
+
             initPlayer() {
                 window._spotifyReady = false;
                 window._pendingTrackUri = null;
 
+                // Global toggle — called by every song card's Spotify icon
+                window.toggleSpotifyPlayer = (spotifyUri) => {
+                    this.playerVisible = !this.playerVisible;
+                    if (this.playerVisible) {
+                        this.collapsed = false; // always show controls when reopened
+                        window.playSpotifyTrack(spotifyUri);
+                    } else {
+                        if (this.player) this.player.pause();
+                    }
+                };
+
                 window.playSpotifyTrack = async (spotifyUri) => {
-                    // Lazily connect on first real play action (user gesture)
+                    this.playerVisible = true;
                     if (!this.sdkInitialized) {
                         this.connectPlayer();
                         window._pendingTrackUri = spotifyUri;
@@ -47,13 +120,10 @@
                 };
 
                 window.onSpotifyWebPlaybackSDKReady = () => {
-                    this.sdkReadyFired = true;
-                    // If play was clicked before SDK ready event, we connect now
-                    if (window._pendingTrackUri) {
-                        this.connectPlayer();
-                    }
+                    if (window._pendingTrackUri) this.connectPlayer();
                 };
             },
+
             connectPlayer() {
                 if (this.sdkInitialized) return;
                 this.sdkInitialized = true;
@@ -87,6 +157,8 @@
                     this.currentTrack = state.track_window.current_track;
                     this.isPaused = state.paused;
                     this.isPlaying = true;
+                    this.positionMs = state.position;
+                    this.durationMs = state.duration;
                 });
 
                 player.addListener('ready', ({ device_id }) => {
@@ -109,19 +181,21 @@
 
                 player.connect();
 
-                // Defensive polling fallback for Firefox state sync issues
-                setInterval(() => {
-                    if (this.player) {
+                // Poll for live position updates (Spotify only fires state_changed on discrete events)
+                this.progressInterval = setInterval(() => {
+                    if (this.player && !this.isPaused) {
                         this.player.getCurrentState().then(state => {
                             if (state) {
-                                this.currentTrack = state.track_window.current_track;
+                                this.positionMs = state.position;
+                                this.durationMs = state.duration;
                                 this.isPaused = state.paused;
-                                this.isPlaying = true;
+                                this.currentTrack = state.track_window.current_track;
                             }
                         }).catch(() => {});
                     }
-                }, 1000);
+                }, 500);
             },
+
             async _doPlay(spotifyUri) {
                 try {
                     const tokenRes = await fetch('/spotify/token');
@@ -145,10 +219,24 @@
                     console.error('Failed to play track:', err);
                 }
             },
+
             togglePlay() {
                 if (this.player) {
                     this.player.togglePlay();
                 }
+            },
+
+            seekRelative(deltaMs) {
+                const newPos = Math.max(0, Math.min(this.durationMs, this.positionMs + deltaMs));
+                this.player?.seek(newPos).then(() => { this.positionMs = newPos; });
+            },
+
+            seekTo(event) {
+                const bar = event.currentTarget;
+                const rect = bar.getBoundingClientRect();
+                const ratio = (event.clientX - rect.left) / rect.width;
+                const newPos = Math.max(0, Math.min(this.durationMs, ratio * this.durationMs));
+                this.player?.seek(newPos).then(() => { this.positionMs = newPos; });
             }
         }));
     });

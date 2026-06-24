@@ -87,10 +87,8 @@
                                     @if($isPremium)
                                         <button type="button"
                                             @click.prevent.stop="
-                                                if(window.playSpotifyTrack) {
-                                                    window.playSpotifyTrack('spotify:track:' + songData.spotify_track_id);
-                                                } else {
-                                                    console.error('Spotify Web Player not ready');
+                                                if(window.toggleSpotifyPlayer) {
+                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id);
                                                 }
                                             "
                                             title="Play on Spotify"
