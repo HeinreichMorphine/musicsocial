@@ -4,8 +4,8 @@
 
 @push('styles')
 <style>
-    .retrain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    @media (max-width: 900px) { .retrain-grid { grid-template-columns: 1fr; } }
+    .recs-preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 900px) { .recs-preview-grid { grid-template-columns: 1fr; } }
 
     .panel-card {
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
@@ -113,7 +113,7 @@
 
 @section('content')
 
-<div class="retrain-grid">
+<div class="recs-preview-grid">
 
     {{-- Flask API Status Card --}}
     <div class="panel-card">
