@@ -19,6 +19,16 @@
                 bottom: 1rem !important;
             }
         }
+        .spotify-player-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-color: rgba(229, 231, 235, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .dark .spotify-player-card {
+            background-color: rgba(20, 20, 20, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
     </style>
 
     <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
@@ -27,7 +37,7 @@
          style="display:none;"
          x-transition>
 
-        <div class="bg-white/95 dark:bg-[#141414]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.3)] pointer-events-auto transition-colors duration-200 w-full">
+        <div class="spotify-player-card border rounded-2xl p-4 shadow-[0_16px_32px_-8px_rgba(0,0,0,0.3)] pointer-events-auto transition-colors duration-200 w-full">
             
             <div class="flex items-center gap-4">
                 <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art" :class="isLoading ? 'opacity-50 animate-pulse' : ''">
