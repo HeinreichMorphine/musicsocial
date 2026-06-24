@@ -106,6 +106,7 @@
             artistName: null,
             albumArt: null,
             pendingTrackUri: null,
+            _retryTimer: null,
 
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
@@ -278,14 +279,12 @@
                 };
 
                 player.connect();
-
-                setTimeout(() => {
-                    document.body.appendChild = originalBodyAppend;
-                    document.body.insertBefore = originalBodyInsertBefore;
-                }, 2000);
             },
 
             async _doPlay(spotifyUri, meta, retryCount = 0) {
+                // Cancel any in-flight retry chain before starting a new attempt
+                clearTimeout(this._retryTimer);
+
                 if (this.isPremium) {
                     if (!this.deviceId || !this.deviceReady) {
                         this.pendingTrackUri = spotifyUri;
@@ -321,8 +320,18 @@
                         if (!res.ok) {
                             if (res.status === 404 && retryCount < 4) {
                                 const delay = 1500 * (retryCount + 1);
-                                setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
+                                this._retryTimer = setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
                             } else {
+                                // Retries exhausted on 404 — SDK connection is dead.
+                                // Reset state and reconnect so the next play attempt starts fresh.
+                                if (res.status === 404) {
+                                    this.deviceId = null;
+                                    this.deviceReady = false;
+                                    this.player = null;
+                                    this.pendingTrackUri = spotifyUri;
+                                    this.connectPlayer();
+                                    return;
+                                }
                                 this.isLoading = false;
                                 if (res.status === 403) this._playNativePreview(meta);
                             }
