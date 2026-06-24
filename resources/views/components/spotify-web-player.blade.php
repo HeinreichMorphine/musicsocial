@@ -14,10 +14,10 @@
                 
                 <!-- Header row: track info + collapse toggle + close -->
                 <div class="flex items-center gap-4">
-                    <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0" alt="Album Art">
+                    <img :src="albumArt || '/images/default-album-art.png'" class="w-12 h-12 rounded-lg shadow-md shrink-0 transition-opacity" alt="Album Art" :class="isLoading ? 'opacity-50 animate-pulse' : ''">
                     <div class="flex-1 min-w-0">
-                        <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="trackName || 'Select a track'"></p>
-                        <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="artistName || ''"></p>
+                        <p class="text-slate-900 dark:text-white font-bold text-sm truncate" x-text="isLoading ? 'Connecting to Spotify...' : (trackName || 'Select a track')"></p>
+                        <p class="text-slate-500 dark:text-zinc-400 text-xs truncate" x-text="isLoading ? 'Waking up device' : (artistName || '')"></p>
                     </div>
 
                     <!-- Collapse/expand toggle -->
@@ -64,10 +64,22 @@
                         <button @click="seekRelative(-10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
                         </button>
-                        <button @click="togglePlay()" class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center" :class="noPreview && !isPremium ? 'opacity-40 cursor-not-allowed' : ''">
-                            <svg x-show="!isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
-                            <svg x-show="isPaused" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
+                        
+                        <button @click="togglePlay()" 
+                                :disabled="isLoading || (noPreview && !isPremium)"
+                                class="text-white bg-slate-900 hover:bg-black dark:text-black dark:bg-white dark:hover:bg-zinc-200 hover:scale-110 transition-transform rounded-full p-3 flex items-center justify-center" 
+                                :class="isLoading || (noPreview && !isPremium) ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''">
+                            
+                            <svg x-show="isLoading" class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <!-- Play Triangle (shown when NOT loading and paused) -->
+                            <svg x-show="!isLoading && isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/></svg>
+                            <!-- Pause Bars (shown when NOT loading and playing) -->
+                            <svg x-show="!isLoading && !isPaused" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/></svg>
                         </button>
+
                         <button @click="seekRelative(10000)" class="text-slate-700 hover:text-black dark:text-zinc-300 dark:hover:text-white hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6" style="transform: scaleX(-1)"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
                         </button>
@@ -113,6 +125,7 @@
                     isPaused: true,
                     playerVisible: false,
                     collapsed: false,
+                    isLoading: false, // Player loading state
                     positionMs: 0,
                     durationMs: 0,
                     progressInterval: null,
@@ -146,6 +159,7 @@
                             this.playerVisible = true;
                             this.collapsed = false;
                             this.noPreview = false;
+                            this.isLoading = true; // Trigger loading UI instantly
 
                             if (meta) {
                                 this.trackName = meta.name || null;
@@ -307,6 +321,7 @@
                             if (!this.deviceId || !this.deviceReady) {
                                 console.log('Player not ready yet. Queuing track:', spotifyUri);
                                 this.pendingTrackUri = spotifyUri;
+                                this.isLoading = true;
                                 this.connectPlayer();
                                 return;
                             }
@@ -321,6 +336,13 @@
                                     'Authorization': `Bearer ${tokenData.token}`
                                 };
 
+                                // WAKE UP CALL: Force Spotify servers to recognize the device speaker state before play request
+                                await fetch('https://api.spotify.com/v1/me/player', {
+                                    method: 'PUT',
+                                    body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
+                                    headers
+                                }).catch(() => {});
+
                                 console.log('Sending play request to device:', this.deviceId);
                                 const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
                                     method: 'PUT',
@@ -332,21 +354,26 @@
                                     const errBody = await res.text();
                                     console.error('Spotify play failed:', res.status, errBody);
 
-                                    if (res.status === 404 && retryCount < 5) {
-                                        const delay = 1000 * (retryCount + 1);
-                                        console.log(`Play 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/5)`);
+                                    if (res.status === 404 && retryCount < 4) {
+                                        const delay = 1500 * (retryCount + 1);
+                                        console.log(`Play 404 — device not registered yet, retrying in ${delay}ms (${retryCount + 1}/4)`);
                                         setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
-                                    } else if (res.status === 403) {
-                                        console.warn('Play returned 403 Forbidden. Falling back to HTML5 preview...');
-                                        this._playNativePreview(meta);
+                                    } else {
+                                        this.isLoading = false;
+                                        if (res.status === 403) {
+                                            console.warn('Play returned 403 Forbidden. Falling back to HTML5 preview...');
+                                            this._playNativePreview(meta);
+                                        }
                                     }
                                 } else {
                                     console.log('Spotify play succeeded.');
+                                    this.isLoading = false;
                                     this.isPaused = false;
                                     this.startPolling();
                                 }
                             } catch (err) {
                                 console.error('Failed to play track:', err);
+                                this.isLoading = false;
                             }
                             return;
                         }
@@ -356,6 +383,7 @@
 
                     _playNativePreview(meta) {
                         const previewUrl = meta?.previewUrl || null;
+                        this.isLoading = false;
 
                         if (!previewUrl) {
                             console.log('No preview_url available for this track.');
@@ -381,7 +409,7 @@
                     },
 
                     togglePlay() {
-                        if (this.noPreview && !this.isPremium) return;
+                        if (this.isLoading || (this.noPreview && !this.isPremium)) return;
 
                         if (this.isPremium && this.player) {
                             this.player.togglePlay();
@@ -433,6 +461,7 @@
                             window.__spotifyNativeAudio.pause();
                         }
                         this.isPaused = true;
+                        this.isLoading = false;
                         this.stopPolling();
                     }
                 });
