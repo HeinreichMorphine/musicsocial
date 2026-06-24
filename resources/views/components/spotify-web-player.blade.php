@@ -127,6 +127,8 @@
                 },
 
                 init() {
+                    console.log('[SpotifyPlayer] init() called — player:', this.player ? 'EXISTS' : 'null', '| deviceId:', this.deviceId, '| deviceReady:', this.deviceReady, '| isPremium:', this.isPremium);
+
                     // Audio listeners for Free Users
                     window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
                         if (!this.isPremium) this.positionMs = window.__spotifyNativeAudio.currentTime * 1000;
@@ -162,6 +164,16 @@
                     }
 
                     if (this.isPremium && this.player && !this.isPaused) this.startPolling();
+
+                    // Safety-net: after every wire:navigate, check if the SDK player
+                    // needs to reconnect (e.g. if not_ready fired during navigation).
+                    document.addEventListener('livewire:navigated', () => {
+                        console.log('[SpotifyPlayer] livewire:navigated — player:', this.player ? 'EXISTS' : 'null', '| deviceId:', this.deviceId, '| deviceReady:', this.deviceReady);
+                        if (this.isPremium && !this.player) {
+                            console.log('[SpotifyPlayer] Player is null after navigation — reconnecting...');
+                            this.connectPlayer();
+                        }
+                    });
                 },
 
                 startPolling() {
