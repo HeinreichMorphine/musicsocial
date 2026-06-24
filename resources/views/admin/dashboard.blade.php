@@ -124,13 +124,15 @@
             </div>
         </div>
     </a>
-    <div class="kpi-card">
-        <div class="kpi-icon orange"><i class="fa fa-music"></i></div>
-        <div>
-            <div class="kpi-val">{{ number_format($songCount) }}</div>
-            <div class="kpi-label">Songs in Catalog</div>
+    <a href="{{ route('admin.songs') }}" style="text-decoration:none;">
+        <div class="kpi-card">
+            <div class="kpi-icon orange"><i class="fa fa-music"></i></div>
+            <div>
+                <div class="kpi-val">{{ number_format($songCount) }}</div>
+                <div class="kpi-label">Songs in Catalog</div>
+            </div>
         </div>
-    </div>
+    </a>
     <a href="{{ route('admin.retrain.page') }}" style="text-decoration:none;">
         <div class="kpi-card">
             <div class="kpi-icon pink"><i class="fa fa-list-ul"></i></div>
