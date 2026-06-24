@@ -126,7 +126,7 @@
                         @endif
                     </div>
                 </div>
-
+                @endif
             </div>
 
             <!-- Desktop Avatar (Hidden on Mobile) -->
