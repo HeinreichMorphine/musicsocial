@@ -318,8 +318,45 @@
                     window._spotifyReady = false;
                 });
 
-                console.log('Connecting to Spotify...');
+                console.log('Connecting to Spotify (with DOM Interceptor)...');
+                
+                const originalBodyAppend = document.body.appendChild;
+                const originalBodyInsertBefore = document.body.insertBefore;
+                const container = this.$el;
+
+                const interceptor = function(element) {
+                    if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
+                        console.log('Intercepted Spotify SDK iframe. Placing inside persisted container...');
+                        element.style.display = 'none';
+                        element.style.width = '0px';
+                        element.style.height = '0px';
+                        element.style.position = 'absolute';
+                        container.appendChild(element);
+                        return element;
+                    }
+                    return null;
+                };
+
+                document.body.appendChild = function(element) {
+                    const intercepted = interceptor(element);
+                    if (intercepted) return intercepted;
+                    return originalBodyAppend.apply(this, arguments);
+                };
+
+                document.body.insertBefore = function(element, reference) {
+                    const intercepted = interceptor(element);
+                    if (intercepted) return intercepted;
+                    return originalBodyInsertBefore.apply(this, arguments);
+                };
+
                 player.connect();
+
+                // Restore original methods
+                setTimeout(() => {
+                    document.body.appendChild = originalBodyAppend;
+                    document.body.insertBefore = originalBodyInsertBefore;
+                    console.log('Restored original document.body DOM methods.');
+                }, 2000);
 
                 if (!this.isPaused) {
                     this.startPolling();
