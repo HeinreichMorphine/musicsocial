@@ -101,7 +101,14 @@
                                         <button type="button"
                                             @click.prevent.stop="
                                                 playerOpen = !playerOpen;
-                                                if(!playerOpen) {
+                                                if (playerOpen) {
+                                                    $nextTick(() => {
+                                                        const audio = $el.closest('[x-data]').querySelector('audio');
+                                                        if (audio && audio.src) {
+                                                            audio.play().catch(e => console.error('Auto-play failed:', e));
+                                                        }
+                                                    });
+                                                } else {
                                                     const audio = $el.closest('[x-data]').querySelector('audio');
                                                     if(audio) audio.pause();
                                                 }
