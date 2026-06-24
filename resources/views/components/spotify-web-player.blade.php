@@ -224,6 +224,46 @@
                     window.isSpotifyReady = false;
                     window.dispatchEvent(new Event('spotify-not-ready'));
                 });
+
+                player.addListener('initialization_error', ({ message }) => {
+                    console.error('Spotify SDK failed to initialize (DRM or connection blocked):', message);
+                    this.deviceReady = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+
+                player.addListener('authentication_error', ({ message }) => {
+                    console.error('Spotify SDK authentication failed:', message);
+                    this.deviceReady = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+
+                player.addListener('account_error', ({ message }) => {
+                    console.error('Spotify SDK account restrictions (Free account or region limits):', message);
+                    this.deviceReady = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+
+                player.addListener('playback_error', ({ message }) => {
+                    console.error('Spotify SDK playback error:', message);
+                });
+
+                // Fallback timeout: If SDK doesn't initialize or connect within 5s, mark unsupported to allow iframe fallback
+                setTimeout(() => {
+                    if (!this.deviceReady) {
+                        console.warn('Spotify Web Playback SDK ready timeout exceeded. Falling back to inline players.');
+                        window.isSpotifySupported = false;
+                        window.dispatchEvent(new Event('spotify-unsupported'));
+                    }
+                }, 5000);
                 
                 // Safe-House DOM Interceptor
                 const originalBodyAppend = document.body.appendChild;
