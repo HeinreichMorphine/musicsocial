@@ -4,8 +4,7 @@
 
 @push('styles')
 <style>
-    .mod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    @media (max-width: 900px) { .mod-grid { grid-template-columns: 1fr; } }
+
 
     .panel-card {
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
@@ -63,10 +62,11 @@
 @endpush
 
 @section('content')
-<div class="mod-grid">
+<div class="row">
 
     {{-- ── Shares Panel ─────────────────────────────────────── --}}
-    <div class="panel-card">
+    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-share-alt" style="color:#16a34a;margin-right:5px;"></i> Shares
                 <span style="font-size:.72rem;color:#94a3b8;font-weight:500;margin-left:4px;">({{ $shares->total() }})</span>
@@ -129,9 +129,11 @@
         </div>
         <div class="pagination-wrap">{{ $shares->links() }}</div>
     </div>
+    </div>
 
     {{-- ── Comments Panel ───────────────────────────────────── --}}
-    <div class="panel-card">
+    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-comments" style="color:#7c3aed;margin-right:5px;"></i> Comments
                 <span style="font-size:.72rem;color:#94a3b8;font-weight:500;margin-left:4px;">({{ $comments->total() }})</span>
@@ -183,8 +185,10 @@
         </div>
         <div class="pagination-wrap">{{ $comments->links() }}</div>
     </div>
+    </div>
     {{-- ── Playlists Panel ───────────────────────────────────── --}}
-    <div class="panel-card" style="grid-column: 1 / -1;">
+    <div class="col-md-12 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-list" style="color:#ef4444;margin-right:5px;"></i> Playlists
                 <span style="font-size:.72rem;color:#94a3b8;font-weight:500;margin-left:4px;">({{ $playlists->total() }})</span>
@@ -239,6 +243,7 @@
             </table>
         </div>
         <div class="pagination-wrap">{{ $playlists->links() }}</div>
+    </div>
     </div>
 
 </div>

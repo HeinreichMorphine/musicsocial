@@ -4,8 +4,7 @@
 
 @push('styles')
 <style>
-    .profile-grid { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; }
-    @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+
 
     .panel-card {
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
@@ -77,10 +76,11 @@
 @endpush
 
 @section('content')
-<div class="profile-grid">
+<div class="row">
 
     {{-- Identity Card --}}
-    <div class="panel-card">
+    <div class="col-md-4 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="profile-id-card">
             <div class="profile-avatar">
                 {{ strtoupper(substr($admin->name, 0, 2)) }}
@@ -104,9 +104,10 @@
             </div>
         </div>
     </div>
+    </div>
 
     {{-- Edit Forms --}}
-    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+    <div class="col-md-8 col-sm-12" style="display:flex;flex-direction:column;gap:1.25rem;">
 
         {{-- Update Profile Details --}}
         <div class="panel-card">

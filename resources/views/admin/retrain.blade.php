@@ -4,8 +4,7 @@
 
 @push('styles')
 <style>
-    .recs-preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    @media (max-width: 900px) { .recs-preview-grid { grid-template-columns: 1fr; } }
+
 
     .panel-card {
         background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
@@ -113,10 +112,11 @@
 
 @section('content')
 
-<div class="recs-preview-grid">
+<div class="row" style="margin-bottom: 1.5rem;">
 
     {{-- Flask API Status Card --}}
-    <div class="panel-card">
+    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-server" style="color:#1d4ed8;margin-right:6px;"></i> Recommender Service Status</h4>
         </div>
@@ -139,9 +139,11 @@
             </form>
         </div>
     </div>
+    </div>
 
     {{-- Audit Dashboard Shortcuts --}}
-    <div class="panel-card">
+    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+        <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-bar-chart" style="color:#7c3aed;margin-right:6px;"></i> Audit Dashboard</h4>
         </div>
@@ -157,6 +159,7 @@
                 </a>
             </div>
         </div>
+    </div>
     </div>
 
 </div>
