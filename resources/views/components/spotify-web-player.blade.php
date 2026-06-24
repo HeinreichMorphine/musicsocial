@@ -322,16 +322,14 @@
                 
                 const originalBodyAppend = document.body.appendChild;
                 const originalBodyInsertBefore = document.body.insertBefore;
-                const container = this.$el;
-
                 const interceptor = function(element) {
                     if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
-                        console.log('Intercepted Spotify SDK iframe. Placing inside persisted container...');
+                        console.log('Intercepted Spotify SDK iframe. Placing inside document.documentElement (html root) to prevent Livewire body swap destruction...');
                         element.style.display = 'none';
                         element.style.width = '0px';
                         element.style.height = '0px';
                         element.style.position = 'absolute';
-                        container.appendChild(element);
+                        document.documentElement.appendChild(element);
                         return element;
                     }
                     return null;
