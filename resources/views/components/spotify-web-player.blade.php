@@ -221,11 +221,17 @@
                     player.addListener('ready', ({ device_id }) => {
                         this.deviceId = device_id;
                         this.player = player;
+                        console.log('[SpotifyPlayer] SDK ready, device_id:', device_id, '— polling Spotify API to confirm...');
 
-                        setTimeout(() => {
+                        // Don't blindly wait 2s — poll until Spotify's API actually
+                        // confirms the device exists, then fire the pending track.
+                        this._waitForDevice(device_id).then(confirmed => {
+                            if (!confirmed) {
+                                console.warn('[SpotifyPlayer] Device did not appear in API within timeout');
+                                this.isLoading = false;
+                                return;
+                            }
                             this.deviceReady = true;
-                            
-                            // Set global variable and broadcast event
                             window.isSpotifyReady = true;
                             window.dispatchEvent(new Event('spotify-ready'));
 
@@ -234,7 +240,7 @@
                                 this.pendingTrackUri = null;
                                 this._doPlay(uri);
                             }
-                        }, 2000);
+                        });
                     });
 
                     player.addListener('not_ready', () => { 
@@ -303,7 +309,34 @@
                     player.connect();
                 },
 
-                async _doPlay(spotifyUri, meta, retryCount = 0) {
+                // Polls GET /me/player/devices every second until our device_id
+                // appears in Spotify's API response (max 15 attempts = 15s).
+                // Returns true if confirmed, false if timed out.
+                async _waitForDevice(deviceId, maxAttempts = 15) {
+                    for (let i = 0; i < maxAttempts; i++) {
+                        await new Promise(r => setTimeout(r, 1000));
+                        try {
+                            const tokenRes = await fetch('/spotify/token');
+                            const tokenData = await tokenRes.json();
+                            if (!tokenData.token) continue;
+
+                            const devRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
+                                headers: { 'Authorization': `Bearer ${tokenData.token}` }
+                            });
+                            if (!devRes.ok) continue;
+
+                            const devData = await devRes.json();
+                            const found = (devData.devices || []).some(d => d.id === deviceId);
+                            console.log(`[SpotifyPlayer] _waitForDevice attempt ${i + 1}: found=${found}`, (devData.devices || []).map(d => d.id));
+                            if (found) return true;
+                        } catch (e) {
+                            console.warn('[SpotifyPlayer] _waitForDevice error:', e);
+                        }
+                    }
+                    return false;
+                },
+
+                async _doPlay(spotifyUri, meta) {
                     // Cancel any in-flight retry chain before starting a new attempt
                     clearTimeout(this._retryTimer);
 
@@ -325,14 +358,14 @@
                                 'Authorization': `Bearer ${tokenData.token}`
                             };
 
-                            // 1. Wake up the specific device on Spotify's real API
+                            // 1. Transfer playback to our device
                             await fetch('https://api.spotify.com/v1/me/player', {
                                 method: 'PUT',
                                 body: JSON.stringify({ device_ids: [this.deviceId], play: false }),
                                 headers
                             }).catch(() => {});
 
-                            // 2. Play the track on Spotify's real API
+                            // 2. Play the track
                             const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`, {
                                 method: 'PUT',
                                 body: JSON.stringify({ uris: [spotifyUri] }),
@@ -340,27 +373,20 @@
                             });
 
                             if (!res.ok) {
-                                if (res.status === 404 && retryCount < 4) {
-                                    const delay = 1500 * (retryCount + 1);
-                                    this._retryTimer = setTimeout(() => this._doPlay(spotifyUri, meta, retryCount + 1), delay);
-                                } else {
-                                    // Retries exhausted on 404 — SDK connection is dead.
-                                    // Explicitly disconnect the ghost player before nulling state,
-                                    // so its stale player_state_changed listener stops writing to Alpine.
-                                    if (res.status === 404) {
-                                        if (this.player) {
-                                            try { this.player.disconnect(); } catch (e) {}
-                                        }
-                                        this.deviceId = null;
-                                        this.deviceReady = false;
-                                        this.player = null;
-                                        this.pendingTrackUri = spotifyUri;
-                                        this.connectPlayer();
-                                        return;
-                                    }
-                                    this.isLoading = false;
-                                    if (res.status === 403) this._playNativePreview(meta);
+                                // 404 means the device is confirmed dead — reset and reconnect.
+                                // _waitForDevice will ensure it's truly registered before next play.
+                                if (res.status === 404) {
+                                    console.warn('[SpotifyPlayer] 404 on play — device dead, resetting...');
+                                    if (this.player) { try { this.player.disconnect(); } catch (e) {} }
+                                    this.deviceId = null;
+                                    this.deviceReady = false;
+                                    this.player = null;
+                                    this.pendingTrackUri = spotifyUri;
+                                    this.connectPlayer();
+                                    return;
                                 }
+                                this.isLoading = false;
+                                if (res.status === 403) this._playNativePreview(meta);
                             } else {
                                 this.isLoading = false;
                                 this.isPaused = false;
