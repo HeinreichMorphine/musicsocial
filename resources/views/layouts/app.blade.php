@@ -114,6 +114,7 @@
                 animation: fadeIn 0.3s ease-out forwards;
             }
         </style>
+        <script src="https://sdk.scdn.co/spotify-player.js" defer></script>
     </head>
     <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
         <div class="min-h-screen">

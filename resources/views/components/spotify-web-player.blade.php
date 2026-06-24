@@ -61,7 +61,6 @@
     </div>
 </div>
 
-<script src="https://sdk.scdn.co/spotify-player.js"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('spotifyWebPlayer', () => ({
@@ -87,6 +86,10 @@
                 const min = Math.floor(totalSec / 60);
                 const sec = totalSec % 60;
                 return `${min}:${sec.toString().padStart(2, '0')}`;
+            },
+
+            isSdkReady() {
+                return typeof Spotify !== 'undefined' && typeof Spotify.Player !== 'undefined';
             },
 
             init() {
@@ -213,6 +216,17 @@
 
             connectPlayer() {
                 if (this.sdkInitialized && window.__spotifyPlayer) return;
+
+                if (!this.isSdkReady()) {
+                    console.warn('Spotify SDK not loaded yet. Queuing connectPlayer...');
+                    const prevOnReady = window.onSpotifyWebPlaybackSDKReady;
+                    window.onSpotifyWebPlaybackSDKReady = () => {
+                        if (prevOnReady) prevOnReady();
+                        this.connectPlayer();
+                    };
+                    return;
+                }
+
                 this.sdkInitialized = true;
 
                 if (window.__spotifyPlayer) {
