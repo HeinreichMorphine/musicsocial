@@ -21,3 +21,7 @@ Artisan::command('app:backfill-share-metadata', function () {
 Artisan::command('app:clear-shares-data', function () {
     $this->call(ClearSharesData::class);
 })->purpose('Clear all shares data');
+
+Artisan::command('app:refetch-empty-genres', function () {
+    $this->call(\App\Console\Commands\RefetchEmptyGenres::class);
+})->purpose('Auto detect songs with empty genres and refetch them');

@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('app:retrain-recommender')->hourly();
         $schedule->command('app:backfill-share-metadata')->daily();
+        $schedule->command('app:refetch-empty-genres')->daily();
     }
 
     /**
