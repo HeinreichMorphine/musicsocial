@@ -25,11 +25,11 @@
             
             <!-- Mobile Header Row (Visible Only on Mobile) -->
             <div class="flex md:hidden items-center mb-3 space-x-3 w-full">
-                <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="shrink-0">
+                <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
                     <x-user-avatar :user="$share->user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm" />
                 </a>
                 <div class="flex-1 min-w-0">
-                    <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
+                    <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors text-base">{{ $share->user->name }}</a>
                     <span class="text-gray-500 dark:text-gray-400 text-xs block"> {{ $share->created_at->diffForHumans() }}</span>
                 </div>
                 <div x-data="{ open: false }" class="relative" x-on:click.stop>
@@ -111,7 +111,7 @@
             </div>
 
             <!-- Desktop Avatar (Hidden on Mobile) -->
-            <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="shrink-0">
+            <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
                 <x-user-avatar :user="$share->user" class="hidden md:block h-14 w-14 border-2 border-white dark:border-gray-700 shadow-sm" />
             </a>
 
@@ -120,7 +120,7 @@
                 <!-- Desktop Header Row (Hidden on Mobile) -->
                 <div class="hidden md:flex items-center">
                     <div class="text-left">
-                        <a href="{{ route('profile.show', $share->user->name) }}" x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
+                        <a href="{{ route('profile.show', $share->user->name) }}" wire:navigate x-on:click.stop class="font-bold text-gray-900 dark:text-white hover:text-custom-mid-blue transition-colors">{{ $share->user->name }}</a>
                         <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $share->created_at->diffForHumans() }}</span>
                         @if($share->type === 'recommendation_request')
                             <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/50 uppercase tracking-wider">
@@ -521,7 +521,7 @@
                         <div class="mt-4 space-y-2" x-show="!commentsOpen">
                             @foreach ($previews as $preview)
                                 <div class="flex items-start space-x-3 cursor-pointer hover:bg-white/60 dark:hover:bg-white/10 p-3 rounded-2xl transition shadow-sm border border-gray-100/50 dark:border-white/5" @click="commentsOpen = true">
-                                     <a href="{{ route('profile.show', $preview->user->name) }}" x-on:click.stop class="shrink-0">
+                                     <a href="{{ route('profile.show', $preview->user->name) }}" wire:navigate x-on:click.stop class="shrink-0">
                                          <x-user-avatar :user="$preview->user" class="h-10 w-10 mt-0.5 border-2 border-white dark:border-gray-700 shadow-sm" />
                                      </a>
                                     <div class="flex-1" x-data="{

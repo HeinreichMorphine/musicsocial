@@ -7,11 +7,11 @@
      }">
     
     <div class="flex items-center min-w-0 flex-1 mr-2 overflow-hidden">
-        <a href="{{ route('profile.show', $user->name) }}" class="shrink-0">
+        <a href="{{ route('profile.show', $user->name) }}" wire:navigate class="shrink-0">
             <x-user-avatar :user="$user" class="h-10 w-10 border-2 border-white dark:border-gray-700 shadow-sm hover:opacity-90 transition-opacity" />
         </a>
         <div class="ml-2 min-w-0 flex-1">
-            <a href="{{ route('profile.show', $user->name) }}" class="block text-sm font-bold text-gray-900 dark:text-white truncate hover:text-custom-mid-blue dark:hover:text-blue-400 transition-colors">
+            <a href="{{ route('profile.show', $user->name) }}" wire:navigate class="block text-sm font-bold text-gray-900 dark:text-white truncate hover:text-custom-mid-blue dark:hover:text-blue-400 transition-colors">
                 {{ $user->name }}
             </a>
             @if($user->username)

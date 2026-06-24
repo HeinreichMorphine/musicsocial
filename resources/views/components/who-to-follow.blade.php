@@ -8,9 +8,11 @@
         @foreach ($usersToSuggest as $suggestedUser)
             <div class="flex items-center justify-between mb-5 last:mb-0" x-data="{ followed: {{ auth()->user()->following->contains($suggestedUser) ? 'true' : 'false' }}, followersCount: {{ $suggestedUser->followers()->count() }} }" x-show="!followed" x-transition.duration.300ms>
                 <div class="flex items-center min-w-0 flex-1 mr-2 xl:mr-3">
-                    <x-user-avatar :user="$suggestedUser" class="w-10 h-10 xl:w-12 xl:h-12 mr-3 shrink-0 border border-white dark:border-gray-700 shadow-sm" />
+                    <a href="{{ route('profile.show', $suggestedUser->name) }}" wire:navigate class="mr-3 shrink-0">
+                        <x-user-avatar :user="$suggestedUser" class="w-10 h-10 xl:w-12 xl:h-12 border border-white dark:border-gray-700 shadow-sm" />
+                    </a>
                     <div class="min-w-0 flex-1 pr-2">
-                        <a href="{{ route('profile.show', $suggestedUser->name) }}" class="block font-bold text-gray-800 dark:text-gray-100 hover:underline truncate text-sm">{{ $suggestedUser->name }}</a>
+                        <a href="{{ route('profile.show', $suggestedUser->name) }}" wire:navigate class="block font-bold text-gray-800 dark:text-gray-100 hover:underline truncate text-sm">{{ $suggestedUser->name }}</a>
                         <p class="text-xs text-gray-500 dark:text-gray-400 truncate font-medium">{{ ' @' . $suggestedUser->username }}</p>
                     </div>
                 </div>

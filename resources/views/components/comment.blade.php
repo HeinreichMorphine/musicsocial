@@ -36,13 +36,13 @@
     }
 }">
     {{-- Always show User Avatar --}}
-    <a href="{{ route('profile.show', $comment->user->name) }}" class="shrink-0">
+    <a href="{{ route('profile.show', $comment->user->name) }}" wire:navigate class="shrink-0">
         <x-user-avatar :user="$comment->user" class="h-10 w-10" />
     </a>
     
     <div class="flex-1">
         <div>
-            <a href="{{ route('profile.show', $comment->user->name) }}" class="font-bold text-gray-900 dark:text-gray-200">{{ $comment->user->name }}</a>
+            <a href="{{ route('profile.show', $comment->user->name) }}" wire:navigate class="font-bold text-gray-900 dark:text-gray-200">{{ $comment->user->name }}</a>
             <span class="text-gray-500 dark:text-gray-400 text-sm"> &middot; {{ $comment->created_at->diffForHumans() }}</span>
             @if ($comment->created_at != $comment->updated_at)
                 <span class="text-gray-400 dark:text-gray-500 text-xs italic ml-1">(edited)</span>

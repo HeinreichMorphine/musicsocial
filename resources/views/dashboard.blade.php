@@ -19,11 +19,11 @@
                     </div>
 
                     <div class="flex space-x-6 mb-6 border-b border-gray-200 dark:border-gray-800">
-                        <a href="{{ route('dashboard', ['feed' => 'following']) }}"
+                        <a href="{{ route('dashboard', ['feed' => 'following']) }}" wire:navigate
                            class="pb-3 text-lg font-bold transition-colors border-b-2 {{ $feedType === 'following' ? 'text-gray-900 dark:text-white border-custom-mid-blue' : 'text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300' }}">
                             Following
                         </a>
-                        <a href="{{ route('dashboard', ['feed' => 'explore']) }}"
+                        <a href="{{ route('dashboard', ['feed' => 'explore']) }}" wire:navigate
                            class="pb-3 text-lg font-bold transition-colors border-b-2 {{ $feedType === 'explore' ? 'text-gray-900 dark:text-white border-custom-mid-blue' : 'text-gray-400 dark:text-gray-500 border-transparent hover:text-gray-600 dark:hover:text-gray-300' }}">
                             Explore
                         </a>
@@ -37,11 +37,11 @@
                             <div class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4 custom-scrollbar">
                                 @foreach($usersToSuggest->take(8) as $suggestedUser)
                                     <div class="flex-none w-40 bg-white/60 dark:bg-black backdrop-blur-lg rounded-2xl p-4 border border-gray-200/50 dark:border-white/10 shadow-sm text-center flex flex-col items-center" x-data="{ followed: {{ auth()->user()->following->contains($suggestedUser) ? 'true' : 'false' }} }" x-show="!followed" x-transition>
-                                        <a href="{{ route('profile.show', $suggestedUser->name) }}" class="block mb-2">
+                                        <a href="{{ route('profile.show', $suggestedUser->name) }}" wire:navigate class="block mb-2">
                                             <x-user-avatar :user="$suggestedUser" class="w-16 h-16 shadow-sm border border-gray-100 dark:border-gray-700" />
                                         </a>
                                         <div class="min-w-0 w-full mb-3">
-                                            <a href="{{ route('profile.show', $suggestedUser->name) }}" class="block font-bold text-gray-800 dark:text-gray-100 hover:underline truncate text-sm">{{ $suggestedUser->name }}</a>
+                                            <a href="{{ route('profile.show', $suggestedUser->name) }}" wire:navigate class="block font-bold text-gray-800 dark:text-gray-100 hover:underline truncate text-sm">{{ $suggestedUser->name }}</a>
                                             <p class="text-xs text-gray-500 dark:text-gray-400 truncate">@ {{ $suggestedUser->username }}</p>
                                         </div>
                                         <form @submit.prevent="
@@ -79,7 +79,7 @@
                                     {{ $feedType === 'following' ? 'No posts from people you follow yet.' : 'No posts found.' }}
                                 </p>
                                 @if($feedType === 'following')
-                                    <p class="text-gray-400 text-sm mt-2">Try the <a href="{{ route('dashboard', ['feed' => 'explore']) }}" class="text-custom-mid-blue dark:text-blue-400 font-bold hover:underline hover:text-blue-600 dark:hover:text-blue-300 transition-colors">Explore</a> feed to find new music!</p>
+                                    <p class="text-gray-400 text-sm mt-2">Try the <a href="{{ route('dashboard', ['feed' => 'explore']) }}" wire:navigate class="text-custom-mid-blue dark:text-blue-400 font-bold hover:underline hover:text-blue-600 dark:hover:text-blue-300 transition-colors">Explore</a> feed to find new music!</p>
                                 @endif
                             </div>
                         @endforelse
