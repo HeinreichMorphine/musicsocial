@@ -241,7 +241,7 @@
         <x-add-to-playlist-modal />
         <x-spotify-link-modal />
         <x-add-to-reso-playlist-modal />
-        @persist('spotify-player')
+        @persist('reso-web-player')
             <x-spotify-web-player />
         @endpersist
 
@@ -335,6 +335,8 @@
                 </div>
             </div>
         </div>
+
+        <div id="spotify-safe-house" wire:ignore></div>
 
         @livewireScripts
     </body>

@@ -10,8 +10,6 @@
         This component just reads from those globals and dispatches playback commands.
         No @persist needed — Alpine state is re-hydrated from window on every init().
     --}}
-    <div id="spotify-safe-house" wire:ignore style="display: none;"></div>
-
     <div x-data="spotifyWebPlayer({ isPremium: {{ $isPremiumUser ? 'true' : 'false' }} })" 
          x-show="playerVisible"
          class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
@@ -168,13 +166,24 @@
                 window.addEventListener('spotify-state',     this._onStateHandler);
                 window.addEventListener('spotify-not-ready', this._onNotReadyHandler);
 
-                // 2. Instant catch-up if navigating to a page where the SDK was already live
-                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyDeviceId) {
-                    console.log('[SpotifyPlayer] Catching the train — SDK already warm!');
-                    this.isLoading = false;
-                    if (window.SpotifyPlayerInstance && !this.isPaused) {
-                        this.startPolling();
-                    }
+                // --- FIX: Real Interrogation Catch-up ---
+                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyPlayerInstance) {
+                    console.log('[SpotifyPlayer] Catching the train — asking Spotify what is playing...');
+                    
+                    window.SpotifyPlayerInstance.getCurrentState().then(state => {
+                        if (state && !state.paused) {
+                            const track = state.track_window.current_track;
+                            this.trackName     = track.name;
+                            this.artistName    = track.artists.map(a => a.name).join(', ');
+                            this.albumArt      = track.album.images[0]?.url || null;
+                            this.positionMs    = state.position;
+                            this.durationMs    = state.duration;
+                            this.isPaused      = false;
+                            this.playerVisible = true;
+                            this.startPolling();
+                            console.log('[SpotifyPlayer] Train caught! UI fully restored.');
+                        }
+                    });
                 }
 
                 // 3. Register the global playback trigger
