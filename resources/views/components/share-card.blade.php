@@ -1,7 +1,7 @@
 @props(['share', 'paginatedComments' => null, 'totalCount' => null, 'previewComments' => null])
 
 <div id="share-{{ $share->id }}" class="bg-white/60 dark:bg-black backdrop-blur-md rounded-3xl shadow-sm border border-white/50 dark:border-white/10 p-4 shrink md:p-6 mb-4 md:mb-6 hover:shadow-md transition-shadow duration-300 scroll-mt-20"
-    @click="window.location.href='{{ route('shares.show', $share) }}'" style="cursor:pointer;"
+    @click="Livewire.navigate('{{ route('shares.show', $share) }}')" style="cursor:pointer;"
     
          x-data="{ 
             commentsOpen: false, 

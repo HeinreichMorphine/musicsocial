@@ -275,19 +275,31 @@
                             this.deviceReady = false;
                         });
 
-                        console.log('Connecting to Spotify (with DOM Interceptor)...');
+                        console.log('Connecting to Spotify (with safe-house DOM Interceptor)...');
                         
+                        if (!document.getElementById('spotify-safe-house')) {
+                            const safeHouse = document.createElement('div');
+                            safeHouse.id = 'spotify-safe-house';
+                            safeHouse.style.display = 'none';
+                            this.$el.appendChild(safeHouse);
+                        }
+
                         const originalBodyAppend = document.body.appendChild;
                         const originalBodyInsertBefore = document.body.insertBefore;
 
                         const interceptor = function(element) {
                             if (element && element.tagName === 'IFRAME' && element.src && (element.src.includes('sdk.scdn.co') || element.src.includes('spotify'))) {
-                                console.log('Intercepted Spotify SDK iframe. Placing inside document.documentElement (html root) to prevent Livewire body swap destruction...');
+                                console.log('Intercepted Spotify SDK iframe. Placing inside safe-house...');
                                 element.style.display = 'none';
                                 element.style.width = '0px';
                                 element.style.height = '0px';
                                 element.style.position = 'absolute';
-                                document.documentElement.appendChild(element);
+                                const sh = document.getElementById('spotify-safe-house');
+                                if (sh) {
+                                    sh.appendChild(element);
+                                } else {
+                                    document.documentElement.appendChild(element);
+                                }
                                 return element;
                             }
                             return null;
@@ -306,12 +318,6 @@
                         };
 
                         player.connect();
-
-                        setTimeout(() => {
-                            document.body.appendChild = originalBodyAppend;
-                            document.body.insertBefore = originalBodyInsertBefore;
-                            console.log('Restored original document.body DOM methods.');
-                        }, 2000);
                     },
 
                     async _doPlay(spotifyUri, meta, retryCount = 0) {
