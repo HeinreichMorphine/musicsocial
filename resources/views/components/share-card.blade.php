@@ -519,6 +519,7 @@
                             </form>
                         </div>
                     </div>
+                </div>
                 @endif
 
                 <div x-on:click.stop>
