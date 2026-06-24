@@ -570,7 +570,7 @@
                         });
                         if (r.ok) {
                             const data = await r.json();
-                            window.location.href = data.redirect;
+                            Livewire.navigate(data.redirect);
                         } else {
                             this.showError('Could not save your shelf. Please try again.');
                             this.isSubmitting = false;
