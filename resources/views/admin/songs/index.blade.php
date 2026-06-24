@@ -163,7 +163,7 @@
                                 </div>
                             @endif
                         </td>
-                        <td style="text-align:center;font-weight:600;">{{ $song->shares_count ?? 0 }}</td>
+                        <td style="text-align:center;font-weight:600;">{{ ($song->shares_count ?? 0) + ($song->comments_count ?? 0) }}</td>
                         <td>
                             <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
                                 <a href="{{ route('admin.songs.edit', $song->id) }}" class="action-btn btn-edit">
