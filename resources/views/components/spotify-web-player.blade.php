@@ -4,7 +4,7 @@
      class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
      style="display:none;"
      x-transition>
-    <div class="bg-white/95 dark:bg-[#121212]/95 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
+    <div class="bg-white dark:bg-black backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-2xl pointer-events-auto transition-colors duration-200">
         
         <!-- Header row: track info + collapse toggle + close -->
         <div class="flex items-center gap-4">
