@@ -114,7 +114,76 @@
                 animation: fadeIn 0.3s ease-out forwards;
             }
         </style>
-        <script src="https://sdk.scdn.co/spotify-player.js" defer></script>
+        {{-- ============================================================
+             Spotify Web Playback SDK — initialised ONCE in <head>.
+             wire:navigate never re-executes <head> scripts, so this
+             block runs only on a hard page load. The player instance,
+             device ID and ready state are stored on window so the
+             Alpine UI component can read them without managing SDK
+             lifecycle at all.
+        ============================================================ --}}
+        @auth
+        @if(auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
+        <script>
+            window.SpotifyPlayerInstance = null;
+            window.SpotifyDeviceId       = null;
+            window.SpotifyDeviceReady    = false;
+
+            window.onSpotifyWebPlaybackSDKReady = () => {
+                const player = new Spotify.Player({
+                    name: 'Reso Web Player',
+                    getOAuthToken: cb => {
+                        fetch('/spotify/token')
+                            .then(r => r.json())
+                            .then(d => { if (d.token) cb(d.token); })
+                            .catch(err => console.error('[SpotifySDK] token fetch failed:', err));
+                    },
+                    volume: 0.5
+                });
+
+                player.addListener('ready', ({ device_id }) => {
+                    console.log('[SpotifySDK] ready — device_id:', device_id);
+                    window.SpotifyPlayerInstance = player;
+                    window.SpotifyDeviceId       = device_id;
+                    window.SpotifyDeviceReady    = true;
+                    window.dispatchEvent(new CustomEvent('spotify-ready', { detail: { device_id } }));
+                });
+
+                player.addListener('not_ready', ({ device_id }) => {
+                    console.warn('[SpotifySDK] not_ready — device offline:', device_id);
+                    window.SpotifyDeviceReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
+                });
+
+                player.addListener('player_state_changed', state => {
+                    if (state) window.dispatchEvent(new CustomEvent('spotify-state', { detail: state }));
+                });
+
+                player.addListener('initialization_error', ({ message }) => {
+                    console.error('[SpotifySDK] initialization_error:', message);
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+                player.addListener('authentication_error', ({ message }) => {
+                    console.error('[SpotifySDK] authentication_error:', message);
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+                player.addListener('account_error', ({ message }) => {
+                    console.error('[SpotifySDK] account_error:', message);
+                    window.isSpotifySupported = false;
+                    window.dispatchEvent(new Event('spotify-unsupported'));
+                });
+                player.addListener('playback_error', ({ message }) => {
+                    console.error('[SpotifySDK] playback_error:', message);
+                });
+
+                player.connect();
+            };
+        </script>
+        <script src="https://sdk.scdn.co/spotify-player.js"></script>
+        @endif
+        @endauth
     </head>
     <body class="font-sans antialiased bg-white dark:bg-black dark:text-gray-100 min-h-screen transition-colors duration-300">
         <div class="min-h-screen">
