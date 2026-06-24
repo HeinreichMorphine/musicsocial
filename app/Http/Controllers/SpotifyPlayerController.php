@@ -29,9 +29,22 @@ class SpotifyPlayerController extends Controller
         if ($response->status() === 401 && $user->spotify_refresh_token) {
             $newToken = $spotifyService->refreshUserToken($user);
             if ($newToken) {
+                // Fetch profile with new token to update product status
+                $newResponse = \Illuminate\Support\Facades\Http::withToken($newToken)
+                    ->get('https://api.spotify.com/v1/me');
+                if ($newResponse->successful()) {
+                    $user->update(['spotify_product' => $newResponse->json('product')]);
+                }
                 return response()->json(['token' => $newToken]);
             } else {
                 return response()->json(['error' => 'Failed to refresh token'], 401);
+            }
+        }
+
+        if ($response->successful()) {
+            $product = $response->json('product');
+            if ($user->spotify_product !== $product) {
+                $user->update(['spotify_product' => $product]);
             }
         }
 
