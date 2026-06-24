@@ -1,5 +1,5 @@
 @if(auth()->check() && auth()->user()->spotify_token && auth()->user()->isSpotifyPremium())
-<div x-data="spotifyWebPlayer()" x-init="initPlayer()" 
+<div x-data="spotifyWebPlayer()" 
      x-show="playerVisible"
      class="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-96 z-50 pointer-events-none"
      style="display:none;"
@@ -89,7 +89,7 @@
                 return `${min}:${sec.toString().padStart(2, '0')}`;
             },
 
-            initPlayer() {
+            init() {
                 // Restore state from global cache if a running player already exists
                 if (window.__spotifyPlayer) {
                     this.player = window.__spotifyPlayer;
@@ -163,10 +163,10 @@
                     if (window._pendingTrackUri) this.connectPlayer();
                 };
 
-                // Register cleanup
-                this.$cleanup(() => {
+                // Register cleanup by returning it (Alpine 3 standard)
+                return () => {
                     this.cleanupPlayer();
-                });
+                };
             },
 
             cleanupPlayer() {
