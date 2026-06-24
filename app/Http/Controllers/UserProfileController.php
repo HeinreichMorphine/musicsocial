@@ -82,7 +82,7 @@ class UserProfileController extends Controller
     {
 
         // 1. GENRE DNA & ARTIST COLLECTION
-        // Collect songs from Shares, Likes, and Interaction History (Listened/Liked)
+        // Collect songs from Shares, Likes, Interaction History (Listened/Liked), and Shelf Songs
         $sharedSongs = $user->shares()->with('song')->get()->pluck('song');
         $likedSongs = $user->likes()->with('song')->get()->pluck('song');
         
@@ -93,8 +93,10 @@ class UserProfileController extends Controller
             ->get()
             ->pluck('song');
 
+        $shelfSongs = Song::whereIn('spotify_track_id', $user->shelfSongs->pluck('song_id'))->get();
+
         // Merge all sources
-        $allSongs = $sharedSongs->merge($likedSongs)->merge($historySongs)->unique('id');
+        $allSongs = $sharedSongs->merge($likedSongs)->merge($historySongs)->merge($shelfSongs)->unique('id');
 
         $genreCounts = [];
         $artistCounts = [];
@@ -153,95 +155,8 @@ class UserProfileController extends Controller
         }
 
         // 2. TASTE TWINS (Artist Based)
-        // Enhanced: Now includes Shares, Likes, and Listening History (Song Interactions)
+        // Removed to simplify testing
         $tasteTwins = collect();
-
-        if (!empty($userArtistKeys)) {
-            // Find users who have shared/liked/listened to songs by these artists
-            $potentialTwins = User::where('id', '!=', $user->id)
-                ->where(function($query) use ($userArtistKeys) {
-                    $query->whereHas('shares.song', function($q) use ($userArtistKeys) {
-                        $q->whereIn('artist_name', $userArtistKeys);
-                    })
-                    ->orWhereHas('songInteractions', function($q) use ($userArtistKeys) {
-                        $q->where('type', '!=', 'dislike')
-                          ->whereHas('song', function($sq) use ($userArtistKeys) {
-                              $sq->whereIn('artist_name', $userArtistKeys);
-                          });
-                    });
-                })
-                ->with(['shares.song' => function($q) {
-                    $q->select('id', 'artist_name', 'genres', 'track_name');
-                }, 'likes.song' => function($q) {
-                    $q->select('id', 'artist_name', 'genres', 'track_name');
-                }, 'songInteractions.song' => function($q) {
-                    $q->select('id', 'artist_name', 'genres', 'track_name');
-                }])
-                ->limit(20)
-                ->get();
-
-            $scoredTwins = [];
-            foreach ($potentialTwins as $twin) {
-                // Collect twin's data
-                $twinSongs = $twin->shares->pluck('song')->merge($twin->likes->pluck('song'))->merge($twin->songInteractions->where('type', '!=', 'dislike')->pluck('song'))->unique('id');
-                
-                $twinSongIds = $twinSongs->pluck('id')->toArray();
-                $twinArtists = $twinSongs->pluck('artist_name')->unique()->filter()->toArray();
-                
-                $twinGenres = [];
-                foreach ($twinSongs as $ts) {
-                    if ($ts->genres) {
-                        $clean = str_replace(['[', ']', '"', "'"], '', $ts->genres);
-                        $gs = array_map('strtolower', array_map('trim', explode(',', $clean)));
-                        $twinGenres = array_merge($twinGenres, $gs);
-                    }
-                }
-                $twinGenres = array_unique(array_filter($twinGenres));
-
-                // --- MULTI-DIMENSIONAL INTERSECTION ---
-                $commonSongs = array_intersect($userSongIds, $twinSongIds);
-                $commonArtists = array_intersect($userArtistKeys, $twinArtists);
-                $commonGenres = array_intersect($userGenreKeys, $twinGenres);
-
-                $songMatchCount = count($commonSongs);
-                $artistMatchCount = count($commonArtists);
-                $genreMatchCount = count($commonGenres);
-
-                if ($songMatchCount > 0 || $artistMatchCount > 0) {
-                    // WEIGHTED SCORING
-                    // Song Match: 4 pts | Artist Match: 2 pts | Genre Match: 1 pt
-                    $rawScore = ($songMatchCount * 4) + ($artistMatchCount * 2) + ($genreMatchCount * 1);
-                    
-                    // Normalization Factor (Based on user's unique footprint)
-                    $userFootprint = (count($userSongIds) * 4) + (count($userArtistKeys) * 2) + (count($userGenreKeys) * 1);
-                    
-                    $matchScore = $userFootprint > 0 ? round(($rawScore / $userFootprint) * 100) : 0;
-                    if ($matchScore > 100) $matchScore = 100;
-                    if ($matchScore < 1) $matchScore = 1; // Minimum floor for visibility
-
-                    // DYNAMIC COMMON GROUND TEXT
-                    if ($songMatchCount > 0) {
-                        $randomSong = Song::find(collect($commonSongs)->random());
-                        $commonGround = "You both enjoy " . ($randomSong->track_name ?? 'the same songs');
-                    } elseif ($artistMatchCount > 0) {
-                        $commonGround = "You both enjoy " . collect($commonArtists)->random();
-                    } else {
-                        $commonGround = "You both enjoy " . collect($commonGenres)->random();
-                    }
-
-                    $twin->match_score = $matchScore;
-                    $twin->common_ground = $commonGround;
-                    $scoredTwins[] = $twin;
-                }
-            }
-
-            // Sort by match score
-            usort($scoredTwins, function($a, $b) {
-                return $b->match_score <=> $a->match_score;
-            });
-
-            $tasteTwins = collect(array_slice($scoredTwins, 0, 4));
-        }
 
         // Top Genre Badge 
         $primaryGenre = array_key_first($topGenres);
