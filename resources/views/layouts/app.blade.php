@@ -148,7 +148,7 @@
                         });
                     });
                 });
-                _spotifyIframeGuard.observe(document.body, { childList: true, subtree: false });
+                _spotifyIframeGuard.observe(document.body, { childList: true, subtree: true });
                 // ------------------------
 
                 const player = new Spotify.Player({

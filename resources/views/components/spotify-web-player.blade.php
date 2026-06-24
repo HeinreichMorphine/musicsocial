@@ -105,6 +105,11 @@
             pendingTrackUri: null,
             pendingMeta: null,
 
+            // References to store our bound window listeners so we can destroy them precisely
+            _onReadyHandler: null,
+            _onStateHandler: null,
+            _onNotReadyHandler: null,
+
             get progressPercent() {
                 return this.durationMs > 0 ? (this.positionMs / this.durationMs) * 100 : 0;
             },
@@ -116,9 +121,8 @@
             },
 
             init() {
-                console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium, '| SDK already warm:', window.SpotifyDeviceReady);
+                console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium, '| Warm SDK:', window.SpotifyDeviceReady);
 
-                // --- Free-user audio listeners (attach once globally) ---
                 if (!window.__spotifyAudioListenersAttached) {
                     window.__spotifyAudioListenersAttached = true;
                     window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
@@ -129,22 +133,8 @@
                     });
                 }
 
-                // --- FIX 1: Instant catch-up ---
-                // wire:navigate only swaps <body> — the <head> already fired spotify-ready
-                // long ago. If Alpine mounts on Page B after navigation, grab the warm
-                // SDK immediately instead of waiting for an event that will never fire again.
-                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyDeviceId) {
-                    console.log('[SpotifyPlayer] Catching the train — SDK already warm!');
-                    this.isLoading = false;
-                    if (window.SpotifyPlayerInstance && !this.isPaused) {
-                        this.startPolling();
-                    }
-                }
-
-                // --- FIX 2: Safe listeners with $cleanup auto-teardown ---
-                // Without $cleanup, every wire:navigate stacks another copy of these
-                // handlers — producing N ghost components all answering one event.
-                const handleReady = (e) => {
+                // 1. Define stable event listeners locked to this instance's memory scope
+                this._onReadyHandler = (e) => {
                     console.log('[SpotifyPlayer] spotify-ready caught, device_id:', e.detail?.device_id);
                     this.isLoading = false;
                     if (this.pendingTrackUri) {
@@ -156,7 +146,7 @@
                     }
                 };
 
-                const handleState = (e) => {
+                this._onStateHandler = (e) => {
                     const state = e.detail;
                     if (!state) return;
                     this.isPaused   = state.paused;
@@ -166,24 +156,26 @@
                     else this.stopPolling();
                 };
 
-                const handleNotReady = () => {
+                this._onNotReadyHandler = () => {
                     console.warn('[SpotifyPlayer] spotify-not-ready received');
                     this.isLoading = false;
                 };
 
-                window.addEventListener('spotify-ready',     handleReady);
-                window.addEventListener('spotify-state',     handleState);
-                window.addEventListener('spotify-not-ready', handleNotReady);
+                // Attach them
+                window.addEventListener('spotify-ready',     this._onReadyHandler);
+                window.addEventListener('spotify-state',     this._onStateHandler);
+                window.addEventListener('spotify-not-ready', this._onNotReadyHandler);
 
-                // Auto-teardown when Livewire destroys this element during navigation.
-                this.$cleanup(() => {
-                    window.removeEventListener('spotify-ready',     handleReady);
-                    window.removeEventListener('spotify-state',     handleState);
-                    window.removeEventListener('spotify-not-ready', handleNotReady);
-                    this.stopPolling();
-                });
+                // 2. Instant catch-up if navigating to a page where the SDK was already live
+                if (this.isPremium && window.SpotifyDeviceReady && window.SpotifyDeviceId) {
+                    console.log('[SpotifyPlayer] Catching the train — SDK already warm!');
+                    this.isLoading = false;
+                    if (window.SpotifyPlayerInstance && !this.isPaused) {
+                        this.startPolling();
+                    }
+                }
 
-                // --- Global play trigger (called by song cards / playlist rows) ---
+                // 3. Register the global playback trigger
                 window.toggleSpotifyPlayer = (spotifyUri, meta) => {
                     this.playerVisible = true;
                     this.collapsed     = false;
@@ -198,6 +190,15 @@
 
                     this._doPlay(spotifyUri, meta);
                 };
+            },
+
+            // NATIVE ALPINE HOOK: Fires the millisecond Livewire tears this DOM node down
+            destroy() {
+                console.log('[SpotifyPlayer] Livewire navigated away. Tearing down component listeners.');
+                window.removeEventListener('spotify-ready',     this._onReadyHandler);
+                window.removeEventListener('spotify-state',     this._onStateHandler);
+                window.removeEventListener('spotify-not-ready', this._onNotReadyHandler);
+                this.stopPolling();
             },
 
             startPolling() {
@@ -224,7 +225,6 @@
 
             async _doPlay(spotifyUri, meta) {
                 if (this.isPremium) {
-                    // Device not ready yet — store and wait for spotify-ready event
                     if (!window.SpotifyDeviceReady || !window.SpotifyDeviceId) {
                         console.log('[SpotifyPlayer] Device not ready — queuing track');
                         this.pendingTrackUri = spotifyUri;
@@ -243,14 +243,12 @@
                             'Authorization': `Bearer ${tokenData.token}`
                         };
 
-                        // Transfer playback to our device
                         await fetch('https://api.spotify.com/v1/me/player', {
                             method: 'PUT',
                             body: JSON.stringify({ device_ids: [window.SpotifyDeviceId], play: false }),
                             headers
                         }).catch(() => {});
 
-                        // Play
                         const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${window.SpotifyDeviceId}`, {
                             method: 'PUT',
                             body: JSON.stringify({ uris: [spotifyUri] }),
