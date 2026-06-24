@@ -14,8 +14,8 @@
         transform: translateY(-50%); color: #94a3b8; font-size: 0.95rem;
     }
     .search-input {
-        width: 100%; padding: .75rem 1rem .75rem 2.6rem;
-        border: 1.5px solid #e2e8f0; border-radius: 8px;
+        width: 100%; padding: .75rem 1rem .75rem 2.6rem !important;
+        border: 1.5px solid #e2e8f0; border-radius: 8px !important;
         font-size: 0.95rem; color: #0f172a; background: #fff; outline: none;
         transition: border-color .2s, box-shadow .2s;
     }

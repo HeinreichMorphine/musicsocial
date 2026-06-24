@@ -14,12 +14,20 @@
         transform: translateY(-50%); color: #94a3b8; font-size: 0.95rem;
     }
     .search-input {
-        width: 100%; padding: .75rem 1rem .75rem 2.6rem;
-        border: 1.5px solid #e2e8f0; border-radius: 8px;
+        width: 100%; padding: .75rem 1rem .75rem 2.6rem !important;
+        border: 1.5px solid #e2e8f0; border-radius: 8px !important;
         font-size: 0.95rem; color: #0f172a; background: #fff; outline: none;
         transition: border-color .2s, box-shadow .2s;
     }
     .search-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.07); }
+    .sort-select {
+        padding: .75rem 1.5rem .75rem 1rem !important;
+        border: 1.5px solid #e2e8f0; border-radius: 8px !important;
+        font-size: 0.95rem; color: #0f172a; background: #fff; outline: none;
+        width: auto !important; min-width: 200px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .sort-select:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.07); }
     .btn-search {
         padding: .75rem 1.5rem; background: #1d4ed8; color: #fff; border: none;
         border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
@@ -116,7 +124,7 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by track name, artist, or genre..." class="search-input">
             </div>
             
-            <select name="sort" class="search-input" style="flex: 0 0 auto; width: auto; min-width: 200px;" onchange="this.form.submit()">
+            <select name="sort" class="sort-select" onchange="this.form.submit()">
                 <option value="latest" {{ (request('sort') ?? 'latest') == 'latest' ? 'selected' : '' }}>Sort By: Newest First</option>
                 <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Sort By: Oldest First</option>
                 <option value="untagged" {{ request('sort') == 'untagged' ? 'selected' : '' }}>Filter: Untagged Songs Only</option>
