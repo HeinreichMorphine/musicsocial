@@ -180,6 +180,9 @@
                     this.deviceId = device_id;
                     this.deviceReady = true;
                     this.isLoading = false;
+                    
+                    window.isSpotifyReady = true;
+                    window.dispatchEvent(new CustomEvent('spotify-ready', { detail: { device_id } }));
 
                     if (this.pendingTrackUri) {
                         const uri = this.pendingTrackUri;
@@ -194,6 +197,9 @@
                     console.warn('[SpotifyPlayer] SDK device offline:', device_id);
                     this.deviceReady = false;
                     this.isLoading = false;
+                    
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
                 });
 
                 player.addListener('player_state_changed', state => {
@@ -217,14 +223,20 @@
                 player.addListener('initialization_error', ({ message }) => {
                     console.error('[SpotifyPlayer] initialization_error:', message);
                     this.isLoading = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
                 });
                 player.addListener('authentication_error', ({ message }) => {
                     console.error('[SpotifyPlayer] authentication_error:', message);
                     this.isLoading = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
                 });
                 player.addListener('account_error', ({ message }) => {
                     console.error('[SpotifyPlayer] account_error:', message);
                     this.isLoading = false;
+                    window.isSpotifyReady = false;
+                    window.dispatchEvent(new Event('spotify-not-ready'));
                 });
                 player.addListener('playback_error', ({ message }) => {
                     console.error('[SpotifyPlayer] playback_error:', message);
@@ -245,6 +257,8 @@
                 }
                 this.deviceId = null;
                 this.deviceReady = false;
+                window.isSpotifyReady = false;
+                window.dispatchEvent(new Event('spotify-not-ready'));
                 this.stopPolling();
 
                 if (window.__spotifyNativeAudio) {
