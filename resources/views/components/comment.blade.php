@@ -89,22 +89,22 @@
                                         @spotify-ready.window="isReady = true"
                                         @spotify-not-ready.window="isReady = false"
                                         @click.prevent.stop="
-                                            const meta = { 
-                                                name: songData.track_name, 
-                                                artist: songData.artist_name, 
-                                                art: songData.album_art_url, 
-                                                previewUrl: songData.preview_url || '' 
-                                            };
-
+                                            playerOpen = !playerOpen;
                                             if (isPremium) {
-                                                // Premium: Only play if ready
-                                                if(isReady && window.toggleSpotifyPlayer) {
-                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, meta);
-                                                }
-                                            } else {
-                                                // Free/Unlinked: Always allowed to toggle preview via persistent web player
-                                                if(window.toggleSpotifyPlayer) {
-                                                    window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, meta);
+                                                if (playerOpen) {
+                                                    if(isReady && window.toggleSpotifyPlayer) {
+                                                        const meta = { 
+                                                            name: songData.track_name, 
+                                                            artist: songData.artist_name, 
+                                                            art: songData.album_art_url, 
+                                                            previewUrl: songData.preview_url || '' 
+                                                        };
+                                                        window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, meta);
+                                                    }
+                                                } else {
+                                                    if(window.toggleSpotifyPlayer) {
+                                                        window.toggleSpotifyPlayer('spotify:track:' + songData.spotify_track_id, null);
+                                                    }
                                                 }
                                             }
                                         "
@@ -180,48 +180,18 @@
                         {{-- Inline Spotify Embed Player --}}
                         @if(!$isPremium)
                         <div x-show="playerOpen"
-                             x-on:click.stop
                              x-transition
-                             class="mt-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-[16px] p-4 flex flex-col gap-3 relative overflow-hidden"
+                             class="mt-3 rounded-2xl overflow-hidden bg-black/40 border border-white/10"
                              style="display:none;">
-                            
-                            <template x-if="songData.preview_url">
-                                <div class="flex flex-col gap-3 z-10">
-                                    <div class="flex items-center gap-3">
-                                        <button @click="const a = $refs.audio; if(a.paused){a.play(); isPlayingPreview=true;}else{a.pause(); isPlayingPreview=false;}" class="w-10 h-10 shrink-0 rounded-full bg-[#1DB954] flex items-center justify-center text-black hover:scale-105 transition-transform">
-                                            <svg x-show="!isPlayingPreview" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 ml-1"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" /></svg>
-                                            <svg x-show="isPlayingPreview" style="display:none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" /></svg>
-                                        </button>
-                                        <div class="flex-1">
-                                            <div class="text-sm text-white font-medium">30s Preview</div>
-                                            <div class="text-xs text-gray-400">Full playback requires a Premium subscription.</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mt-2 flex gap-2">
-                                        @if(!$isLinked)
-                                            <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-white text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
-                                        @else
-                                            <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
-                                        @endif
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="songData.preview_url">
-                                <audio x-ref="audio" :src="songData.preview_url" @play="isPlayingPreview = true" @pause="isPlayingPreview = false" @ended="isPlayingPreview = false"></audio>
-                            </template>
-                            <template x-if="!songData.preview_url">
-                                <div>
-                                    <div class="text-sm text-gray-400 p-2 text-center">No preview available for this track.</div>
-                                    <div class="mt-2 text-center">
-                                        @if(!$isLinked)
-                                            <button @click.prevent.stop="$dispatch('open-spotify-link-modal')" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Link Spotify for Full Tracks</button>
-                                        @else
-                                            <a href="https://spotify.com/premium" target="_blank" class="inline-block bg-[#1DB954] text-black font-bold text-xs px-4 py-2 rounded-full hover:scale-105 transition-transform uppercase tracking-wide">Get Premium</a>
-                                        @endif
-                                    </div>
-                                </div>
-                            </template>
+                            <iframe class="share-spotify-frame"
+                                x-bind:src="playerOpen && songData ? 'https://open.spotify.com/embed/track/' + songData.spotify_track_id + '?utm_source=generator&theme=0' : ''"
+                                width="100%"
+                                height="80"
+                                frameborder="0"
+                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                loading="lazy"
+                                style="border-radius:12px; display:block;">
+                            </iframe>
                         </div>
                         @endif
 
