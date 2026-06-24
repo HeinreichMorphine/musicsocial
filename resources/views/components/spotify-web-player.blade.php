@@ -154,7 +154,7 @@
                     });
                 }
 
-                if (this.isPremium) {
+                if (this.isPremium && window.isSpotifySupported !== false) {
                     this.initializePlayer();
                 }
 

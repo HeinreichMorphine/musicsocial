@@ -17,6 +17,9 @@
         @livewireStyles
 
         <script>
+            // Spotify Web SDK Firefox compatibility override
+            window.isSpotifySupported = !(/firefox/i.test(navigator.userAgent));
+
             // Dark Mode
             const theme = localStorage.getItem('theme') 
               ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
