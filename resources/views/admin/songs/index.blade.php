@@ -87,12 +87,15 @@
     .btn-edit { background: #eff6ff; color: #1d4ed8; text-decoration: none; }
     .btn-edit:hover { color: #1d4ed8; text-decoration: none; }
     .btn-del  { background: #fef2f2; color: #dc2626; }
+    .btn-refetch { background: #f0fdf4; color: #16a34a; }
+    .btn-refetch:hover { background: #dcfce7; color: #15803d; }
+    .btn-refetch:disabled { opacity: 0.5; cursor: not-allowed; }
     
     .results-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem; }
     
     .genres-list { font-size: 0.8rem; color: #64748b; }
     
-    /* Sync API button styles */
+    /* Sync API button styles (hover reveal on blank-tag rows) */
     .sync-group { display: flex; align-items: center; gap: 8px; }
     .sync-btn {
         opacity: 0; background: #e0e7ff; color: #4f46e5; border: none; padding: 4px 8px;
@@ -187,6 +190,16 @@
                                 <a href="{{ route('admin.songs.edit', $song->id) }}" class="action-btn btn-edit">
                                     <i class="fa fa-edit"></i> Edit
                                 </a>
+                                @if($song->spotify_track_id)
+                                <button
+                                    id="refetch-btn-{{ $song->id }}"
+                                    onclick="handleRefetch({{ $song->id }}, this)"
+                                    class="action-btn btn-refetch"
+                                    title="Re-scan Spotify, MusicBrainz, Discogs & YouTube for genre tags"
+                                >
+                                    <i class="fa fa-refresh"></i> Refetch
+                                </button>
+                                @endif
                                 <form action="{{ route('admin.songs.delete', $song->id) }}" method="POST"
                                       onsubmit="return confirm('Delete {{ addslashes($song->track_name) }}? This cannot be undone.');" style="display:inline;">
                                     @csrf @method('DELETE')
@@ -221,7 +234,7 @@ function handleRefetch(songId, btn) {
     const originalHtml = btn.innerHTML;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Syncing...';
     btn.disabled = true;
-    
+
     fetch(`/admin/songs/${songId}/refetch-genres`, {
         method: 'POST',
         headers: {
@@ -232,11 +245,22 @@ function handleRefetch(songId, btn) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update the cell content to show the new genres
+            // Update the genres cell
             const cell = document.getElementById(`genres-cell-${songId}`);
-            const displayGenres = data.genres.slice(0, 3).join(', ') + (data.genres.length > 3 ? '...' : '');
-            cell.innerHTML = `<span class="genres-list">${displayGenres}</span>`;
-            alert('Tags synced successfully!');
+            if (data.genres && data.genres.length > 0) {
+                const displayGenres = data.genres.slice(0, 3).join(', ') + (data.genres.length > 3 ? '...' : '');
+                cell.innerHTML = `<span class="genres-list">${displayGenres}</span>`;
+                btn.innerHTML = '<i class="fa fa-check"></i> Done';
+                btn.style.background = '#dcfce7';
+            } else {
+                cell.innerHTML = `<div class="sync-group"><span style="color:#94a3b8;font-style:italic;font-size:.85rem;">No tags found</span></div>`;
+                btn.innerHTML = originalHtml;
+            }
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa fa-refresh"></i> Refetch';
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 2500);
         } else {
             alert(data.message || 'Failed to sync tags.');
             btn.innerHTML = originalHtml;
