@@ -1,338 +1,423 @@
-# Technical Architecture Overview
+# Reso – Architecture Overview for Mock Presentation
 
-## 1. System Topology & Data Layer
-
-The application utilizes a MySQL database to track social actions and user engagement. Relationships are structured around the central [Song](file:///c:/laragon/www/musicsocial-main/app/Models/Song.php) and [User](file:///c:/laragon/www/musicsocial-main/app/Models/User.php) models.
-
-### Key Entities
-1. **[User](file:///c:/laragon/www/musicsocial-main/app/Models/User.php)**: Stores authentication credentials, onboarding progress (`is_onboarded`), and Spotify OAuth tokens (`spotify_token`, `spotify_refresh_token`).
-2. **[Song](file:///c:/laragon/www/musicsocial-main/app/Models/Song.php)**: The metadata authority. Stores identifiers (`spotify_track_id`, `youtube_video_id`), details (`track_name`, `artist_name`, `album_art_url`), and an enriched JSON array of keywords (`genres`).
-3. **[Share](file:///c:/laragon/www/musicsocial-main/app/Models/Share.php)**: User-created social posts sharing a song with a caption and type (`music`, `text`, or `recommendation_request`).
-4. **[Comment](file:///c:/laragon/www/musicsocial-main/app/Models/Comment.php) & [CommentThread](file:///c:/laragon/www/musicsocial-main/app/Models/CommentThread.php)**: Threaded comments supporting replies and user mentions.
-5. **[SongInteraction](file:///c:/laragon/www/musicsocial-main/app/Models/SongInteraction.php)**: Log of user-song actions used directly as training algorithm weight inputs: `listen`, `like`, `dislike`, `share`.
-6. **[UserShelfSong](file:///c:/laragon/www/musicsocial-main/app/Models/UserShelfSong.php)**: Stores 5 curated songs selected by the user during onboarding to prevent the cold-start problem.
-7. **[Playlist](file:///c:/laragon/www/musicsocial-main/app/Models/Playlist.php) / [PlaylistCollaborator](file:///c:/laragon/www/musicsocial-main/app/Models/PlaylistCollaborator.php) / [PlaylistSong](file:///c:/laragon/www/musicsocial-main/app/Models/PlaylistSong.php)**: Manages shared, collaborative playlist structures, participant permissions, and song items.
+This document condenses your project's technical architecture into a clear, presentation-ready summary. It highlights the **end‑to‑end data flow**, the **recommendation engine**, and the **post composer** — a key interaction point that drives both social engagement and taste profiling.
 
 ---
 
-## 2. End-to-End Data Flow: From Ingress to Intelligence
+## 1. System Topology & Core Data Models
 
-The data lifecycle follows a linear path: **Ingress (Sharing)** $\rightarrow$ **Engagement (Interactions)** $\rightarrow$ **Intelligence (Processing)** $\rightarrow$ **Egress (Discovery)**.
+The system is built on **Laravel 10** (PHP) with a **MySQL** database, complemented by a **Python/Flask** microservice for recommendation logic.
 
-### Phase 1: Metadata Ingress & Enrichment
-When a song is shared, the server performs multi-source API metadata gathering to construct a rich, search-optimized genre/tag vector.
+**Central Models**:
 
-*   **Primary Page/Form View**: [create.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/shares/create.blade.php)
+| Model | Purpose |
+|-------|---------|
+| **User** | Authentication, Spotify OAuth tokens, onboarding status. |
+| **Song** | Metadata authority: Spotify ID, YouTube ID, title, artist, album art, and a JSON `genres` vector (enriched from multiple APIs). |
+| **Share** | User post sharing a song with a caption and type (`music`, `text`, `recommendation_request`). |
+| **SongInteraction** | Logs user actions (`listen`, `like`, `dislike`, `share`) – the training signal for the recommender. |
+| **UserShelfSong** | 5 curated songs selected during onboarding – prevents cold-start. |
+| **Playlist** / **PlaylistSong** / **PlaylistCollaborator** | Shared, collaborative playlists with participant permissions. |
+| **Comment** & **CommentThread** | Threaded comments with song URL auto-detection. |
 
-#### Code Block: [ShareController.php (Metadata Enrichment)](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/ShareController.php#L68-L112)
+---
+
+## 2. End‑to‑End Data Flow (Ingress → Intelligence → Egress)
+
+### Phase 1: Metadata Ingress & Enrichment  
+When a user shares a song, the backend gathers metadata from multiple sources to build a rich genre vector.
+
+**Key code** (`ShareController`):
 ```php
 // 1. Fetch Spotify track details
 $trackData = $this->spotifyService->getTrack($validated['spotify_track_id']);
-$song = $trackData['song'];
 $genres = json_decode($song->genres, true) ?? [];
 
-// 2. Enhance with MusicBrainz artist genres
+// 2. Enrich with MusicBrainz artist genres
 $musicBrainzGenres = $this->musicBrainzService->getArtistGenres($song->artist_name);
-if ($musicBrainzGenres && !isset($musicBrainzGenres['error'])) {
-    $genres = array_unique(array_merge($genres, $musicBrainzGenres));
-}
+$genres = array_unique(array_merge($genres, $musicBrainzGenres));
 
-// 3. Enhance with Discogs track styles
+// 3. Enrich with Discogs track styles
 $discogsGenres = $this->discogsService->getGenres($song->artist_name, $song->track_name);
-if (!empty($discogsGenres)) {
-    $genres = array_unique(array_merge($genres, $discogsGenres));
-}
+$genres = array_unique(array_merge($genres, $discogsGenres));
 
-// 4. Fallback to YouTube tags if genres array is empty
+// 4. Fallback to YouTube tags if genres are still empty
 if (empty($genres) && !empty($song->youtube_video_id)) {
     $videoData = $this->youTubeService->getVideo($song->youtube_video_id);
-    if ($videoData) {
-        $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []));
-        $genres = array_unique(array_merge($genres, $youtubeGenres));
-    }
+    $youtubeGenres = $this->extractGenresFromText($videoData['title'] . ' ' . implode(' ', $videoData['tags'] ?? []));
+    $genres = array_unique(array_merge($genres, $youtubeGenres));
 }
 
-// 5. Save the enriched genre/keyword vector
+// 5. Save the enriched vector
 $song->update(['genres' => json_encode(array_values(array_unique($genres)))]);
 ```
 
-##### How It Works (Sharing & Metadata Ingress):
-1. **Fetch Spotify Core**: Queries the Spotify Web API to extract initial track details and basic artist information.
-2. **MusicBrainz & Discogs Queries**: Enriches this baseline metadata by fetching the artist's historical genres and track-specific styles.
-3. **YouTube Tags Fallback**: If the genre list remains empty, it queries YouTube's metadata to extract keywords from video tags/descriptions.
-4. **Keyword Vector Update**: Merges, deduplicates, and saves the final list to the `genres` JSON column of the [Song Model](file:///c:/laragon/www/musicsocial-main/app/Models/Song.php) to prepare for similarity matching.
+**Why it matters**: The multi‑source enrichment produces a high‑quality keyword vector for content‑based similarity, feeding directly into the recommendation engine.
 
-### Phase 2: User Engagement (The Feedback Loop)
-User interactions produce training signals. The system implements mutual exclusivity to guarantee clean ratings (e.g., liking a share detaches any existing dislikes).
+---
 
-*   **Primary Feed Page**: [dashboard.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/dashboard.blade.php)
-*   **UI Components**:
-    *   [share-card.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/share-card.blade.php)
-    *   [post-composer.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/post-composer.blade.php)
-    *   [comment.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/comment.blade.php)
+### Phase 2: User Engagement (The Feedback Loop)  
+Likes and dislikes are mutually exclusive – toggling a like removes any existing dislike, ensuring clean training data.
 
-#### Mutual Exclusivity Code: [LikeController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/LikeController.php#L23-L46)
+**`LikeController` toggle logic**:
 ```php
-public function toggle(Share $share)
-{
+public function toggle(Share $share) {
     $user = auth()->user();
 
-    // 1. Enforce mutual exclusivity (unlike/dislike balance)
+    // Mutual exclusivity: remove dislike if present
     if ($user->dislikes->contains($share)) {
         $user->dislikes()->detach($share);
     }
-
-    // 2. Toggle the user's like state
     $user->likes()->toggle($share);
 
-    return response()->json([
-        'liked' => $user->likes->contains($share),
-        'likesCount' => $share->likes()->count(),
-        'disliked' => $user->dislikes->contains($share),
-        'dislikesCount' => $share->dislikes()->count(),
-    ]);
+    return response()->json([...]);
 }
 ```
 
-##### How It Works (Likes/Dislikes Mutual Exclusivity):
-1. **Exclusivity Check**: Checks if the user dislikes the share. If they do, the dislike is detached before applying the like.
-2. **Toggle Like**: Laravel toggles the user's like state on the share.
-3. **JSON Response**: Returns the updated counts and user status to trigger the instant Alpine.js frontend UI change on the share card.
-
-#### Spotify Link Auto-Detection Code: [CommentController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php#L57-L76)
-```php
-// Auto-detect a Spotify URL in the comment body and resolve its metadata
-$songId = null;
-if (preg_match('/https:\/\/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/', $validated['body'], $trackMatches)) {
-    $spotifyTrackId = $trackMatches[1];
-    $trackData = $this->spotifyService->getTrack($spotifyTrackId);
-    if (!isset($trackData['error']) && isset($trackData['song'])) {
-        $songId = $trackData['song']->id;
-    }
-}
-
-$body = $validated['body'];
-if ($songId) {
-    $song = \App\Models\Song::find($songId);
-    if ($song && strpos($body, "[SONG:{$song->spotify_track_id}]") === false) {
-         $body .= " [SONG:{$song->spotify_track_id}]";
-    }
-}
-```
-
-##### How It Works (Pasting a Song URL in Comments):
-1. **URL Intercept**: When a user inputs a comment containing a Spotify track link, the backend regex detects it and queries Spotify's API to fetch the song metadata, saving it to our local database.
-2. **Hidden Tag Generation**: It appends a hidden tag `[SONG:spotify_track_id]` to the end of the text.
-3. **Clean Presentation**: When rendering, [Comment.php](file:///c:/laragon/www/musicsocial-main/app/Models/Comment.php#L64) strips the `[SONG:...]` tag so the comment text displays cleanly without raw URLs.
-4. **Dynamic Card Hydration**: [comment.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/comment.blade.php#L8-L27) uses Alpine.js to detect the embedded song ID, asynchronously fetches the details via `/search/tracks/{id}`, and dynamically renders a beautiful glassmorphism play card beneath the comment text.
+**Comment auto‑detection**: If a comment contains a Spotify track URL, the backend fetches its metadata and appends a hidden `[SONG:spotify_id]` tag. The frontend renders a play card dynamically using Alpine.js – turning comments into rich music recommendations.
 
 ---
 
-### Phase 3: Intelligence Processing (Netcentric Service)
-Laravel requests recommendations from the Flask microservice. The microservice dynamically decides which mathematical model to run.
+### Phase 3: Intelligence Processing (Recommender Microservice)  
+Laravel calls the Flask service (`RecommendationService`) which decides which algorithm to apply based on the user’s interaction count.
 
-*   **Laravel integration**: [RecommendationService.php](file:///c:/laragon/www/musicsocial-main/app/Services/RecommendationService.php)
+**Decision thresholds**:
+- **HOT** (Collaborative SVD): `effective_interactions >= 10`
+- **WARM** (TF‑IDF Cosine Similarity): `5 <= effective_interactions < 10` – *all new users start here because onboarding forces 5 shelf songs.*
+- **COLD** (Popularity fallback): only a safety net, normally unreachable.
 
-#### A. Decision Engine Thresholds
-The algorithm computes `effective_interactions = max(interactions, shelf_count)`. Due to the mandatory onboarding flow, **the COLD start phase is bypassed entirely for all real users**:
-*   **HOT Phase (Collaborative SVD)**: Triggered when `effective_interactions >= 10` (users with deep activity history).
-*   **WARM Phase (TF-IDF Cosine Similarity)**: Triggered when `5 <= effective_interactions < 10`. **This is the starting phase for all new users** because the onboarding flow forces them to select exactly 5 shelf songs, making their initial `effective_interactions = 5`.
-*   **COLD Phase (Popularity Fallback)**: A backend safety net in the Python service that only triggers if `effective_interactions < 5` (e.g. data corruption or test accounts that bypassed onboarding). Under normal operation, this is unreachable.
+**Final recommendation score** fuses algorithmic prediction with social trust:
 
-#### B. The Recommendation Equations
-The final score fuses algorithmic preference with social authority:
-$$\text{Total Score} = (\text{Base Score} \times 0.7) + (\text{Social Trust Boost} \times 0.3)$$
+`Total Score = (Base Score × 0.7) + (Social Trust Boost × 0.3)`
 
-1. **Active SVD Predictor** ([app.py:L1340](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L1340)):
-   Runs collaborative matrix factorization to predict ratings, adding a $+0.4$ boost for explicit favorite artist matches.
-   $$\text{Base Score} = \hat{r}_{u,i} + \text{Context Boost (0.4)}$$
-2. **Warm Content Predictor** ([app.py:L1383](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L1383)):
-   Computes the average TF-IDF vector of a user's liked and shelf songs, then matches candidates using Cosine Similarity:
-   $$\text{Cosine Similarity} = \frac{\vec{U} \cdot \vec{S}}{\|\vec{U}\| \|\vec{S}\|}$$
-3. **Social Trust Boost** ([app.py:L873](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L873)):
-   Calculates recommendations weight based on social influence and dilutes it if the user follows a massive amount of accounts:
-   $$\text{Trust} = \frac{\ln(1 + \text{Followers}_{sharer}^{0.7})}{1 + 0.5 \times \ln(1 + \text{Following}_{active})}$$
-   $$\text{Social Boost} = \text{Trust} \times R_m$$
-   Where relationship multiplier $R_m$ is:
-   *   `1.0` for collaborative playlist peers.
-   *   `0.8` for followed users (friends).
-   *   `0.3` for general community/strangers.
-
-#### Collaborative Filtering SVD & Context Boost Code: [recommender_service/app.py](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L1340-L1359)
+**SVD with context boost** (Python):
 ```python
-# Predict rating using SVD model
-for song_id in candidates:
-    pred = algo.predict(user_id, song_id)
-    current_score = pred.est
-    
-    # Apply context boost (+0.4) for favorite artists
-    artist_matched = False
-    if song_id in songs_metadata:
-        artist = songs_metadata[song_id]['artist_name']
-        if artist and artist.lower().strip() in liked_artists:
-            current_score += 0.4
-            artist_matched = True
+pred = algo.predict(user_id, song_id)
+current_score = pred.est
+
+# +0.4 if the artist is a known favorite
+if artist in liked_artists:
+    current_score += 0.4
 ```
 
-##### How It Works (SVD & Context Boosting):
-1. **Algorithmic Prediction**: Uses the pre-trained SVD collaborative filtering model to predict how much the user will enjoy a candidate song on a 1-5 scale.
-2. **Artist Matching**: Cross-references the candidate song's artist name with the list of artists the user has previously liked or shared.
-3. **Contextual Boost**: Adds a $+0.4$ boost directly to the SVD prediction score to ensure that songs by the user's favorite artists bubble up to the top.
-
-#### TF-IDF Warm-Start Vectorization Code: [recommender_service/app.py](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L1056-L1076)
+**TF‑IDF warm‑start** (Python):
 ```python
-# Transform user liked songs using pre-built cache vectorizer
-user_features_matrix = tfidf.transform(user_liked_songs_df['features'])
-
-# Calculate the user's tastes vector profile average
-user_profile = np.asarray(user_features_matrix.mean(axis=0))
-
-# Compute cosine similarity array vs. all other songs
+user_profile = tfidf.transform(user_liked_songs_df['features']).mean(axis=0)
 similarities = cosine_similarity(user_profile, all_features_matrix)[0]
 ```
 
-##### How It Works (TF-IDF Similarity):
-1. **Transform User Taste**: Converts the metadata features (genres/artists) of the user's shelf and liked songs into a sparse vector space using the cached TF-IDF vectorizer.
-2. **Music Taste Profile**: Computes the mean vector to construct a single profile representing the user's overall music taste dimensions.
-3. **Cosine Similarity**: Measures the mathematical angle between the user taste profile vector and all other candidate song vectors to score metadata overlaps.
-
-#### Trust Score Calculation Code: [recommender_service/app.py](file:///c:/laragon/www/musicsocial-main/recommender_service/app.py#L903-L915)
+**Social Trust** – dampened follower influence:
 ```python
-# Dampened follower influence
-numerator = math.log(1.0 + (pow(sharer_friends, 0.7)))
-
-# Halved dilution based on selectivity
-denominator = 1.0 + (0.5 * math.log(1.0 + active_user_friends))
-
-trust = numerator / denominator
+trust = math.log(1 + pow(sharer_friends, 0.7)) / (1 + 0.5 * math.log(1 + active_user_friends))
 ```
-
-##### How It Works (Social Trust Math):
-1. **Superstar Dampening (Numerator)**: Applies a $0.7$ exponent to the sharer's follower count to flatten the curve, ensuring mainstream influencers' recommendations don't completely drown out regular friends' shares.
-2. **Dilution Adjustment (Denominator)**: Takes the active user's following count and halves the penalty using the $0.5$ factor to handle selective vs. social users fairly.
-3. **Trust Score**: Divides the dampened influence by dilution to compute the peer-to-peer trust score.
+- Relationship multiplier: `1.0` for playlist peers, `0.8` for followed friends, `0.3` for strangers.
 
 ---
 
-### Phase 4: Data Egress (Hydration & UI Display)
-The Laravel controller fetches recommendations, applies contextual interaction filters, retrieves full song metadata, and feeds the view.
+### Phase 4: Data Egress (Hydration & Display)  
+The `DiscoveryController` fetches recommendations, filters out already-interacted songs, hydrates the top 12 results with database metadata, sorts them back into recommended order, and determines "Who to Follow" using a taste-neighbor query.
 
-*   **Primary Page View**: [discovery.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/discovery.blade.php)
-*   **UI Components**:
-    *   [discovery-card.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/discovery-card.blade.php)
-    *   [who-to-follow.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/who-to-follow.blade.php)
-    *   [sidebar-right.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/sidebar-right.blade.php)
-
-#### Egress Filter & Sorting Code: [DiscoveryController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/DiscoveryController.php#L50-L99)
+**Key Recommendation Hydration & Ordering** (`DiscoveryController@index`):
 ```php
+// 1. Fetch raw recommendations from the recommender microservice
 $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
+$recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
 
-if (!empty($rawRecommendations)) {
-    $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
-    
-    // Fetch and remove existing listener interactions to prevent repeating suggestions
-    $interactedSongIds = \App\Models\SongInteraction::where('user_id', $user->id)
-                            ->pluck('song_id')->toArray();
-    $filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
-    
-    // Select top 12 recommendation items
-    $top12Ids = array_slice($filteredSongIds, 0, 12);
-    $recommendationData = collect($rawRecommendations)->keyBy('song_id');
-    $recommendedSongs = Song::whereIn('id', $top12Ids)->get();
+// 2. Filter out songs user has interacted with (Listened/Liked/Disliked)
+$interactedSongIds = \App\Models\SongInteraction::where('user_id', $user->id)
+                        ->pluck('song_id')
+                        ->toArray();
+$filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
 
-    // Re-apply score sorting
-    $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
-        return $recommendationData[$song->id]['score'] ?? 0;
-    })->values();
+// 3. Take top 12 valid recommendation IDs (preserving recommender sorting)
+$top12Ids = array_slice($filteredSongIds, 0, 12);
+$recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-    $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
-        $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
-        $song->score = $recommendationData[$song->id]['score'] ?? null;
-        return $song;
-    });
-}
+// 4. Hydrate Song models from DB
+$recommendedSongs = Song::whereIn('id', $top12Ids)->get();
+
+// 5. Re-sort songs by recommendation score (whereIn does not preserve order)
+$recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
+    return $recommendationData[$song->id]['score'] ?? 0;
+})->values();
+
+// 6. Map scores, reasons, and debug logs into the model properties
+$recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+    $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+    $song->score = $recommendationData[$song->id]['score'] ?? null;
+    $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
+    return $song;
+});
 ```
 
-##### How It Works (Laravel Hydration & Post-Filtering):
-1. **Raw Retrieval**: Laravel fetches recommendation lists directly from the microservice.
-2. **Historical Filtering**: Performs a `SongInteraction` query to exclude songs the active user has already heard, liked, or disliked.
-3. **Trim & Hydration**: Trims results to the top 12, queries full models using `whereIn`, re-sorts them by Python score order, and attaches the recommendation reason strings to the collection before displaying the Blade views.
+**"Who to Follow" (Taste Neighbors) Query**:
+To boost community engagement, the discovery engine identifies "Taste Neighbors" (users who have liked the same songs) and suggests following them:
+```php
+// 1. Find users who liked the same songs as the current user (Taste Neighbors)
+$likedSongIds = $user->likes->pluck('song.id');
+$tasteNeighbors = User::where('id', '!=', $user->id)
+    ->whereHas('likes', function ($query) use ($likedSongIds) {
+        $query->whereIn('song_id', $likedSongIds);
+    })
+    ->whereDoesntHave('followers', function ($query) use ($user) {
+        $query->where('follower_id', $user->id);
+    })
+    ->withCount('followers')
+    ->orderByDesc('followers_count') // Prioritize more popular users among taste neighbors
+    ->limit(3)
+    ->get();
+
+// 2. Fill remaining suggestion slots (up to 5) with other active users
+$otherUsers = User::where('id', '!=', $user->id)
+    ->whereNotIn('id', $tasteNeighbors->pluck('id'))
+    ->whereDoesntHave('followers', function ($query) use ($user) {
+        $query->where('follower_id', $user->id);
+    })
+    ->inRandomOrder()
+    ->limit(5 - $tasteNeighbors->count())
+    ->get();
+
+$usersToSuggest = $tasteNeighbors->merge($otherUsers);
+```
+
+**How the "Who to Follow" Algorithm Works**:
+To drive social network density and community interactions, the system suggests a personalized pool of **5 users** through a two-tiered selection query:
+* **Tier 1: Taste Neighbors (High-Relevance affinity, capped at 3)**:
+  * Looks up all songs the active user has liked.
+  * Queries for other users who have liked at least one of those same songs (co-likes).
+  * Excludes the active user themselves and users they already follow.
+  * Prioritizes influential users by sorting them by follower count descending.
+* **Tier 2: Explorer Fallback (Fills the remaining slots up to 5)**:
+  * If the active user has fewer than 3 Taste Neighbors, the system pulls random active users to fill the remaining slots.
+  * Ensures that a new user (cold start) or user with niche preferences always sees a complete set of 5 suggestions without database overlap.
+
+The results are passed to the `discovery.blade.php` view, displaying the recommendation list and custom-tailored user connection widgets.
 
 ---
 
-## 3. Real-Time & Persistent Playback Subsystem
+## 3. Post Composer – The Heart of Social Sharing
 
-The application provides a seamless music experience where playback persists across page navigation, resolving the player resetting issue.
+The composer is an Alpine.js‑powered component that allows users to search for a track, select it, add a caption, and post it to their feed. Each post strengthens the user’s taste profile.
 
-*   **HTML Layout**: [app.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/layouts/app.blade.php) loads the Spotify Web Playback SDK scripts inside the `<head>`.
-*   **Navigation Components**: [navigation.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/layouts/navigation.blade.php) and [mobile-bottom-nav.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/mobile-bottom-nav.blade.php).
-*   **Playback Proxy Routing**: [SpotifyPlayerController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/SpotifyPlayerController.php)
+### Key Functions
 
-#### Player Alpine Component Init Listener: [spotify-web-player.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/components/spotify-web-player.blade.php#L144-L176)
+**`search()`** – queries Spotify API when the user types ≥ 3 characters:
 ```javascript
-init() {
-    console.log('[SpotifyPlayer] Alpine mounted — isPremium:', this.isPremium);
-
-    // Attach native audio preview listeners for free accounts
-    if (!window.__spotifyAudioListenersAttached) {
-        window.__spotifyAudioListenersAttached = true;
-        window.__spotifyNativeAudio.addEventListener('timeupdate', () => {
-            if (!this.isPremium) this.positionMs = window.__spotifyNativeAudio.currentTime * 1000;
-        });
-        window.__spotifyNativeAudio.addEventListener('ended', () => {
-            if (!this.isPremium) { this.isPaused = true; this.positionMs = 0; }
-        });
-    }
-
-    if (this.isPremium) {
-        this.initializePlayer();
-    }
-
-    // Intercept global triggers to play a song and wake up the player UI
-    window.toggleSpotifyPlayer = (spotifyUri, meta) => {
-        this.playerVisible = true;
-        this.collapsed     = false;
-        this.noPreview     = false;
-        this.isLoading     = true;
-
-        if (meta) {
-            this.trackName  = meta.name   || null;
-            this.artistName = meta.artist || null;
-            this.albumArt   = meta.art    || null;
-        }
-
-        this._doPlay(spotifyUri, meta);
-    };
+search() {
+    if (this.searchQuery.length < 3) { this.searchResults = []; return; }
+    this.loading = true;
+    fetch(`/spotify/search?query=${encodeURIComponent(this.searchQuery)}`)
+        .then(response => response.json())
+        .then(data => { this.searchResults = data; this.loading = false; });
 }
 ```
 
-##### How It Works (Persistent Web Player Bridge):
-1. **Free Account Listener**: If the logged-in user doesn't have Spotify Premium, it registers event listeners directly onto HTML5 preview audios to track position and completion.
-2. **Premium Device Initializer**: If they are Premium, it dynamically inserts Spotify SDK script and connects to the virtual playback target device.
-3. **Global Play Bridge**: Mounts `window.toggleSpotifyPlayer` as a global handle. When users click play on any dashboard share card or discovery list, the event calls this bridge to wake up the persistent player UI and streams the track.
+**`selectTrack(track)`** – stores the chosen track and clears the search results:
+```javascript
+selectTrack(track) {
+    this.selectedTrack = track;
+    this.searchQuery = '';
+    this.searchResults = [];
+}
+```
+
+**`submitPost()`** – sends a POST request to `/shares/store` with the track ID, caption, and post type (music or recommendation_request). The response HTML (the new share card) is prepended to the feed container without a page reload.
+
+```javascript
+submitPost() {
+    if (!this.selectedTrack) return;
+    this.loading = true;
+
+    const formData = new FormData();
+    formData.append('type', this.isSeekingRecommendations ? 'recommendation_request' : 'music');
+    formData.append('spotify_track_id', this.selectedTrack.id);
+    formData.append('caption', this.$refs.captionInput.value);
+
+    fetch('/shares/store', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('feed-container').insertAdjacentHTML('afterbegin', data.html);
+            this.resetComposer();
+        });
+}
+```
+
+**UX highlights**:
+- **Recently played** list appears when the input is focused (fetched via `/spotify/recently-played`).
+- A toggle switches between **“Just Sharing”** and **“Asking for Recommendations”** – the latter changes the post type and encourages community replies.
+- A first‑time tip reminds users that posting songs refines their taste profile.
 
 ---
 
-## 4. Netcentric Integration Points
+## 4. Persistent Spotify Web Player
 
-Three vital network dependencies connect the Laravel core:
-1.  **Spotify Web API (REST - OAuth client flow)**: Handled by [SpotifyService.php](file:///c:/laragon/www/musicsocial-main/app/Services/SpotifyService.php). Manages token updates, search routing, and metadata retrieval. Supporting routing controllers are [SpotifySearchController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/SpotifySearchController.php) and [SpotifyImportController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/SpotifyImportController.php).
-2.  **External Information Services (REST)**: [MusicBrainzService.php](file:///c:/laragon/www/musicsocial-main/app/Services/MusicBrainzService.php) and [DiscogsService.php](file:///c:/laragon/www/musicsocial-main/app/Services/DiscogsService.php) fetch genre tags to create content profiling indexes.
-3.  **Flask Recommendation Service (HTTP/JSON)**: Laravel calls this server synchronously with a 5s connection timeout and 3 retries, guaranteeing reliable discovery page loads.
+The application embeds the Spotify Web Playback SDK in `app.blade.php`. The `spotify-web-player` Alpine component maintains a persistent player that survives page navigation.
+
+**Key mechanism**:
+- For **Premium users**, the SDK connects to a virtual device.
+- For **free users**, native HTML5 audio previews are used, with event listeners for time and ended events.
+- A global `window.toggleSpotifyPlayer()` function is exposed so any share card or discovery card can trigger playback, waking up the persistent player UI.
 
 ---
 
-## 5. Page Routing & Rendering Map
+## 5. Routing & Page Map (Quick Reference)
 
-This map outlines how URLs resolve to backend controller actions and where their corresponding Blade view template layouts reside in the project directory.
+| Page | Route | Controller | View |
+|------|-------|------------|------|
+| Home Feed | `/dashboard` | `FeedController@index` | `dashboard.blade.php` |
+| Discovery | `/discovery` | `DiscoveryController@index` | `discovery.blade.php` |
+| User Profile | `/users/{user:name}` | `UserProfileController@show` | `profile/show.blade.php` |
+| Playlists | `/playlists` | `PlaylistController@index` | `playlists/index.blade.php` |
+| Onboarding | `/onboarding/genres` | `OnboardingController@genres` | `onboarding/genres.blade.php` |
+| Admin Retrain | `/admin/retrain` | `AdminController@retrainPage` | `admin/retrain.blade.php` |
 
-| Feature Page / Scope | URL / Route Definition | Controller Action | Compiled Blade View Path |
-| :--- | :--- | :--- | :--- |
-| **Home Feed (Dashboard)** | `/dashboard` ([web.php:84](file:///c:/laragon/www/musicsocial-main/routes/web.php#L84)) | `FeedController@index` ([FeedController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/FeedController.php)) | [dashboard.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/dashboard.blade.php) |
-| **Discovery Page** | `/discovery` ([web.php:186](file:///c:/laragon/www/musicsocial-main/routes/web.php#L186)) | `DiscoveryController@index` ([DiscoveryController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/DiscoveryController.php)) | [discovery.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/discovery.blade.php) |
-| **User Profiles** | `/users/{user:name}` ([web.php:143](file:///c:/laragon/www/musicsocial-main/routes/web.php#L143)) | `UserProfileController@show` ([UserProfileController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/UserProfileController.php)) | [profile/show.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/profile/show.blade.php) |
-| **Playlist Management** | `/playlists` ([web.php:103](file:///c:/laragon/www/musicsocial-main/routes/web.php#L103)) | `PlaylistController` ([PlaylistController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/PlaylistController.php)) | [playlists/index.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/playlists/index.blade.php) & [playlists/show.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/playlists/show.blade.php) |
-| **Shelf Onboarding** | `/onboarding/genres` ([web.php:33](file:///c:/laragon/www/musicsocial-main/routes/web.php#L33)) | `OnboardingController@genres` ([OnboardingController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/OnboardingController.php)) | [onboarding/genres.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/onboarding/genres.blade.php) |
-| **Account Settings** | `/settings` ([web.php:168](file:///c:/laragon/www/musicsocial-main/routes/web.php#L168)) | `SettingsController@index` ([SettingsController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/SettingsController.php)) | [settings/index.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/settings/index.blade.php) |
-| **Admin Dashboard** | `/admin` ([web.php:41](file:///c:/laragon/www/musicsocial-main/routes/web.php#L41)) | `AdminController@dashboard` ([AdminController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/AdminController.php)) | [admin/dashboard.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/admin/dashboard.blade.php) |
-| **Admin Retrain Algo** | `/admin/retrain` ([web.php:49](file:///c:/laragon/www/musicsocial-main/routes/web.php#L49)) | `AdminController@retrainPage` ([AdminController.php](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/AdminController.php)) | [admin/retrain.blade.php](file:///c:/laragon/www/musicsocial-main/resources/views/admin/retrain.blade.php) |
+---
+
+## 6. Complete Directory Structure & Core Code Map
+
+To navigate the overall project, here is the complete folder structure mapping all core modules, routing systems, and view templates across both the Laravel and Python codebases:
+
+```
+reso/ (Root Directory)
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/          # Laravel Web and AJAX Controllers
+│   │   │   ├── AdminController.php
+│   │   │   ├── CommentController.php
+│   │   │   ├── DiscoveryController.php
+│   │   │   ├── LikeController.php
+│   │   │   ├── OnboardingController.php
+│   │   │   ├── ShareController.php
+│   │   │   └── ... (Other Controllers)
+│   │   └── Middleware/           # Routing middleware (auth, admin blocks)
+│   ├── Models/                   # Laravel Eloquent Database Models
+│   │   ├── Admin.php
+│   │   ├── Comment.php
+│   │   ├── CommentThread.php
+│   │   ├── Playlist.php
+│   │   ├── PlaylistCollaborator.php
+│   │   ├── PlaylistSong.php
+│   │   ├── Share.php
+│   │   ├── Song.php
+│   │   ├── SongInteraction.php
+│   │   ├── User.php
+│   │   └── UserShelfSong.php
+│   └── Services/                 # Business logic and external API wrappers
+│       ├── DiscogsService.php
+│       ├── GenreCleanerService.php
+│       ├── MusicBrainzService.php
+│       ├── RecommendationService.php # Connects Laravel to Flask Recommender
+│       ├── SpotifyService.php
+│       └── YouTubeService.php
+├── bootstrap/                    # Laravel application bootstrap configuration
+├── config/                       # Application configuration values (database, services)
+├── database/
+│   ├── migrations/               # MySQL database schema definition files
+│   └── seeders/                  # Mock data generators for local deployment
+├── public/                       # Entry point (index.php) and compiled web assets
+├── recommender_service/          # Python/Flask Machine Learning Microservice
+│   ├── app.py                    # Recommender API service, SVD & TF-IDF engines
+│   ├── benchmark_model.py        # 5-fold cross validation script
+│   ├── test_recommender.py       # Python recommender unit test suite
+│   ├── recs.json                 # Cached SVD recommendations database
+│   └── requirements.txt          # Python dependency list (scikit-surprise, pandas, etc.)
+├── resources/
+│   ├── css/                      # Application custom stylesheets (Vanilla CSS)
+│   ├── js/                       # Alpine.js script components
+│   └── views/                    # Blade Templates (HTML & Tailwind/Alpine directives)
+│       ├── admin/                # Admin dashboards and model controls
+│       ├── components/           # Reusable UI widgets (cards, modals, player)
+│       ├── layouts/              # Main layout wrappers (app.blade.php)
+│       ├── onboarding/           # Onboarding view templates
+│       ├── playlists/            # Playlist index and detail views
+│       └── discovery.blade.php   # Main personalization and social suggestions view
+├── routes/
+│   ├── api.php                   # Public / mobile API routes
+│   ├── auth.php                  # Authentication and password recovery routes
+│   └── web.php                   # Core application web routes (controller maps)
+└── tests/                        # Laravel Feature and Unit Testing framework
+```
+
+---
+
+## 7. Key Architecture File Reference Table
+
+For a deep dive into specific architectural elements, refer to these primary files in the repository:
+
+| System Layer | Component / File | Purpose |
+|--------------|-------------------|---------|
+| **Recommendation Engine** | [`recommender_service/app.py`](file:///C:/laragon/www/musicsocial-main/recommender_service/app.py) | Contains SVD training, TF-IDF calculation, cosine similarity matrix, and Flask API endpoints. |
+| **Recommendation Client** | [`app/Services/RecommendationService.php`](file:///C:/laragon/www/musicsocial-main/app/Services/RecommendationService.php) | Wrapper that communicates with the Flask microservice with built-in retry and timeout logic. |
+| **Discovery Controller** | [`app/Http/Controllers/DiscoveryController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/DiscoveryController.php) | Hydrates recommendations, filters out user-interacted tracks, and runs the "Taste Neighbors" follow suggestion algorithm. |
+| **Discovery View** | [`resources/views/discovery.blade.php`](file:///C:/laragon/www/musicsocial-main/resources/views/discovery.blade.php) | Main interface rendering Alpine.js discovery tabs, Spotify play cards, and follow components. |
+| **Data Ingress & Enrichment** | [`app/Http/Controllers/ShareController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/ShareController.php) | Coordinates the multi-source enrichment pipeline (Spotify, MusicBrainz, Discogs, YouTube tags). |
+| **Enrichment Services** | [`app/Services/`](file:///C:/laragon/www/musicsocial-main/app/Services/) | Custom wrappers calling third-party APIs: `SpotifyService.php`, `MusicBrainzService.php`, `DiscogsService.php`, and `YouTubeService.php`. |
+| **Engagement Handlers** | [`app/Http/Controllers/LikeController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/LikeController.php) | Handles likes/dislikes with mutual exclusivity logic. |
+| | [`app/Http/Controllers/CommentController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php) | Implements comment storage and Spotify track link auto-detection tags (`[SONG:spotify_id]`). |
+| **Persistent Player SDK** | [`resources/views/components/spotify-web-player.blade.php`](file:///C:/laragon/www/musicsocial-main/resources/views/components/spotify-web-player.blade.php) | Manages the Spotify Web Playback SDK connection, virtual device initialization, audio playback state, and exposes global trigger. |
+| **Onboarding Pipeline** | [`app/Http/Controllers/OnboardingController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/OnboardingController.php) | Manages step-by-step onboarding, genre selection, and the cold-start shelf songs creation. |
+| **Model Retrain Endpoint** | [`app/Http/Controllers/AdminController.php`](file:///C:/laragon/www/musicsocial-main/app/Http/Controllers/AdminController.php) | Handles the admin action to manually trigger recommender retraining. |
+
+---
+
+## 8. RecSys Test Suite & Simulation (Verification Framework)
+
+To guarantee the reliability and math accuracy of the Python microservice, the system includes a dedicated unit test suite ([`recommender_service/test_recommender.py`](file:///C:/laragon/www/musicsocial-main/recommender_service/test_recommender.py)).
+
+### Mock Ingress: How the Test Suite Fetches Data
+To run tests without requiring a running MySQL database, the test suite intercepts Pandas SQL calls and SQLAlchemy connection blocks.
+
+1. **`pandas.read_sql` Interception (`@patch`)**:
+   The test suite patches SQL routing with a custom side-effect parser:
+   ```python
+   @patch('app.pd.read_sql')
+   def test_cold_start_content_based(self, mock_read_sql):
+       # Define query routing for mock_read_sql
+       def mock_read_sql_side_effect(query, connection, params=None):
+           normalized_query = " ".join(str(query).lower().split())
+           
+           if "from songs" in normalized_query:
+               return all_songs_df  # Pre-defined test catalog
+           elif "from likes l join shares s" in normalized_query and "select s.song_id" in normalized_query:
+               return user_interactions_df  # Empty/populated interaction histories
+           elif "from followers" in normalized_query:
+               return followers_df  # Custom user follower numbers
+           return pd.DataFrame()
+
+       mock_read_sql.side_effect = mock_read_sql_side_effect
+   ```
+
+2. **Connection Context Mocking**:
+   It mocks the SQLAlchemy execution pipeline to return deterministic values for row queries:
+   ```python
+   mock_conn = MagicMock()
+   self.mock_engine.connect.return_value.__enter__.return_value = mock_conn
+
+   def mock_execute_side_effect(query, *args, **kwargs):
+       if "count(*) as cnt" in str(query).lower():
+           return MockQueryResult([(5,)]) # Simulates onboarding 5-song warm-start threshold
+       return MockQueryResult([])
+
+   mock_conn.execute.side_effect = mock_execute_side_effect
+   ```
+
+### Core Verified Mathematical Models
+- **TF-IDF Keyword Weighting**: Proves that rare genres (e.g., *Math-Rock*) are correctly weighted higher than dominant ones (e.g., *Pop*) based on logarithmic inverse document frequency.
+- **Cosine Similarity Thresholding**: Assures that only songs exceeding the `> 0.1` similarity threshold are recommended.
+- **Logarithmic Activity Flattening**: Verifies the SVD confidence scale weighting: $c_{ui} = 1 + \ln(1 + r_{ui})$.
+- **Social Trust Boost dampening**: Checks follower trust value calculations: $\text{trust} = \frac{\ln(1 + F_{\text{sharer}}^{0.7})}{1 + 0.5 \ln(1 + F_{\text{active}})}$ combined with user relationship multipliers (Collaborators = `1.0`, Friends = `0.8`, Strangers = `0.3`).
+- **Strict Benchmarking Standards**: Asserts model quality targets using live cross-validation (Root Mean Squared Error $\text{RMSE} < 1.0$, Mean Absolute Error $\text{MAE} < 0.85$, and Normalized Discounted Cumulative Gain $\text{NDCG} > 0.70$).
+
+---
+
+## In a Nutshell (for your examiner)
+
+1. **Tech Stack**: Laravel + MySQL (core) + Python/Flask (ML microservice) + Spotify APIs.
+2. **Data Pipeline**: Ingest via multiple APIs → enrich genres → store → user interactions → train/update models → serve personalized feeds.
+3. **Recommendation**: Hybrid SVD + TF‑IDF, boosted by social trust – bypasses cold-start via mandatory onboarding shelf.
+4. **Engagement**: Post composer is the primary interaction point; it fuels the feedback loop and integrates seamlessly with the persistent player.
+5. **Real-time UX**: Alpine.js for reactivity, SPAs with persistent player, and AJAX submissions.
+
+---
+
+*This summary should give your examiner a clear picture of the system’s intelligence, social layers, and technical depth. Good luck with your mock presentation!*

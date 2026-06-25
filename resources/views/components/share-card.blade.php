@@ -779,6 +779,7 @@
                                     </svg>
                                 </button>
                             </div>
+                        </form>
                         @endif
 
                         <div class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
