@@ -228,6 +228,8 @@ class SpotifyService
             $artistName = $track['artists'][0]['name'] ?? 'Unknown Artist';
             $trackName = $track['name'] ?? 'Unknown Track';
             
+            $cleaner = new GenreCleanerService();
+            
             $debugSources = [
                 'spotify_artist' => [],
                 'spotify_album' => [],
@@ -304,9 +306,6 @@ class SpotifyService
                     Log::error('SpotifyService: MusicBrainz Error: ' . $e->getMessage());
                 }
             }
-            
-            // Clean and Sanitize (instantiate early so we can use it for extraction if needed)
-            $cleaner = new GenreCleanerService();
             
             // 4. INTERNAL HEURISTIC FALLBACK
             // Highly structured secondary source before resorting to user-generated tags
