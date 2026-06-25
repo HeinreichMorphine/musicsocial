@@ -28,7 +28,12 @@ class FollowController extends Controller
         }
 
         // Use toggle to follow or unfollow
-        auth()->user()->following()->toggle($user);
+        $result = auth()->user()->following()->toggle($user);
+        $followed = in_array($user->id, $result['attached'] ?? []);
+
+        if ($followed) {
+            $user->notify(new \App\Notifications\UserFollowedNotification(auth()->user()));
+        }
 
         // Invalidate the suggested users cache for the authenticated user
         \Illuminate\Support\Facades\Cache::forget("user_" . auth()->id() . "_suggested_users");

@@ -22,11 +22,14 @@
                     $shareId = $notification->data['share_id'] ?? null;
                     $commentId = $notification->data['comment_id'] ?? null;
                     $playlistId = $notification->data['playlist_id'] ?? null;
+                    $followerName = $notification->data['follower_name'] ?? null;
                     
                     if ($shareId) {
                         $notificationUrl = route('shares.show', $shareId) . ($commentId ? '#comment-' . $commentId : '');
                     } elseif ($playlistId) {
                         $notificationUrl = route('playlists.index');
+                    } elseif ($followerName) {
+                        $notificationUrl = route('profile.show', $followerName);
                     } else {
                         $notificationUrl = route('dashboard');
                     }

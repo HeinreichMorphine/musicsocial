@@ -96,9 +96,15 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                                 @php
                                     $shareId = $notification->data['share_id'] ?? null;
                                     $commentId = $notification->data['comment_id'] ?? null;
-                                    $notificationUrl = $shareId
-                                        ? route('shares.show', $shareId) . ($commentId ? '#comment-' . $commentId : '')
-                                        : route('dashboard');
+                                    $followerName = $notification->data['follower_name'] ?? null;
+                                    
+                                    if ($shareId) {
+                                        $notificationUrl = route('shares.show', $shareId) . ($commentId ? '#comment-' . $commentId : '');
+                                    } elseif ($followerName) {
+                                        $notificationUrl = route('profile.show', $followerName);
+                                    } else {
+                                        $notificationUrl = route('dashboard');
+                                    }
                                 @endphp
                                 <a 
                                     href="{{ $notificationUrl }}" 

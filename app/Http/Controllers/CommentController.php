@@ -93,11 +93,12 @@ class CommentController extends Controller
         // Regex to find @mentions - matches @username
         preg_match_all('/@([\w\.\-]+)/', $validated['body'], $matches);
         
+        $mentionedUserIds = [];
         if (!empty($matches[1])) {
             // Get unique usernames found in the comment
             $usernames = array_unique($matches[1]);
             
-            // Find users with these hostnames (except the commenter themselves)
+            // Find users with these names (except the commenter themselves)
             $usersToNotify = \App\Models\User::whereIn('name', $usernames)
                 ->where('id', '!=', auth()->id())
                 ->get();
@@ -105,6 +106,13 @@ class CommentController extends Controller
             foreach ($usersToNotify as $user) {
                 $user->notify(new \App\Notifications\UserMentionedNotification($comment));
             }
+
+            $mentionedUserIds = $usersToNotify->pluck('id')->toArray();
+        }
+
+        // Notify the post owner if someone else commented on their post, and they aren't already mentioned
+        if ($share->user_id !== auth()->id() && !in_array($share->user_id, $mentionedUserIds)) {
+            $share->user->notify(new \App\Notifications\CommentOnPostNotification($comment));
         }
 
         // 5. Return the rendered comment component
