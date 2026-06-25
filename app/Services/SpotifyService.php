@@ -307,12 +307,13 @@ class SpotifyService
                 }
             }
             
-            // 4. INTERNAL HEURISTIC FALLBACK
+            // 4. ITUNES (APPLE) SEARCH API FALLBACK
             // Highly structured secondary source before resorting to user-generated tags
             // Run this if we have less than 3 genres to supplement our highly-accurate primary tags
             if (count(array_unique($allGenres)) < 3) {
                 try {
-                    $endpoint = base64_decode('aHR0cHM6Ly9pdHVuZXMuYXBwbGUuY29tL3NlYXJjaA==');
+                    // iTunes (Apple) Search API
+                    $endpoint = 'https://itunes.apple.com/search';
                     $heuristicResponse = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'])->timeout(10)->get($endpoint, [
                         'term' => $artistName . ' ' . $trackName,
                         'entity' => 'song',
