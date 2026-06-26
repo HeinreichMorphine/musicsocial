@@ -106,4 +106,40 @@ class NotificationTest extends TestCase
         $this->assertEquals('UserA mentioned you in a comment.', $notification->data['message']);
         $this->assertEquals($share->id, $notification->data['share_id']);
     }
+
+    public function test_user_receives_notification_when_their_post_is_liked(): void
+    {
+        $userA = User::factory()->create(['name' => 'UserA']);
+        $userB = User::factory()->create(['name' => 'UserB']);
+
+        $song = Song::create([
+            'track_name' => 'Test Track',
+            'artist_name' => 'Test Artist',
+            'spotify_track_id' => '12345abcdef',
+        ]);
+
+        $share = Share::create([
+            'user_id' => $userB->id,
+            'song_id' => $song->id,
+            'caption' => 'Check this song',
+        ]);
+
+        // UserA likes UserB's share
+        $response = $this
+            ->actingAs($userA)
+            ->post(route('shares.like', $share->id));
+
+        $response->assertOk();
+        $response->assertJson([
+            'liked' => true,
+        ]);
+
+        // Verify userB received PostLikedNotification
+        $this->assertEquals(1, $userB->unreadNotifications()->count());
+        $notification = $userB->unreadNotifications()->first();
+        $this->assertEquals(\App\Notifications\PostLikedNotification::class, $notification->type);
+        $this->assertEquals('UserA liked your post.', $notification->data['message']);
+        $this->assertEquals($share->id, $notification->data['share_id']);
+        $this->assertEquals($userA->id, $notification->data['liker_id']);
+    }
 }

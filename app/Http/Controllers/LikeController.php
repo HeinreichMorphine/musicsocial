@@ -34,7 +34,14 @@ class LikeController extends Controller
 
         // Use the toggle method to attach if not attached,
         // or detach if already attached.
-        $user->likes()->toggle($share);
+        $result = $user->likes()->toggle($share);
+
+        // If the like was attached (added), notify the post owner
+        if (!empty($result['attached'])) {
+            if ($share->user_id !== $user->id) {
+                $share->user->notify(new \App\Notifications\PostLikedNotification($share, $user));
+            }
+        }
 
         // Return a JSON response with the new like count and liked status, AND dislike status
         return response()->json([
