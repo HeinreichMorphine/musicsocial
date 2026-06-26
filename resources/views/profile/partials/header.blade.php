@@ -101,7 +101,7 @@
                              <span x-show="loading" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block"></span>
                          </button>
                      @else
-                         <a href="{{ route('profile.edit') }}" 
+                         <a href="{{ route('settings.index') }}" 
                             wire:navigate
                             class="px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all transform hover:scale-105 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 inline-block cursor-pointer"
                          >
