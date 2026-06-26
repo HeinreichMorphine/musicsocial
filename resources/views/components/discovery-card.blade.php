@@ -83,6 +83,7 @@
         })
         .then(() => {
             this.interacted = true; // This will hide the card
+            this.$dispatch('song-interacted');
         });
     }
 }" 

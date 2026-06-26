@@ -155,16 +155,35 @@
 
                         <!-- Songs Content -->
                         <div :class="activeTab === 'songs' ? 'block' : 'hidden lg:block'">
-                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                                @if($recommendedSongs->isEmpty())
-                                    <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at
-                                        the moment.</p>
-                                @else
-                                    @foreach ($recommendedSongs as $song)
-                                        <x-discovery-card :song="$song" />
-                                    @endforeach
-                                @endif
-                            </div>
+                            @if($recommendedSongs->isEmpty())
+                                <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at the moment.</p>
+                            @else
+                                <div x-data="{ 
+                                    activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
+                                    maxRendered: Math.min(12, {{ $recommendedSongs->count() }}),
+                                    handleInteraction(index) {
+                                        this.activeIndexes = this.activeIndexes.filter(i => i !== index);
+                                        if (this.maxRendered < {{ $recommendedSongs->count() }}) {
+                                            this.activeIndexes.push(this.maxRendered);
+                                            this.maxRendered++;
+                                        }
+                                    }
+                                }">
+                                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                                        @foreach ($recommendedSongs as $song)
+                                            <div x-show="activeIndexes.includes({{ $loop->index }})" 
+                                                 @song-interacted.stop="handleInteraction({{ $loop->index }})"
+                                                 x-transition:enter="transition ease-out duration-500"
+                                                 x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
+                                                 x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+                                                 class="h-full"
+                                                 style="{{ $loop->index >= 12 ? 'display: none;' : '' }}">
+                                                <x-discovery-card :song="$song" />
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Who to Follow Content (Mobile Only) -->

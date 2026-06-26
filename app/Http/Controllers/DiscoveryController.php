@@ -65,22 +65,19 @@ class DiscoveryController extends Controller
                 Log::error("DiscoveryController: Filtered song IDs count: " . count($filteredSongIds));
                 Log::error("DiscoveryController: Filtered IDs: " . json_encode(array_values($filteredSongIds)));
                 
-                // Take top 12 from the filtered list (preserving order from recommender)
-                
-                // Take top 12 from the filtered list (preserving order from recommender)
-                // Recommender returns sorted list, so we just take the first 12 valid ones.
-                $top12Ids = array_slice($filteredSongIds, 0, 12);
+                // Take top 30 from the filtered list (preserving order from recommender)
+                $top30Ids = array_slice($filteredSongIds, 0, 30);
                 
                 $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-                $recommendedSongs = Song::whereIn('id', $top12Ids)->get();
+                $recommendedSongs = Song::whereIn('id', $top30Ids)->get();
                 Log::info("DiscoveryController: Songs retrieved from DB: " . $recommendedSongs->count());
                 
                 // Check if we are missing any songs
-                if ($recommendedSongs->count() < count($top12Ids)) {
-                     Log::warning("DiscoveryController: Mismatch! Expected " . count($top12Ids) . " songs, but got " . $recommendedSongs->count() . " from DB. IDs missing potentially.");
+                if ($recommendedSongs->count() < count($top30Ids)) {
+                     Log::warning("DiscoveryController: Mismatch! Expected " . count($top30Ids) . " songs, but got " . $recommendedSongs->count() . " from DB. IDs missing potentially.");
                      $retrievedIds = $recommendedSongs->pluck('id')->toArray();
-                     $missingIds = array_diff($top12Ids, $retrievedIds);
+                     $missingIds = array_diff($top30Ids, $retrievedIds);
                      Log::warning("DiscoveryController: Missing IDs: " . implode(',', $missingIds));
                 }
 
