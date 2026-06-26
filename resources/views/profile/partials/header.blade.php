@@ -6,16 +6,55 @@
      }">
     
     <!-- Cover Image -->
-    @if($user->cover_photo_url)
-        <div class="w-full aspect-[3/1] bg-cover bg-center" style="background-image: url('{{ $user->cover_photo_url }}');"></div>
+    @if(auth()->check() && auth()->id() === $user->id)
+        <form id="banner-upload-form" action="{{ route('profile.banner.update') }}" method="POST" enctype="multipart/form-data" class="relative group/banner w-full aspect-[3/1] overflow-hidden">
+            @csrf
+            @method('PATCH')
+            <input type="file" id="cover_photo_input" name="cover_photo" accept="image/*" class="hidden" onchange="document.getElementById('banner-upload-form').submit()">
+            
+            <button type="button" onclick="document.getElementById('cover_photo_input').click()" class="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white px-3 py-1.5 rounded-full shadow-lg transition-all opacity-0 group-hover/banner:opacity-100 flex items-center gap-1.5 text-xs font-bold z-20 cursor-pointer" title="Edit Cover Photo">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                </svg>
+                <span>Edit Cover</span>
+            </button>
+            @if($user->cover_photo_url)
+                <div class="w-full h-full bg-cover bg-center cursor-pointer hover:brightness-95 transition-all duration-300" onclick="document.getElementById('cover_photo_input').click()" style="background-image: url('{{ $user->cover_photo_url }}');"></div>
+            @else
+                <div class="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 cursor-pointer hover:brightness-95 transition-all duration-300" onclick="document.getElementById('cover_photo_input').click()"></div>
+            @endif
+        </form>
     @else
-        <div class="w-full aspect-[3/1] bg-gradient-to-r from-blue-400 to-purple-500 object-cover"></div>
+        @if($user->cover_photo_url)
+            <div class="w-full aspect-[3/1] bg-cover bg-center" style="background-image: url('{{ $user->cover_photo_url }}');"></div>
+        @else
+            <div class="w-full aspect-[3/1] bg-gradient-to-r from-blue-400 to-purple-500 object-cover"></div>
+        @endif
     @endif
 
     <div class="px-6 pb-6 text-gray-900 dark:text-gray-100 relative">
         <div class="flex flex-col sm:flex-row items-start sm:items-end -mt-12 mb-4">
              <!-- Avatar -->
-             <x-user-avatar :user="$user" class="h-24 w-24 border-4 border-white dark:border-gray-800 shadow-lg" />
+             @if(auth()->check() && auth()->id() === $user->id)
+                 <form id="avatar-upload-form" action="{{ route('profile.picture.update') }}" method="POST" enctype="multipart/form-data" class="relative group/avatar cursor-pointer shrink-0 z-10">
+                     @csrf
+                     @method('PATCH')
+                     <input type="file" id="profile_picture_input" name="profile_picture" accept="image/*" class="hidden" onchange="document.getElementById('avatar-upload-form').submit()">
+                     <div onclick="document.getElementById('profile_picture_input').click()" class="relative rounded-full">
+                         <x-user-avatar :user="$user" class="h-24 w-24 border-4 border-white dark:border-gray-800 shadow-lg" />
+                         <!-- Hover overlay -->
+                         <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200">
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                               <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                               <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                             </svg>
+                         </div>
+                     </div>
+                 </form>
+             @else
+                 <x-user-avatar :user="$user" class="h-24 w-24 border-4 border-white dark:border-gray-800 shadow-lg shrink-0" />
+             @endif
              
              <!-- Name & Badge -->
              <div class="mt-4 sm:mt-0 sm:ml-4 flex-1">
@@ -31,37 +70,46 @@
                   </div>
              </div>
 
-             <!-- Follow Button -->
-             @if(auth()->check() && auth()->id() !== $user->id)
-                <div class="mt-4 sm:mt-0">
-                    <button 
-                        @click="
-                            loading = true;
-                            fetch('{{ route('users.follow', $user) }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({})
-                            })
-                            .then(resp => resp.json())
-                            .then(data => {
-                                followed = data.followed;
-                                followersCount = data.followersCount;
-                            })
-                            .catch(err => console.error(err))
-                            .finally(() => loading = false);
-                        "
-                        :disabled="loading"
-                        :class="allowed = followed ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-custom-mid-blue text-white hover:bg-custom-dark-blue'"
-                        class="px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all transform hover:scale-105"
-                    >
-                        <span x-show="!loading" x-text="followed ? 'Unfollow' : 'Follow'"></span>
-                        <span x-show="loading" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block"></span>
-                    </button>
-                </div>
-            @endif
+             <!-- Follow / Edit Profile Button -->
+             @if(auth()->check())
+                 <div class="mt-4 sm:mt-0">
+                     @if(auth()->id() !== $user->id)
+                         <button 
+                             @click="
+                                 loading = true;
+                                 fetch('{{ route('users.follow', $user) }}', {
+                                     method: 'POST',
+                                     headers: {
+                                         'Content-Type': 'application/json',
+                                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                     },
+                                     body: JSON.stringify({})
+                                 })
+                                 .then(resp => resp.json())
+                                 .then(data => {
+                                     followed = data.followed;
+                                     followersCount = data.followersCount;
+                                 })
+                                 .catch(err => console.error(err))
+                                 .finally(() => loading = false);
+                             "
+                             :disabled="loading"
+                             :class="followed ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' : 'bg-custom-mid-blue text-white hover:bg-custom-dark-blue'"
+                             class="px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all transform hover:scale-105 cursor-pointer"
+                         >
+                             <span x-show="!loading" x-text="followed ? 'Unfollow' : 'Follow'"></span>
+                             <span x-show="loading" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block"></span>
+                         </button>
+                     @else
+                         <a href="{{ route('profile.edit') }}" 
+                            wire:navigate
+                            class="px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all transform hover:scale-105 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 inline-block cursor-pointer"
+                         >
+                             Edit Profile
+                         </a>
+                     @endif
+                 </div>
+             @endif
         </div>
 
         <div class="flex items-center space-x-6 mb-6 ml-1 sm:ml-28">
