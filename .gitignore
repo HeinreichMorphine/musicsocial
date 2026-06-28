@@ -33,23 +33,12 @@ recommender_service/origin)
 surprise_model.pkl
 /storage/framework/views/
 
-# Documentation
+# Documentation and Assets (Excluded from GitHub)
 *.md
-!README.md
-!algorithm_validation.md
-!presentation.md
-
-!activity_diagram_description.md
-!recsys.md
-!presentation_technical.md
-!interface_results.md
-!backend_processes.md
-!back_end_process.md
-!database_overview.md
-!accuracy_testing.md
-
-# Scratch and test files
+*.drawio
+*.tex
+*.txt
+!recommender_service/requirements.txt
+/publicimages/
 /scratch/
 /test_admin_rendering.php
-
-
