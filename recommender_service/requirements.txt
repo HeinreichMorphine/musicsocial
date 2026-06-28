@@ -1,0 +1,11 @@
+Flask
+scikit-surprise==1.1.4
+pandas
+python-dotenv
+SQLAlchemy
+PyMySQL
+numpy<2.0
+scikit-learn
+requests
+joblib
+gunicorn
