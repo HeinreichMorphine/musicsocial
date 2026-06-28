@@ -1166,7 +1166,7 @@
                     <strong>Formula:</strong> Candidates = Catalog &setminus; (Interacted &cup; Disliked)
                 </p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.45;">
-                    Dislikes register a negative signal (-1.0 in matrix), lowering predictions. Disliked tracks are also immediately placed in an exclusion set and 100% filtered from candidate pools.
+                    Dislikes register a negative signal (0.0 in matrix), lowering predictions. Disliked tracks are also immediately placed in an exclusion set and 100% filtered from candidate pools.
                 </p>
                 <table class="accuracy-table">
                     <thead>
@@ -1186,7 +1186,7 @@
                         </tr>
                         <tr>
                             <td class="test-case-name">Learned Negative Decay</td>
-                            <td class="expected-val">Negative signal (-1.0) stored for SVD training matrix</td>
+                            <td class="expected-val">Negative signal (0.0) stored for SVD training matrix</td>
                             <td class="actual-val" id="tc06-val-decay">Calculating...</td>
                             <td class="status-col"><span class="status-check" id="tc06-status-2">&minus;</span></td>
                         </tr>
@@ -1478,7 +1478,7 @@
             // --- TC-06 Negative Feedback ---
             const dislikesCount = data.tc06.calculation.match(/\d+/) ? data.tc06.calculation.match(/\d+/)[0] : 0;
             document.getElementById('tc06-val-exclusion').innerText = `100% Excluded (Dislikes: ${dislikesCount})`;
-            document.getElementById('tc06-val-decay').innerText = `-1.0 registered in matrix`;
+            document.getElementById('tc06-val-decay').innerText = `0.0 registered in matrix`;
             document.getElementById('tc06-status-1').className = 'status-check';
             document.getElementById('tc06-status-1').innerText = '✓';
             document.getElementById('tc06-status-2').className = 'status-check';

@@ -32,7 +32,7 @@ class RecommendationDataController extends Controller
             $interactions[] = [
                 'user_id' => $dislike->user_id,
                 'item_id' => $dislike->share_id,
-                'rating' => -1, // Negative feedback
+                'rating' => 0, // Negative feedback
             ];
         }
 
