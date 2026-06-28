@@ -844,107 +844,39 @@
                 <span>Academic & Industry RecSys Standard</span>
             </div>
 
-            <div class="cv-container">
-                <!-- CV Split Table Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <span class="card-title-number">TC-08.1</span>
-                            <span>SVD Cross Validation Splits</span>
-                        </div>
-                        <span class="pass-tag">CALIBRATED</span>
-                    </div>
-                    <table class="cv-table">
-                        <thead>
-                            <tr>
-                                <th>Split Index</th>
-                                <th>Fold RMSE Score</th>
-                                <th>Fold MAE Score</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cv-table-body">
-                            <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem 0;">Waiting for benchmark validation execution...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="result-comparison">
-                        <div class="result-box expected">
-                            <span class="result-box-label">Expected Result</span>
-                            <span class="result-box-value">All 5 fold RMSE scores &lt; 1.0. All fold MAE scores &lt; 0.85. Fold-to-fold variance (std deviation) &lt; 0.05 to confirm model stability across splits.</span>
-                        </div>
-                        <div class="result-box actual">
-                            <span class="result-box-label">Actual Result</span>
-                            <span class="result-box-value" id="tc081-actual">Run Global Validation to populate fold-level RMSE and MAE results from the live Surprise SVD 5-Fold Cross Validation computation.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Model & Database Training Statistics -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <span class="card-title-number">STATS</span>
-                            <span>Model Training & Database Matrix Statistics</span>
-                        </div>
-                        <span class="pass-tag">ACTIVE</span>
-                    </div>
-                    <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-                        <div class="stat-card">
-                            <span class="stat-label">Model Engine Version</span>
-                            <span class="stat-value highlight" id="stat-version">v3.8.2-ALPHA</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Last Retrained Timestamp</span>
-                            <span class="stat-value" id="stat-retrained" style="font-size: 0.85rem;">Never</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Total Interaction Records</span>
-                            <span class="stat-value" id="stat-records">0</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Unique Users in Matrix</span>
-                            <span class="stat-value" id="stat-users">0</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">Unique Songs in Model</span>
-                            <span class="stat-value" id="stat-songs">0</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label">SVD Sparsity Ratio</span>
-                            <span class="stat-value" id="stat-sparsity">0.00%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SVD 5-Fold Cross-Validation Variance Analysis (Graphs) -->
+            <!-- Model & Database Training Statistics -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <span class="card-title-number">TC-08.2</span>
-                        <span>SVD 5-Fold Cross-Validation Variance Analysis</span>
+                        <span class="card-title-number">STATS</span>
+                        <span>Model Training & Database Matrix Statistics</span>
                     </div>
-                    <span class="pass-tag" id="variance-status-tag">PASS</span>
+                    <span class="pass-tag">ACTIVE</span>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
-                    <div style="height: 250px; position: relative;">
-                        <h4 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700;">Fold-level RMSE & MAE</h4>
-                        <canvas id="foldMetricsChart"></canvas>
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                    <div class="stat-card">
+                        <span class="stat-label">Model Engine Version</span>
+                        <span class="stat-value highlight" id="stat-version">v3.8.2-ALPHA</span>
                     </div>
-                    <div style="height: 250px; position: relative;">
-                        <h4 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 700;">RMSE Deviation from Mean (Variance)</h4>
-                        <canvas id="varianceDeviationChart"></canvas>
+                    <div class="stat-card">
+                        <span class="stat-label">Last Retrained Timestamp</span>
+                        <span class="stat-value" id="stat-retrained" style="font-size: 0.85rem;">Never</span>
                     </div>
-                </div>
-                <div class="result-comparison" style="margin-top: 1.5rem;">
-                    <div class="result-box expected">
-                        <span class="result-box-label">Expected Result</span>
-                        <span class="result-box-value">Deviation of each fold from the mean RMSE ≤ ±0.05. A low-variance deviation curve/bar chart indicates a stable, non-overfitting SVD model generalising well across data splits.</span>
+                    <div class="stat-card">
+                        <span class="stat-label">Total Interaction Records</span>
+                        <span class="stat-value" id="stat-records">0</span>
                     </div>
-                    <div class="result-box actual">
-                        <span class="result-box-value" id="tc082-actual">Waiting for fold data. Deviation: ±0.0000. Graphs will render dynamically after benchmark fetch.</span>
+                    <div class="stat-card">
+                        <span class="stat-label">Unique Users in Matrix</span>
+                        <span class="stat-value" id="stat-users">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Unique Songs in Model</span>
+                        <span class="stat-value" id="stat-songs">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">SVD Sparsity Ratio</span>
+                        <span class="stat-value" id="stat-sparsity">0.00%</span>
                     </div>
                 </div>
             </div>
@@ -1636,33 +1568,6 @@
                 `Precision@12: ${precisionVal.toFixed(1)}% ${precisionPass ? '✓' : '✗'}  |  ` +
                 `NDCG@12: ${data.ndcg_at_12.toFixed(4)} ${ndcgPass ? '✓' : '✗'}  —  ${statusIcon}`;
 
-            // Populate CV Table
-            const tbody = document.getElementById('cv-table-body');
-            tbody.innerHTML = '';
-            
-            data.folds.forEach(fold => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="fold-num">Fold SPLIT #${fold.fold}</td>
-                    <td class="fold-val">${fold.rmse.toFixed(4)}</td>
-                    <td class="fold-val-blue">${fold.mae.toFixed(4)}</td>
-                    <td><span class="pass-tag">PASS</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // --- Update TC-08.1 Actual Result ---
-            const foldRmses = data.folds.map(f => f.rmse);
-            const foldMaes = data.folds.map(f => f.mae);
-            const allFoldPass = foldRmses.every(r => r < 1.0) && foldMaes.every(m => m < 0.85);
-            const rmseMin = Math.min(...foldRmses).toFixed(4);
-            const rmseMax = Math.max(...foldRmses).toFixed(4);
-            const maeMin = Math.min(...foldMaes).toFixed(4);
-            const maeMax = Math.max(...foldMaes).toFixed(4);
-            document.getElementById('tc081-actual').innerText =
-                `RMSE: ${rmseMin} – ${rmseMax}  |  MAE: ${maeMin} – ${maeMax}  ` +
-                (allFoldPass ? '— ✓ All 5 folds PASS' : '— ⚠ Fold threshold exceeded');
-
             // --- Update SVD Benchmarking Table (TC-08) ---
             document.getElementById('tc08-val-rmse').innerText = data.rmse.toFixed(4);
             document.getElementById('tc08-val-mae').innerText = data.mae.toFixed(4);
@@ -1682,9 +1587,6 @@
             document.getElementById('tc08-status-precision').innerText = precisionPass ? '✓' : '✗';
             document.getElementById('tc08-status-ndcg').className = ndcgPass ? 'status-check' : 'status-fail';
             document.getElementById('tc08-status-ndcg').innerText = ndcgPass ? '✓' : '✗';
-
-            // Update Variance Graphs
-            updateVarianceCharts(data.folds);
         }
 
         async function fetchStatsTimestamp() {
@@ -1700,143 +1602,6 @@
                 document.getElementById('stat-retrained').innerText = new Date().toLocaleString();
             }
         }
-
-        function updateVarianceCharts(folds) {
-            const foldsLabels = folds.map(f => `Fold ${f.fold}`);
-            const rmseVals = folds.map(f => f.rmse);
-            const maeVals = folds.map(f => f.mae);
-            
-            // Calculate Mean RMSE
-            const meanRmse = rmseVals.reduce((a, b) => a + b, 0) / rmseVals.length;
-            const deviationVals = rmseVals.map(v => v - meanRmse);
-            
-            const minRmse = Math.min(...rmseVals);
-            const maxRmse = Math.max(...rmseVals);
-            const deviation = maxRmse - minRmse;
-            
-            // Update variance badge and text
-            const stableModel = deviation <= 0.05;
-            const badgeEl = document.getElementById('variance-status-tag');
-            if (badgeEl) {
-                badgeEl.className = stableModel ? 'pass-tag' : 'pass-tag danger-tag';
-                badgeEl.innerText = stableModel ? 'STABLE' : 'HIGH VARIANCE';
-            }
-            
-            const foldSummary = folds.map((f, i) => `F${i+1}:${f.rmse.toFixed(4)}`).join('  ');
-            document.getElementById('tc082-actual').innerText =
-                `Variance: ±${deviation.toFixed(4)} ${stableModel ? '✓ STABLE' : '⚠ HIGH'}  |  ` +
-                `${foldSummary}  ` +
-                (stableModel ? '— PASS' : '— REVIEW REQUIRED');
-
-            // 1. Render/Update Fold Metrics Chart
-            const ctxMetrics = document.getElementById('foldMetricsChart').getContext('2d');
-            if (metricsChart) {
-                metricsChart.data.labels = foldsLabels;
-                metricsChart.data.datasets[0].data = rmseVals;
-                metricsChart.data.datasets[1].data = maeVals;
-                metricsChart.update();
-            } else {
-                metricsChart = new Chart(ctxMetrics, {
-                    type: 'line',
-                    data: {
-                        labels: foldsLabels,
-                        datasets: [
-                            {
-                                label: 'RMSE',
-                                data: rmseVals,
-                                borderColor: '#059669', // Primary green
-                                backgroundColor: 'rgba(5, 150, 105, 0.05)',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#059669',
-                                pointRadius: 4,
-                                tension: 0.2,
-                                fill: true
-                            },
-                            {
-                                label: 'MAE',
-                                data: maeVals,
-                                borderColor: '#1d4ed8', // Accent blue
-                                backgroundColor: 'rgba(29, 78, 216, 0.05)',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#1d4ed8',
-                                pointRadius: 4,
-                                tension: 0.2,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: { font: { family: 'Outfit', size: 10 } }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                ticks: { font: { family: 'JetBrains Mono', size: 9 } }
-                            },
-                            x: {
-                                ticks: { font: { family: 'Outfit', size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // 2. Render/Update Variance Deviation Chart
-            const ctxDev = document.getElementById('varianceDeviationChart').getContext('2d');
-            if (deviationChart) {
-                deviationChart.data.labels = foldsLabels;
-                deviationChart.data.datasets[0].data = deviationVals;
-                deviationChart.data.datasets[0].backgroundColor = deviationVals.map(v => v >= 0 ? 'rgba(220, 38, 38, 0.6)' : 'rgba(5, 150, 105, 0.6)');
-                deviationChart.data.datasets[0].borderColor = deviationVals.map(v => v >= 0 ? '#dc2626' : '#059669');
-                deviationChart.update();
-            } else {
-                deviationChart = new Chart(ctxDev, {
-                    type: 'bar',
-                    data: {
-                        labels: foldsLabels,
-                        datasets: [
-                            {
-                                label: 'Deviation from Mean RMSE',
-                                data: deviationVals,
-                                backgroundColor: deviationVals.map(v => v >= 0 ? 'rgba(220, 38, 38, 0.6)' : 'rgba(5, 150, 105, 0.6)'),
-                                borderColor: deviationVals.map(v => v >= 0 ? '#dc2626' : '#059669'),
-                                borderWidth: 1.5,
-                                borderRadius: 4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `Deviation: ${context.raw >= 0 ? '+' : ''}${context.raw.toFixed(5)}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                ticks: { font: { family: 'JetBrains Mono', size: 9 } }
-                            },
-                            x: {
-                                ticks: { font: { family: 'Outfit', size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-
 
         async function retrainModel() {
             showLoader('retraining surprise svd model matrix...');
