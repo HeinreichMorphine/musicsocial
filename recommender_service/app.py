@@ -186,11 +186,11 @@ def fetch_data_from_db():
             
             if not direct_interactions_df.empty:
                 # Map interaction types to scores
-                # like -> 2.0, listen -> 1.0, dislike -> -1.0
+                # like -> 2.0, listen -> 1.0, dislike -> 0.0
                 direct_interactions_df['score'] = direct_interactions_df['type'].map({
                     'like': 2.0,
                     'listen': 1.0,
-                    'dislike': -1.0
+                    'dislike': 0.0
                 })
                 
                 # Separate positives and negatives
@@ -216,15 +216,15 @@ def fetch_data_from_db():
             else:
                 grouped_df = pd.DataFrame(columns=['user_id', 'song_id', 'interaction'])
 
-            # 7. Dislikes (Strong Negative -1.0)
+            # 7. Dislikes (Strong Negative 0.0)
             # Combine traditional share-based dislikes with direct Discovery passes
-            dislikes_query = "SELECT d.user_id, s.song_id, -1.0 as interaction FROM dislikes d JOIN shares s ON d.share_id = s.id"
+            dislikes_query = "SELECT d.user_id, s.song_id, 0.0 as interaction FROM dislikes d JOIN shares s ON d.share_id = s.id"
             dislikes_df = pd.read_sql(dislikes_query, connection)
             
             if not negative_direct.empty:
                 dislikes_df = pd.concat([dislikes_df, negative_direct], ignore_index=True)
             
-            print(f"7. Total Negative Signals (-1.0): Found {len(dislikes_df)} records.")
+            print(f"7. Total Negative Signals (0.0): Found {len(dislikes_df)} records.")
 
             # Combine Weighted Personal Scores + Dislikes
             final_dfs = [grouped_df.rename(columns={'song_id': 'item_id'}), 
@@ -238,7 +238,7 @@ def fetch_data_from_db():
             # before dislikes_df, positive engagement is preserved unless the user
             # ONLY has a dislike (no positive engagement). This is the intended behavior:
             # a user who liked AND then disliked shows ambiguity, so we trust the positive.
-            # A user who ONLY disliked gets the -1.0 signal.
+            # A user who ONLY disliked gets the 0.0 signal.
             interactions_df = interactions_df.drop_duplicates(subset=['user_id', 'item_id'], keep='first')
 
             print(f"\nTotal unique training records: {len(interactions_df)}")
@@ -264,8 +264,8 @@ def train_and_save_model():
 
     # Adjusted scale for new Weighted Formula
     # 1 + log(1 + ~20) is around 4.0. Max theoretical could be higher but 1-5 is standard.
-    # We set scale (-1, 6) to be safe.
-    reader = Reader(rating_scale=(-1, 6)) 
+    # We set scale (0, 6) to be safe.
+    reader = Reader(rating_scale=(0, 6)) 
     data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
 
     trainset = data.build_full_trainset()
@@ -627,7 +627,7 @@ def benchmark_endpoint():
         # If we have enough data, we can calculate the real values to show live computation
         if not interactions_df.empty and len(interactions_df['user_id'].unique()) >= 5 and len(interactions_df) >= 20:
             try:
-                reader = Reader(rating_scale=(-1, 6))
+                reader = Reader(rating_scale=(0, 6))
                 data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
                 
                 # Perform 5-fold cross validation dynamically

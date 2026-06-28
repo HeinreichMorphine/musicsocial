@@ -123,7 +123,7 @@ if __name__ == "__main__":
         print(f"Data loaded: {len(interactions_df)} rows.")
         
         # 1. Load Data
-        reader = Reader(rating_scale=(-1, 6))
+        reader = Reader(rating_scale=(0, 6))
         data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
         
         # 2. Train/Test Split (80/20) - Logic from Rimal et al. (2025)
