@@ -37,8 +37,14 @@
 <body class="bg-slate-50/50 text-slate-900 antialiased selection:bg-custom-periwinkle selection:text-custom-dark-blue">
 
     {{-- Single top strip --}}
-    <div class="sticky top-0 z-50 bg-custom-periwinkle/80 backdrop-blur-sm border-b border-custom-periwinkle/30 py-2.5 px-4 text-center text-xs md:text-sm font-bold text-custom-dark-blue tracking-wide">
-        Builds your taste profile for better recommendations & matches.
+    <div class="sticky top-0 z-50 bg-custom-periwinkle/80 backdrop-blur-sm border-b border-custom-periwinkle/30 py-2.5 px-4 text-xs md:text-sm font-bold text-custom-dark-blue tracking-wide flex justify-between items-center">
+        <span class="flex-1 text-center">Builds your taste profile for better recommendations & matches.</span>
+        <form method="POST" action="{{ route('logout') }}" class="inline shrink-0 ml-4">
+            @csrf
+            <button type="submit" class="hover:text-red-600 transition-colors uppercase tracking-wider text-xs font-black border border-custom-dark-blue/20 hover:border-red-600/30 px-2.5 py-1 rounded bg-white/50 backdrop-blur-sm shadow-sm cursor-pointer">
+                Log Out
+            </button>
+        </form>
     </div>
 
     {{-- Page container --}}
