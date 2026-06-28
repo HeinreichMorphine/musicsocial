@@ -1323,6 +1323,8 @@
                 if (response.ok) {
                     isConnected = true;
                     document.getElementById('status-indicator').className = 'header-status-indicator connected';
+                    const verEl = document.getElementById('version-badge');
+                    verEl.className = 'badge'; // reset to default blue
                     log('API', 'Handshake successful! Connected to Python Recommendation engine.', 'success');
                     
                     // Fetch global benchmarks
@@ -1335,6 +1337,9 @@
             } catch (e) {
                 isConnected = false;
                 document.getElementById('status-indicator').className = 'header-status-indicator';
+                const verEl = document.getElementById('version-badge');
+                verEl.className = 'badge badge-red';
+                verEl.innerText = 'API OFFLINE';
                 log('API', `Handshake failed: Unable to reach recommender service at ${FLASK_URL}. Ensure the Flask service is running.`, 'error');
             }
         }
@@ -1539,6 +1544,9 @@
 
             // Update stats
             document.getElementById('stat-version').innerText = 'v' + data.version;
+            if (data.version) {
+                document.getElementById('version-badge').innerText = 'API v' + data.version;
+            }
             document.getElementById('stat-records').innerText = data.dataset_stats.total_records.toLocaleString();
             document.getElementById('stat-users').innerText = data.dataset_stats.unique_users.toLocaleString();
             document.getElementById('stat-songs').innerText = data.dataset_stats.unique_songs.toLocaleString();
@@ -1594,16 +1602,27 @@
                 const response = await fetch(`${FLASK_URL}/stats`);
                 if (response.ok) {
                     const stats = await response.json();
-                    document.getElementById('stat-retrained').innerText = stats.last_train_time;
+                    document.getElementById('stat-retrained').innerText = stats.last_train_time || 'Never';
+                    if (stats.algo_version) {
+                        document.getElementById('version-badge').innerText = 'API v' + stats.algo_version;
+                    }
                 } else {
-                    document.getElementById('stat-retrained').innerText = new Date().toLocaleString();
+                    document.getElementById('stat-retrained').innerText = 'Never';
                 }
             } catch (e) {
-                document.getElementById('stat-retrained').innerText = new Date().toLocaleString();
+                document.getElementById('stat-retrained').innerText = 'Never';
             }
         }
 
         async function retrainModel() {
+            if (!isConnected) {
+                log('API', 'Cannot retrain model: Flask service is offline.', 'error');
+                alert('Cannot retrain model: Recommender service is offline.');
+                return;
+            }
+            if (!confirm('Force-retrain the SVD model now? This may take a few moments.')) {
+                return;
+            }
             showLoader('retraining surprise svd model matrix...');
             log('API', 'Sending retraining signal to Flask server...', 'info');
             try {
