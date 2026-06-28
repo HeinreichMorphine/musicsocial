@@ -224,7 +224,7 @@
 
     <!-- Invite Modal -->
     <x-modal name="invite-collaborator" focusable>
-        <form method="post" action="{{ route('playlists.invite', $playlist) }}" class="relative p-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-[2rem] border border-gray-100 dark:border-white/10 shadow-2xl transition-all overflow-hidden">
+        <form method="post" action="{{ route('playlists.invite', $playlist) }}" class="relative p-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-[2rem] border border-gray-100 dark:border-white/10 shadow-2xl transition-all">
             @csrf
             <button type="button" x-on:click="$dispatch('close')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-all transform hover:scale-110 p-2">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
