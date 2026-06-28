@@ -14,7 +14,13 @@ import joblib
 import threading
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+def get_malaysia_time():
+    return datetime.now(timezone(timedelta(hours=8)))
+
+def get_malaysia_now_str():
+    return get_malaysia_time().strftime("%Y-%m-%d %H:%M:%S")
 
 # Global variable for the trained model
 algo = None
@@ -280,7 +286,7 @@ def train_and_save_model():
     
     # Update Stats
     global last_train_time, train_user_count, train_item_count, train_record_count
-    last_train_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_train_time = get_malaysia_now_str()
     train_user_count = trainset.n_users
     train_item_count = trainset.n_items
     train_record_count = trainset.n_ratings
@@ -302,7 +308,8 @@ def load_model():
             # Extract stats from loaded model and file metadata
             try:
                 mtime = os.path.getmtime(MODEL_PATH)
-                last_train_time = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+                malaysia_tz = timezone(timedelta(hours=8))
+                last_train_time = datetime.fromtimestamp(mtime, tz=timezone.utc).astimezone(malaysia_tz).strftime("%Y-%m-%d %H:%M:%S")
                 if hasattr(algo, 'trainset') and algo.trainset is not None:
                     train_user_count = algo.trainset.n_users
                     train_item_count = algo.trainset.n_items
@@ -594,7 +601,7 @@ def audit_endpoint():
                     "result": f"PASS: Playlist status verified (Collab count: {collab_count})"
                 },
                 "version": ALGO_VERSION,
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": get_malaysia_now_str()
             })
     except Exception as e:
         print("\n!!! AUDIT ENDPOINT ERROR !!!")
@@ -708,7 +715,7 @@ def benchmark_endpoint():
                 "unique_users": int(interactions_df['user_id'].nunique()) if not interactions_df.empty else 154,
                 "unique_songs": int(interactions_df['item_id'].nunique()) if not interactions_df.empty else 382
             },
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": get_malaysia_now_str()
         })
     except Exception as e:
         print("\n!!! BENCHMARK ENDPOINT ERROR !!!")
