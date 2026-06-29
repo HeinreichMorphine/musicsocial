@@ -336,60 +336,7 @@
             margin-top: 0.35rem;
         }
 
-        /* 5-Fold Cross Validation Layout */
-        .cv-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
 
-        @media (max-width: 768px) {
-            .cv-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .cv-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .cv-table th {
-            text-transform: uppercase;
-            font-size: 0.675rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            text-align: left;
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .cv-table td {
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .cv-table tbody tr:hover {
-            background-color: rgba(15, 23, 42, 0.02);
-        }
-
-        .cv-table .fold-num {
-            font-weight: bold;
-            color: var(--text-primary);
-        }
-
-        .cv-table .fold-val {
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .cv-table .fold-val-blue {
-            color: var(--accent-blue);
-            font-weight: 500;
-        }
 
         /* SVG Sparkline chart */
         .variance-chart-container {
@@ -840,7 +787,7 @@
 
         <div class="section-panel">
             <div class="section-title">
-                SVD Model Validation & 5-Fold Cross Validation
+                SVD Model Validation
                 <span>Academic & Industry RecSys Standard</span>
             </div>
 
@@ -1645,7 +1592,7 @@
                 log('SYS', 'Cannot run benchmark: Flask service is offline.', 'error');
                 return;
             }
-            showLoader('running standard 5-fold surprise validation...');
+            showLoader('running SVD model validation...');
             log('SYS', 'Beginning global recommendation algorithm validation...', 'info');
             
             setTimeout(async () => {
