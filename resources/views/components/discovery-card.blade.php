@@ -194,7 +194,6 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
 
                 <!-- Algorithm Signal Chip -->
                 <div class="inline-flex items-center gap-1.5 w-fit">
-                    <span class="inline-block w-1.5 h-1.5 rounded-full {{ $dotColor }} flex-shrink-0"></span>
                     <span class="text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full {{ $chipColor }}">
                         {{ $chipLabel }}
                     </span>
