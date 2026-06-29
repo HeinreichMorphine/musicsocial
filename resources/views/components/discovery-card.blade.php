@@ -9,12 +9,12 @@
 
     // Determine algorithm signal chip
     $reasonLower = strtolower($reason);
-    if (str_contains($reasonLower, 'deep cut from')) {
+    if (str_contains($reasonLower, 'deep cut from') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
         $chipLabel = 'Artist Deep Cut';
         $chipColor = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40';
         $barColor  = 'from-amber-400 to-amber-600';
         $dotColor  = 'bg-amber-500';
-    } elseif (str_contains($reasonLower, 'sound profile')) {
+    } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
         $chipLabel = 'Sound Profile';
         $chipColor = 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/40';
         $barColor  = 'from-blue-400 to-indigo-500';
@@ -24,7 +24,7 @@
         $chipColor = 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/40';
         $barColor  = 'from-purple-400 to-violet-500';
         $dotColor  = 'bg-purple-500';
-    } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre')) {
+    } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe')) {
         $chipLabel = 'Genre Affinity';
         $chipColor = 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-700/40';
         $barColor  = 'from-teal-400 to-emerald-500';
