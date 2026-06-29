@@ -174,14 +174,14 @@ class AdminController extends Controller
         $share = Share::findOrFail($id);
         
         // Manual cleanup to ensure no FK constraint failures
-        \App\Models\Like::where('share_id', $share->id)->delete();
-        \App\Models\Bookmark::where('share_id', $share->id)->delete();
-        \App\Models\Notification::where('data->share_id', $share->id)->delete();
+        DB::table('likes')->where('share_id', $share->id)->delete();
+        DB::table('bookmarks')->where('share_id', $share->id)->delete();
+        DB::table('notifications')->where('data->share_id', $share->id)->delete();
         \App\Models\SongInteraction::where('share_id', $share->id)->delete();
         
         // Delete comments manually if they aren't cascading
         foreach ($share->comments as $comment) {
-            \App\Models\Upvote::where('comment_id', $comment->id)->delete();
+            DB::table('upvotes')->where('comment_id', $comment->id)->delete();
             $comment->delete();
         }
 
