@@ -158,15 +158,21 @@ class SpotifyImportController extends Controller
                 $trackData = json_decode($trackJson, true);
                 if (!$trackData || !isset($trackData['id'])) continue;
 
-                // First fetch/create the song locally via basic metadata
-                $song = Song::firstOrCreate([
-                    'spotify_track_id' => $trackData['id'],
-                ], [
-                    'track_name' => $trackData['name'],
-                    'artist_name' => $trackData['artist'],
-                    'album_art_url' => $trackData['album_art'],
-                    'spotify_url' => 'https://open.spotify.com/track/' . $trackData['id']
-                ]);
+                // First fetch/create the song locally via SpotifyService to resolve genres and other tags
+                $spotifyTrackData = $this->spotifyService->getTrack($trackData['id']);
+                if (!isset($spotifyTrackData['error']) && isset($spotifyTrackData['song'])) {
+                    $song = $spotifyTrackData['song'];
+                } else {
+                    // Fallback to local DB creation if Spotify Service has issues (e.g. rate limit)
+                    $song = Song::firstOrCreate([
+                        'spotify_track_id' => $trackData['id'],
+                    ], [
+                        'track_name' => $trackData['name'],
+                        'artist_name' => $trackData['artist'],
+                        'album_art_url' => $trackData['album_art'],
+                        'spotify_url' => 'https://open.spotify.com/track/' . $trackData['id']
+                    ]);
+                }
                 
                 // Add to playlist_songs
                 PlaylistSong::firstOrCreate([

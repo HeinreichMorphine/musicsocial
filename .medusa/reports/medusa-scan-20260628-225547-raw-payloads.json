@@ -1,0 +1,27 @@
+{
+  "warning": "RAW PAYLOADS - Contains unobfuscated attack content. For human review only.",
+  "generated": "2026-06-28T22:55:47.674417",
+  "payloads": {
+    "f0800e27957f": {
+      "original_code": "",
+      "original_issue": "Payload Splitting: cross-context prompt injection assembly detected",
+      "file": "C:\\laragon\\www\\musicsocial-main\\.agents\\skills\\vercel-react-best-practices\\AGENTS.md",
+      "line": 2697,
+      "category": "Prompt Injection"
+    },
+    "d8e3c6ed49c2": {
+      "original_code": "",
+      "original_issue": "Security issue detected: prompt-injection-code-generation-trigger-keywords",
+      "file": "C:\\laragon\\www\\musicsocial-main\\.agents\\skills\\vercel-react-best-practices\\AGENTS.md",
+      "line": 2476,
+      "category": "Prompt Injection"
+    },
+    "ef63152bd091": {
+      "original_code": "",
+      "original_issue": "Security issue detected: prompt-injection-m-gcg-adversarial-suffix-pattern",
+      "file": "C:\\laragon\\www\\musicsocial-main\\.agents\\skills\\vercel-react-best-practices\\AGENTS.md",
+      "line": 2764,
+      "category": "Prompt Injection"
+    }
+  }
+}

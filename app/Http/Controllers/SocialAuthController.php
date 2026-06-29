@@ -92,7 +92,8 @@ class SocialAuthController extends Controller
                     session()->forget('spotify_retry_count');
                 }
 
-                return redirect()->route('settings.index')->with('status', ucfirst($provider) . ' account connected successfully.');
+                return redirect()->route('dashboard')->with('status', 'Spotify account connected successfully. Welcome back!');
+
             }
 
             // Logic for Guest Users (Login/Register)
@@ -102,7 +103,6 @@ class SocialAuthController extends Controller
 
             if ($provider === 'spotify') {
                 session()->forget('spotify_retry_count');
-                return redirect()->route('settings.index');
             }
 
             return redirect()->route('dashboard');

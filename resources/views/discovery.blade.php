@@ -19,26 +19,28 @@
                         <!-- Onboarding Explainer Banner Container -->
                         <div x-data="{ isCollapsed: localStorage.getItem('discoveryOnboardingCollapsed') === 'true' }" class="mb-8 space-y-4">
                             <!-- Collapsed State Header -->
-                             <div x-show="isCollapsed"
-                                  @click="isCollapsed = false; localStorage.setItem('discoveryOnboardingCollapsed', 'false')"
-                                  x-transition:enter="transition ease-out duration-200"
-                                  x-transition:enter-start="opacity-0 scale-95"
-                                  x-transition:enter-end="opacity-100 scale-100"
-                                  class="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-3.5 cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300 flex items-center justify-between shadow-md group/collapsed"
-                             >
-                                 <div class="flex items-center gap-3 text-gray-600 dark:text-gray-300 text-sm">
-                                     <span class="text-indigo-600 dark:text-indigo-400">
-                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                                     </span>
-                                     <span class="font-medium group-hover/collapsed:text-gray-900 dark:group-hover/collapsed:text-white transition-colors">How your Signal Feed works — taste vectors, diversity injection &amp; social trust</span>
-                                 </div>
-                                 <span class="text-gray-400 dark:text-gray-500 group-hover/collapsed:text-gray-600 dark:group-hover/collapsed:text-zinc-300 transition-colors flex items-center gap-1.5 text-xs font-semibold">
-                                     Expand
-                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                                     </svg>
-                                 </span>
-                             </div>
+                            <div x-show="isCollapsed" 
+                                 @click="isCollapsed = false; localStorage.setItem('discoveryOnboardingCollapsed', 'false')"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 class="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-3.5 cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300 flex items-center justify-between shadow-md group/collapsed"
+                            >
+                                <div class="flex items-center gap-3 text-gray-600 dark:text-gray-300 text-sm">
+                                    <span class="text-indigo-600 dark:text-indigo-400">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                        </svg>
+                                    </span>
+                                    <span class="font-medium group-hover/collapsed:text-gray-900 dark:group-hover/collapsed:text-white transition-colors">How Discovery Works: Recommendations, Social Sharing & Spotify Syncing</span>
+                                </div>
+                                <span class="text-gray-400 dark:text-gray-500 group-hover/collapsed:text-gray-600 dark:group-hover/collapsed:text-zinc-300 transition-colors flex items-center gap-1.5 text-xs font-semibold">
+                                    Expand
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </span>
+                            </div>
 
                             <!-- Expanded State (Full Banner) -->
                             <div x-show="!isCollapsed"
@@ -65,63 +67,50 @@
                                     </svg>
                                 </button>
 
-                                 <div class="relative z-10">
-                                     <div class="flex items-start justify-between gap-4 mb-5">
-                                         <div>
-                                             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Your Signal Feed</h3>
-                                             <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xl">Powered by taste vectors, social trust scoring &amp; diversity injection — engineered to break filter bubbles, not reinforce them.</p>
-                                         </div>
-                                         {{-- Anti-bias badge row --}}
-                                         <div class="hidden sm:flex flex-col gap-1.5 shrink-0">
-                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50">Anti-Filter Bubble</span>
-                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/50">Social Trust Layer</span>
-                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-700/50">Niche Artist Boost</span>
-                                         </div>
-                                     </div>
+                                <div class="relative z-10">
+                                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Get the most out of Discovery</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-2xl">Explore custom recommendations, interact with tracks, and take your synced discoveries with you on Spotify.</p>
 
-                                     <!-- Algorithm Pillars -->
-                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <!-- Pillars Grid -->
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <!-- Pillar 1: Algorithm Matches -->
+                                        <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800 rounded-2xl p-5 hover:border-fuchsia-500/30 dark:hover:border-fuchsia-500/30 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-300 flex flex-col items-start">
+                                            <div class="bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-100 dark:border-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                                                    <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"></path>
+                                                    <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"></path>
+                                                </svg>
+                                            </div>
+                                            <h4 class="text-base font-bold text-gray-900 dark:text-white mb-2">Algorithm Matches</h4>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Explore tracks hand-picked by our recommender engine, calculated based on your likes, recently played tracks, and community tastes.</p>
+                                        </div>
 
-                                         <!-- Pillar 1: Taste Vector -->
-                                         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-5 hover:border-indigo-400/40 dark:hover:border-indigo-500/30 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-all duration-300 flex flex-col items-start">
-                                             <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-xl mb-4">
-                                                 {{-- Target / cosine icon --}}
-                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                                             </div>
-                                             <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-1">Taste Vector Engine</h4>
-                                             <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">Your listening history is compressed into a multi-dimensional taste centroid using TF-IDF weighting. Cosine similarity then scores every track in the catalog against that fingerprint — not just your top artists.</p>
-                                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 w-full">
-                                                 <span class="text-[10px] font-mono font-semibold text-indigo-500 dark:text-indigo-400">TF-IDF · Cosine Similarity · SVD</span>
-                                             </div>
-                                         </div>
+                                        <!-- Pillar 2: Listen & Share Vibes -->
+                                        <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800 rounded-2xl p-5 hover:border-indigo-500/30 dark:hover:border-indigo-500/30 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-300 flex flex-col items-start">
+                                            <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                                    <path d="M9 18V5l12-2v13"></path>
+                                                    <circle cx="6" cy="18" r="3"></circle>
+                                                    <circle cx="18" cy="16" r="3"></circle>
+                                                </svg>
+                                            </div>
+                                            <h4 class="text-base font-bold text-gray-900 dark:text-white mb-2">Listen & Share</h4>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Preview audio snippets of any track directly, add them to your user shelf, bookmark them for later, or post them to the activity feed.</p>
+                                        </div>
 
-                                         <!-- Pillar 2: Diversity Injection -->
-                                         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-5 hover:border-teal-400/40 dark:hover:border-teal-500/30 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-all duration-300 flex flex-col items-start">
-                                             <div class="bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-500/20 text-teal-600 dark:text-teal-400 p-2.5 rounded-xl mb-4">
-                                                 {{-- Compass / exploration icon --}}
-                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-                                             </div>
-                                             <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-1">Diversity Injection</h4>
-                                             <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">When your taste profile alone would create a narrow echo chamber, the tiered fallback pipeline intentionally injects genre-adjacent and serendipitous tracks — giving independent and niche artists a genuine path to your feed.</p>
-                                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 w-full">
-                                                 <span class="text-[10px] font-mono font-semibold text-teal-500 dark:text-teal-400">Genre Fallback · Serendipity Tier · Anti-Bias</span>
-                                             </div>
-                                         </div>
-
-                                         <!-- Pillar 3: Social Trust -->
-                                         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800 rounded-2xl p-5 hover:border-purple-400/40 dark:hover:border-purple-500/30 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-all duration-300 flex flex-col items-start">
-                                             <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-500/20 text-purple-600 dark:text-purple-400 p-2.5 rounded-xl mb-4">
-                                                 {{-- People / network icon --}}
-                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                                             </div>
-                                             <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-1">Social Trust Scoring</h4>
-                                             <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">Songs shared or liked by people you follow receive a logarithmic trust boost proportional to your social authority — surfacing tracks championed by real curators in your network, not just platform popularity metrics.</p>
-                                             <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/50 w-full">
-                                                 <span class="text-[10px] font-mono font-semibold text-purple-500 dark:text-purple-400">Log Trust · Network Authority · Social Signals</span>
-                                             </div>
-                                         </div>
-                                     </div>
-                                 </div>
+                                        <!-- Pillar 3: Spotify Sync -->
+                                        <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800 rounded-2xl p-5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-300 flex flex-col items-start">
+                                            <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-2.5 rounded-xl mb-4 transition-transform duration-300 hover:scale-110">
+                                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm5.508 17.302c-.216.354-.675.465-1.028.249-2.815-1.722-6.36-2.112-10.537-1.157-.403.093-.811-.158-.905-.562-.093-.404.159-.812.562-.905 4.577-1.047 8.508-.602 11.659 1.326.354.216.465.675.249 1.028zm1.474-3.264c-.273.443-.852.583-1.295.31-3.222-1.98-8.136-2.557-11.947-1.4c-.5.152-1.025-.13-1.177-.63-.153-.5.13-1.025.63-1.177 4.357-1.322 9.774-.678 13.482 1.6 0 .001.442.274.707.697zm.128-3.413C15.111 8.217 8.513 7.994 4.697 9.151c-.604.183-1.246-.164-1.428-.767-.183-.604.164-1.246.767-1.428 4.38-1.328 11.666-1.066 16.326 1.7 0 .001 1.107.657.828 1.488-.28.831-1.08 1.141-1.08 1.141z"/>
+                                                </svg>
+                                            </div>
+                                            <h4 class="text-base font-bold text-gray-900 dark:text-white mb-2">Spotify Sync</h4>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Save your entire recommended list directly to a dedicated playlist in your linked Spotify account to play on any device.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -143,18 +132,8 @@
                         </div>
 
                         <!-- Desktop Header -->
-                        <div class="hidden lg:flex justify-between items-start mb-6">
-                            <div>
-                                <div class="flex items-center gap-2.5 mb-1">
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Your Signal Feed</h3>
-                                    {{-- Live pulse indicator --}}
-                                    <span class="relative flex h-2 w-2 mt-0.5">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                    </span>
-                                </div>
-                                <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Taste vectors · Social trust · Diversity injection — not popularity rank</p>
-                            </div>
+                        <div class="hidden lg:flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Discover New Songs</h3>
                             @if(auth()->user()->spotify_token)
                                 @if($recommendedSongs->count() > 0)
                                     <form action="{{ route('export-playlist') }}" method="POST">
