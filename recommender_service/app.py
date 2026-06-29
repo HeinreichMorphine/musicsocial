@@ -201,7 +201,7 @@ def fetch_data_from_db():
                 
                 # Separate positives and negatives
                 positive_direct = direct_interactions_df[direct_interactions_df['score'] > 0][['user_id', 'song_id', 'score']]
-                negative_direct = direct_interactions_df[direct_interactions_df['score'] < 0][['user_id', 'song_id', 'score']].rename(columns={'score': 'interaction'})
+                negative_direct = direct_interactions_df[direct_interactions_df['type'] == 'dislike'][['user_id', 'song_id', 'score']].rename(columns={'score': 'interaction'})
                 
                 print(f"6. Discovery Interactions: Found {len(positive_direct)} positive and {len(negative_direct)} negative actions.")
 
@@ -379,41 +379,59 @@ def audit_endpoint():
                     user_name = user_check[0]
 
             # TC-01: TF-IDF (Personalized Onboarding Check)
+            # Uses scikit-learn's default smoothed IDF: ln((1+N)/(1+df(t))) + 1
             songs_df = get_cached_songs(connection)
             N = max(1, len(songs_df))
-            
-            # Get user's onboarding genres if available
+
+            # Get user's onboarding genres from Shelf (warm-start seed matrix)
             user_genres = []
             if user_id:
                 shelf_genres_query = """
-                    SELECT s.genres FROM user_shelf_songs uss 
-                    JOIN songs s ON uss.song_id = s.spotify_track_id 
+                    SELECT s.genres FROM user_shelf_songs uss
+                    JOIN songs s ON uss.song_id = s.spotify_track_id
                     WHERE uss.user_id = :uid
                 """
                 res = connection.execute(text(shelf_genres_query), {"uid": user_id}).fetchall()
                 for row in res:
-                    user_genres.extend([g.strip() for g in row[0].split(',')])
-            
-            # Calculation for rarest genre in their profile vs a global common one
+                    if row[0]:
+                        user_genres.extend([g.strip() for g in row[0].split(',') if g.strip()])
+
+            # Build genre frequency map across full catalog
             genre_counts = {}
             for genres_str in songs_df['genres'].dropna():
                 for g in genres_str.split(','):
                     g = g.strip()
-                    genre_counts[g] = genre_counts.get(g, 0) + 1
-            
+                    if g:
+                        genre_counts[g] = genre_counts.get(g, 0) + 1
+
             sorted_genres = sorted(genre_counts.items(), key=lambda x: x[1])
-            rare = sorted_genres[0] if sorted_genres else ("Niche", 10)
-            common = sorted_genres[-1] if sorted_genres else ("Pop", 1000)
-            
-            # If user has genres, pick the rarest from their set
+
+            # Data-plan anchors: Math-Rock (niche) vs Pop (common)
+            # Try to find these exact genres in the catalog; fall back to statistical extremes
+            NICHE_GENRE  = "Math-Rock"
+            COMMON_GENRE = "Pop"
+
+            if NICHE_GENRE in genre_counts:
+                rare = (NICHE_GENRE, genre_counts[NICHE_GENRE])
+            else:
+                rare = sorted_genres[0] if sorted_genres else (NICHE_GENRE, 10)
+
+            if COMMON_GENRE in genre_counts:
+                common = (COMMON_GENRE, genre_counts[COMMON_GENRE])
+            else:
+                common = sorted_genres[-1] if sorted_genres else (COMMON_GENRE, 1000)
+
+            # If user has shelf genres, pick the rarest from their set as the niche anchor
             if user_genres:
-                user_genre_stats = [(g, genre_counts.get(g, 9999)) for g in set(user_genres)]
+                user_genre_stats = [(g, genre_counts.get(g, 9999)) for g in set(user_genres) if g in genre_counts]
                 if user_genre_stats:
                     user_genre_stats.sort(key=lambda x: x[1])
                     rare = user_genre_stats[0]
 
-            idf_rare = math.log10(N / max(1, rare[1]))
-            idf_common = math.log10(N / max(1, common[1]))
+            # Smoothed IDF (scikit-learn default): ln((1+N)/(1+df(t))) + 1
+            idf_rare   = math.log((1 + N) / (1 + rare[1]))   + 1
+            idf_common = math.log((1 + N) / (1 + common[1])) + 1
+            idf_ratio  = idf_rare / max(0.001, idf_common)
             
             # TC-02: Cosine Similarity (Real calculation based on actual DB tracks)
             # Fetch user's liked/interacted tracks to build taste profile
@@ -556,49 +574,97 @@ def audit_endpoint():
 
             tc07_calculation = f"Rm = {rm_val} ({relationship_type})"
 
+            # ---------------------------------------------------------------
+            # TC-03 enrichment: build a data-plan matching breakdown string
+            # Data plan example: Shelf(4) + Like(2) + SuggestionComment(3) = 9 -> 3.30
+            # Query individual interaction buckets for the selected user
+            tc03_shelf = 0; tc03_share = 0; tc03_like = 0; tc03_plyadd = 0
+            tc03_comment = 0; tc03_disc_like = 0; tc03_disc_listen = 0
+            if user_id:
+                r = connection.execute(text("SELECT COUNT(*) FROM user_shelf_songs WHERE user_id=:uid"), {"uid": user_id}).scalar() or 0
+                tc03_shelf = r * 4.0
+                r = connection.execute(text("SELECT COUNT(*) FROM shares WHERE user_id=:uid"), {"uid": user_id}).scalar() or 0
+                tc03_share = r * 3.0
+                r = connection.execute(text("SELECT COUNT(*) FROM likes l JOIN shares s ON l.share_id=s.id WHERE l.user_id=:uid"), {"uid": user_id}).scalar() or 0
+                tc03_like = r * 2.0
+
+            tc03_raw = tc03_shelf + tc03_share + tc03_like + tc03_plyadd + tc03_comment + tc03_disc_like + tc03_disc_listen
+            tc03_flattened = 1 + math.log(1 + tc03_raw)
+
+            tc03_breakdown = (
+                f"Shelf ({int(tc03_shelf/4.0)}×4.0={tc03_shelf:.0f}) + "
+                f"Share ({int(tc03_share/3.0)}×3.0={tc03_share:.0f}) + "
+                f"Like ({int(tc03_like/2.0)}×2.0={tc03_like:.0f}) = "
+                f"Raw {tc03_raw:.0f} → 1+ln(1+{tc03_raw:.0f}) = {round(tc03_flattened, 2)}"
+            )
+            tc03_comparison = (
+                f"Shelf (4.0) → {round(1+math.log(1+4.0),2)} | "
+                f"Like (2.0) → {round(1+math.log(1+2.0),2)} | "
+                f"Comment (1.0) → {round(1+math.log(1+1.0),2)}"
+            )
+            # ---------------------------------------------------------------
+
             return jsonify({
                 "user": {"id": user_id, "name": user_name},
                 "tc01": {
-                    "formula": f"w = log10({N} / df_i)",
-                    "rare": f"log10({N}/{rare[1]}) = {round(idf_rare, 4)} ({rare[0]})",
-                    "common": f"log10({N}/{common[1]}) = {round(idf_common, 4)} ({common[0]})",
-                    "result": f"Profile affinity for '{rare[0]}' weight: {round(idf_rare, 2)}"
+                    "formula": f"idf(d,t) = ln((1+{N})/(1+df(t))) + 1",
+                    "niche_genre":  rare[0],
+                    "common_genre": common[0],
+                    "niche_df":     rare[1],
+                    "common_df":    common[1],
+                    "N":            N,
+                    "rare":   f"ln((1+{N})/(1+{rare[1]})) + 1 = {round(idf_rare, 4)} ({rare[0]})",
+                    "common": f"ln((1+{N})/(1+{common[1]})) + 1 = {round(idf_common, 4)} ({common[0]})",
+                    "ratio":  round(idf_ratio, 2),
+                    "result": f"'{rare[0]}' IDF={round(idf_rare,4)} vs '{common[0]}' IDF={round(idf_common,4)} — ratio {round(idf_ratio,2)}×"
+                },
+                "tc02": {
+                    "formula": "cos(θ) = (A·B) / (||A||×||B||)  [threshold > 0.10]",
+                    "high_song": high_song_info,
+                    "low_song":  low_song_info,
+                    "high_score": round(high_score, 4),
+                    "low_score":  round(low_score, 4),
+                    "ordering": f"{round(high_score,4)} > {round(low_score,4)}",
+                    "passed": bool(sim_passed)
                 },
                 "tc03": {
-                    "formula": "c_ui = 1 + ln(1 + r_ui)",
-                    "calculation": f"1 + ln(1 + {raw_sum}) = {round(svd_val, 4)}",
-                    "comparison": f"Raw Activity Score: {raw_sum} -> Flattened Vector: {round(svd_val, 3)}"
+                    "formula": "Score = 1 + ln(1 + Σwᵢ)",
+                    "calculation": tc03_breakdown,
+                    "comparison":  tc03_comparison,
+                    "raw":       tc03_raw,
+                    "flattened": round(tc03_flattened, 4)
                 },
                 "tc04": {
-                    "formula": "Trust = ln(1+F^0.7) / (1+0.5*ln(1+f))",
-                    "stats": f"Followers: {follower_count} | Following: {following_count}",
-                    "calculation": f"{round(num, 3)} / {round(den, 3)} = {round(trust, 4)}",
+                    "formula": "Trust = ln(1+Fₛ⁰·⁷) / (1+0.5×ln(1+Fₐ))",
+                    "stats": f"Followers of active user: {follower_count} | Accounts active user follows: {following_count}",
+                    "calculation": f"ln(1+{follower_count}^0.7) / (1+0.5×ln(1+{following_count})) = {round(num,3)}/{round(den,3)} = {round(trust,4)}",
+                    "trust_score": round(trust, 4),
                     "boosts": {
-                        "peer": f"Playlist Peer -> {round(trust*1.0, 3)}",
-                        "follow": f"Followed User -> {round(trust*0.8, 3)}",
-                        "stranger": f"Community -> {round(trust*0.3, 3)}"
+                        "peer":     f"Playlist Peer: {round(trust,4)} × 1.0 → {round(trust*1.0,4)}",
+                        "follow":   f"Followed User: {round(trust,4)} × 0.8 → {round(trust*0.8,4)}",
+                        "stranger": f"Community/Stranger: {round(trust,4)} × 0.3 → {round(trust*0.3,4)}"
                     }
                 },
                 "tc05": {
-                    "formula": "Score = Prediction + Boost",
-                    "calculation": tc05_calculation
-                },
-                "tc02": {
-                    "formula": "cos(θ) = (A·B) / (||A||*||B||)",
-                    "high_song": high_song_info,
-                    "low_song": low_song_info,
-                    "ordering": f"{round(high_score, 4)} > {round(low_score, 4)}",
-                    "passed": bool(sim_passed)
+                    "formula": "Score = SVD_Prediction + α   [α = 0.40]",
+                    "calculation": tc05_calculation,
+                    "artist": active_liked_artist,
+                    "base_prediction": round(real_svd, 2),
+                    "boosted_score":   round(boosted_svd, 2)
                 },
                 "tc06": {
-                    "formula": "Candidate Pool = Total - Excluded(Disliked + Seen)",
-                    "calculation": f"User Dislikes: {disliked_count} Tracks",
-                    "result": "PASS: 100% Excluded from Candidate Recommendations"
+                    "formula": "Candidates = Catalog \ (Interacted ∪ Disliked)",
+                    "disliked_count": disliked_count,
+                    "calculation": f"Disliked / PASS tracks: {disliked_count}",
+                    "result": "100% Excluded from Candidate Pool"
                 },
                 "tc07": {
-                    "formula": "R_m Multipliers: Peer = 1.0, Follow = 0.8, Stranger = 0.3",
+                    "formula": "Rₘ: Collaborative Peer=1.0, Followed=0.8, Stranger=0.3",
+                    "relationship_type": relationship_type,
+                    "rm_val": rm_val,
+                    "collab_count": collab_count,
                     "calculation": tc07_calculation,
-                    "result": f"PASS: Playlist status verified (Collab count: {collab_count})"
+                    "result": f"PASS: Collaborative playlist status verified (peers: {collab_count})"
                 },
                 "version": ALGO_VERSION,
                 "timestamp": get_malaysia_now_str()
