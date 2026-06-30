@@ -639,7 +639,7 @@ def audit_endpoint():
                     "boosted_score":   round(boosted_svd, 2)
                 },
                 "tc06": {
-                    "formula": "Candidates = Catalog \ (Interacted ∪ Disliked)",
+                    "formula": r"Candidates = Catalog \ (Interacted ∪ Disliked)",
                     "disliked_count": disliked_count,
                     "calculation": f"Disliked / PASS tracks: {disliked_count}",
                     "result": "100% Excluded from Candidate Pool"
