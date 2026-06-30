@@ -5,21 +5,14 @@
  * Designed for a single tester to prevent account clutter and eliminate reliance on User B.
  * Run createForm() to generate the form.
  */
-
 function createForm() {
-  var form = FormApp.create('RESO - System Functionality Testing Plan');
-
+  var form = FormApp.create('RESO - System Functionality Test Form');
   form.setDescription(
-    'PURPOSE:\n' +
-    'This functionality testing document ensures thorough testing of all system modules within RESO.\n\n' +
-    'INSTRUCTIONS:\n' +
-    '1. Test each module in the order presented (following the page-by-page website navigation).\n' +
-    '2. Follow the step-by-step instructions precisely.\n' +
-    '3. Compare actual results with the "Expected UI" description.\n' +
-    '4. Mark Pass or Fail for each test case.\n' +
-    '5. Test on Chrome/Chromium browser for full Web Playback SDK support (Firefox falls back to Web Embed).'
+    'This form is used to log the manual testing results of the RESO platform.\n' +
+    'Please proceed sequentially page-by-page. For each test, mark Pass or Fail, and add observations if needed.'
   );
 
+  // General Metadata
   form.addDateItem().setTitle('Date of Testing').setRequired(true);
   form.addTextItem().setTitle('Tester Name').setRequired(true);
   form.addTextItem().setTitle('Position/Role').setRequired(true);
@@ -67,7 +60,7 @@ function createForm() {
             'Steps:\n' +
             '1. Go back to the Home feed (click "Home" in the sidebar).\n' +
             '2. Click the central input in the "Drop a track" composer.\n' +
-            '3. Type a song name, select a track from the AJAX search overlay, and add a caption.\n' +
+            '3. Type a song name, select a track from the search dropdown, and add a caption.\n' +
             '4. Toggle the mode to "Just Sharing" and click Post.\n' +
             '5. Verify sidebar page links, follow button in "Who to Follow" sidebar, and "Explore" vs "Following" feed tabs.\n\n' +
             'Expected UI: Published post appears at top of feed immediately. Left sidebar links highlight active states. Taste Neighbors (Who to Follow) follows instantly. Explore vs Following tabs toggle correctly.'
@@ -79,7 +72,7 @@ function createForm() {
             '1. Open the post composer, select a track, add a caption, toggle to "Asking for Recommendations", and click Post.\n' +
             '2. Locate your post in the feed and verify the badge.\n' +
             '3. Click comments on your post, use the integrated Spotify search widget in the comment block, select a track, and submit.\n\n' +
-            'Expected UI: The composer prompt shifts to "What track should I hear next?". The card displays a blue "SEEKING RECOMMENDATIONS" badge. Suggesting a track via the search widget embeds an inline playable track card tag [SONG:spotify_id] in the comment thread.'
+            'Expected UI: The composer prompt shifts to "What track should I hear next?". The card displays a blue "SEEKING RECOMMENDATIONS" badge. Suggesting a track via the search widget embeds a playable song card in the comment thread.'
         },
         {
           id: 'TC-06: Song Card Actions (Unlinked)',
@@ -117,7 +110,7 @@ function createForm() {
             'Steps:\n' +
             '1. Open comments on a post. Type a comment and submit.\n' +
             '2. Click Upvote next to your comment. <br>3. Reply to your own comment. <br>4. Delete your parent comment.\n\n' +
-            'Expected UI: Comment count increments instantly. Upvotes update asynchronously. Reply field supports nesting. Deleting parent comments soft-redacts text to "[deleted]" to preserve replies.'
+            'Expected UI: Comment count increments instantly. Upvote count increases. Reply field supports nested replies. Deleting a parent comment changes its text to "[deleted]".'
         },
         {
           id: 'TC-10: Global Search & Filtering',
@@ -166,10 +159,10 @@ function createForm() {
           desc:
             'Steps:\n' +
             '1. Go to /playlists, click "New Playlist", enter name and description, and click Create.\n' +
-            '2. On the playlist details page, click "Invite" (verify mutual followers modal layout).\n' +
+            '2. On the playlist details page, click "Invite" (verify followers selection list).\n' +
             '3. Click the cover image area, upload an image (<2MB), and click Save.\n' +
             '4. Search for a song inside the page search box, add it, then click trash icon next to it to remove.\n\n' +
-            'Expected UI: Playlist is created showing contributor list with your avatar. Invite modal displays mutual followers (placeholder if none). Cover photo updates instantly. Adding and removing songs is immediate.'
+            'Expected UI: Playlist is created showing contributor list with your avatar. Invite modal displays followers (placeholder if none). Cover photo updates instantly. Adding and removing songs is immediate.'
         },
         {
           id: 'TC-15: Profile Branding Customization',
@@ -256,8 +249,8 @@ function createForm() {
             'Steps:\n' +
             '1. Log out. Go to /login/admin.\n' +
             '2. Log in using admin1@musicsocial.com and AdminPassword123!.\n' +
-            '3. Verify dashboard statistics and 7-day Shares Activity Posting trends chart fit laptop monitors cleanly without overlapping.\n\n' +
-            'Expected UI: Redirects to /admin dashboard. Left sidebar and right content blocks scale cleanly. KPI cards format matches monitor resolution.'
+            '3. Verify dashboard statistics and 7-day activity graph fit laptop monitors cleanly without overlapping.\n\n' +
+            'Expected UI: Redirects to /admin dashboard. Left sidebar and right content blocks scale cleanly. Status cards format matches monitor size.'
         },
         {
           id: 'TC-23: User Management',
@@ -280,7 +273,7 @@ function createForm() {
             '4. Click "Edit" next to a song, edit metadata, and save.\n' +
             '5. Click "Refetch Genres" on a song.\n' +
             '6. Click "Delete" on a song.\n\n' +
-            'Expected UI: Catalog contains track IDs, artists, genres, shares. Search/edit/delete/refetch actions update DB instantly.'
+            'Expected UI: Catalog lists tracks, artists, and genres. Search, edit, delete, and refetch actions update the database instantly.'
         },
         {
           id: 'TC-25: Moderation Streams',
@@ -300,7 +293,7 @@ function createForm() {
             '2. Check the Recommender Service status badge.\n' +
             '3. Click "Force Retrain Model".\n' +
             '4. Select a user from the dropdown to preview their recommendation feed.\n\n' +
-            'Expected UI: Status shows active. Force retrain model triggers successfully. Feed preview table displays recommended tracks showing Rank, Song title, and Reasoning (No Score or Score Breakdown columns).'
+            'Expected UI: Status shows active. Model retrains successfully. Recommendation preview table displays recommended tracks showing Rank, Song title, and Reasoning.'
         }
       ]
     },
