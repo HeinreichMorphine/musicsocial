@@ -505,7 +505,7 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Song deleted successfully.');
     }
 
-    public function refetchGenres(\App\Models\Song $song, \App\Services\SpotifyService $spotifyService)
+    public function refetchGenres(\App\Models\Song $song, \App\Services\SpotifyService $spotifyService, \App\Services\YouTubeService $youTubeService)
     {
         if (!$song->spotify_track_id) {
             return response()->json([
@@ -517,7 +517,60 @@ class AdminController extends Controller
         // 1. Force flush the 7-day cache block for this specific track
         \Illuminate\Support\Facades\Cache::forget("genres_track_v2_{$song->spotify_track_id}");
 
-        // 2. Re-run the engine (which now includes your new YouTube backstop)
+        // 2. Behind the scenes: refetch Spotify metadata if any Spotify details are blank
+        $spotifyFieldsBlank = empty($song->getRawOriginal('album_art_url')) ||
+                              empty($song->preview_url) ||
+                              empty($song->spotify_url) ||
+                              empty($song->release_date);
+
+        if ($spotifyFieldsBlank) {
+            try {
+                $rawTrack = $spotifyService->getRawTrack($song->spotify_track_id);
+                if ($rawTrack) {
+                    $spotifyUpdates = [];
+                    if (empty($song->getRawOriginal('album_art_url')) && !empty($rawTrack['album']['images'][0]['url'])) {
+                        $spotifyUpdates['album_art_url'] = $rawTrack['album']['images'][0]['url'];
+                    }
+                    if (empty($song->preview_url) && !empty($rawTrack['preview_url'])) {
+                        $spotifyUpdates['preview_url'] = $rawTrack['preview_url'];
+                    }
+                    if (empty($song->spotify_url) && !empty($rawTrack['external_urls']['spotify'])) {
+                        $spotifyUpdates['spotify_url'] = $rawTrack['external_urls']['spotify'];
+                    }
+                    if (empty($song->release_date) && !empty($rawTrack['album']['release_date'])) {
+                        $releaseDate = $rawTrack['album']['release_date'];
+                        if (strlen($releaseDate) === 4) {
+                            $releaseDate .= '-01-01';
+                        } elseif (strlen($releaseDate) === 7) {
+                            $releaseDate .= '-01';
+                        }
+                        $spotifyUpdates['release_date'] = $releaseDate;
+                    }
+                    if (!empty($spotifyUpdates)) {
+                        $song->update($spotifyUpdates);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to refetch Spotify details for song {$song->id}: " . $e->getMessage());
+            }
+        }
+
+        // 3. Behind the scenes: refetch YouTube links if they are blank
+        if (empty($song->youtube_video_id) || empty($song->youtube_url)) {
+            try {
+                $videoData = $youTubeService->searchVideo($song->track_name . ' ' . $song->artist_name);
+                if ($videoData && isset($videoData['video_id'])) {
+                    $song->update([
+                        'youtube_video_id' => $song->youtube_video_id ?: $videoData['video_id'],
+                        'youtube_url' => $song->youtube_url ?: ($videoData['url'] ?? ('https://www.youtube.com/watch?v=' . $videoData['video_id']))
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to refetch YouTube link for song {$song->id}: " . $e->getMessage());
+            }
+        }
+
+        // 4. Re-run the engine (which now includes your new YouTube backstop)
         $genreData = $spotifyService->getGenresWithSources($song->spotify_track_id);
 
         if (!empty($genreData['genres'])) {

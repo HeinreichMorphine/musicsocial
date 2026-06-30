@@ -4,13 +4,13 @@
 
 @push('styles')
 <style>
-    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
     .kpi-card {
         background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 1.5rem 1.75rem;
-        display: flex; align-items: center; gap: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem;
         box-shadow: 0 1px 4px rgba(15,23,42,.04);
         transition: box-shadow .2s;
     }
@@ -88,8 +88,9 @@
     .share-meta { font-size: 0.85rem; color: #94a3b8; }
     .share-time { font-size: 0.8rem; color: #cbd5e1; margin-left: auto; white-space: nowrap; }
 
-    @media (max-width: 1200px) { .kpi-row { grid-template-columns: repeat(3,1fr); } }
-    @media (max-width: 900px)  { .panels-row { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 1440px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px)  { .panels-row { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .kpi-row { grid-template-columns: 1fr; } }
 </style>
 @endpush
 

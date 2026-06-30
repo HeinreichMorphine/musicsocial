@@ -23,16 +23,25 @@
     @stack('styles')
     
     <style>
-        /* Modern Premium Scaling for high-resolution screens */
+        /* Modern Responsive Scaling to fit various monitor sizes */
         html {
-            font-size: 17px !important;
+            font-size: 16px !important;
+        }
+        @media (max-width: 1600px) {
+            html { font-size: 15px !important; }
+        }
+        @media (max-width: 1366px) {
+            html { font-size: 14.5px !important; }
+        }
+        @media (max-width: 1200px) {
+            html { font-size: 14px !important; }
         }
 
         body, .container.body .right_col {
             background: #f1f5f9 !important;
             font-family: 'Inter', 'Figtree', sans-serif;
             color: #1a202c !important;
-            font-size: 16px !important;
+            font-size: 15px !important;
             line-height: 1.65 !important;
         }
         
@@ -55,6 +64,30 @@
         @media (min-width: 992px) {
             .nav-md footer {
                 margin-left: 280px !important;
+            }
+        }
+
+        /* Narrower sidebar on smaller monitors to preserve content canvas space */
+        @media (max-width: 1440px) {
+            .nav-md .container.body .col-md-3.left_col {
+                width: 240px !important;
+            }
+            .nav-md .container.body .right_col {
+                margin-left: 240px !important;
+            }
+            .nav-md .nav_title {
+                width: 240px !important;
+            }
+            .nav-md .main_container .top_nav {
+                margin-left: 240px !important;
+            }
+            .nav-md .sidebar-footer {
+                width: 240px !important;
+            }
+            @media (min-width: 992px) {
+                .nav-md footer {
+                    margin-left: 240px !important;
+                }
             }
         }
 
@@ -271,6 +304,21 @@
         /* Spacing for Main Page Content Area */
         .right_col {
             padding: 40px 50px !important;
+        }
+        @media (max-width: 1440px) {
+            .right_col {
+                padding: 30px 40px !important;
+            }
+        }
+        @media (max-width: 1200px) {
+            .right_col {
+                padding: 24px 24px !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .right_col {
+                padding: 16px 16px !important;
+            }
         }
 
         /* Standardize Buttons globally */
