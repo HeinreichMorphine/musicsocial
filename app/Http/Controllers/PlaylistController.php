@@ -79,6 +79,14 @@ class PlaylistController extends Controller
             'status' => 'accepted'
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Playlist created!',
+                'playlist' => $playlist
+            ]);
+        }
+
         return redirect()->route('playlists.show', $playlist->id)->with('success', 'Playlist created!');
     }
 

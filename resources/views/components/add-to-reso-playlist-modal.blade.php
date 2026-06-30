@@ -6,6 +6,9 @@
     loading: false,
     adding: null,
     message: '',
+    showCreate: false,
+    newPlaylistName: '',
+    creating: false,
 
     init() {
         window.addEventListener('open-reso-playlist-modal', event => {
@@ -14,6 +17,8 @@
             this.trackName = event.detail.trackName;
             this.message  = '';
             this.adding   = null;
+            this.showCreate = false;
+            this.newPlaylistName = '';
             this.fetchPlaylists();
         });
     },
@@ -35,6 +40,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({ spotify_track_id: this.songId })
@@ -52,6 +58,49 @@
         .catch(() => {
             this.adding = null;
             this.message = '⚠ Something went wrong.';
+        });
+    },
+
+    createPlaylist() {
+        if (!this.newPlaylistName.trim()) {
+            this.message = '⚠ Playlist name is required.';
+            return;
+        }
+        this.creating = true;
+        this.message = '';
+        fetch('{{ route('playlists.store') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ name: this.newPlaylistName })
+        })
+        .then(r => {
+            if (!r.ok) {
+                return r.json().then(err => { throw err; });
+            }
+            return r.json();
+        })
+        .then(data => {
+            this.creating = false;
+            if (data.success && data.playlist) {
+                this.newPlaylistName = '';
+                this.showCreate = false;
+                this.fetchPlaylists();
+                this.addToPlaylist(data.playlist.id);
+            } else {
+                this.message = '⚠ Creation failed.';
+            }
+        })
+        .catch(err => {
+            this.creating = false;
+            if (err.errors && err.errors.name) {
+                this.message = '⚠ ' + err.errors.name[0];
+            } else {
+                this.message = '⚠ Failed to create playlist.';
+            }
         });
     }
 
@@ -93,6 +142,28 @@
             {{-- Status message --}}
             <div x-show="message" x-text="message" class="px-5 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"></div>
 
+            {{-- Inline Create Form --}}
+            <div x-show="showCreate" class="px-5 py-3.5 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+                <div class="flex items-center space-x-2">
+                    <input type="text"
+                           x-model="newPlaylistName"
+                           @keydown.enter="createPlaylist"
+                           placeholder="Enter playlist name..."
+                           class="flex-1 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button @click="createPlaylist"
+                            :disabled="creating"
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center space-x-1 flex-shrink-0">
+                        <template x-if="creating">
+                            <svg class="w-4 h-4 animate-spin text-white flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                            </svg>
+                        </template>
+                        <span>Create</span>
+                    </button>
+                </div>
+            </div>
+
             {{-- Playlist List --}}
             <div class="max-h-72 overflow-y-auto px-2 py-2">
                 <template x-if="loading">
@@ -101,7 +172,7 @@
 
                 <template x-if="!loading && playlists.length === 0">
                     <div class="py-8 text-center text-sm text-gray-400">
-                        No playlists found. <a href="{{ route('playlists.index') }}" class="text-indigo-500 underline">Create one</a>
+                        No playlists found. <button @click="showCreate = true" class="text-indigo-500 underline font-semibold hover:text-indigo-600 focus:outline-none">Create one</button>
                     </div>
                 </template>
 
@@ -144,10 +215,10 @@
 
             {{-- Footer --}}
             <div class="px-5 py-4 border-t border-gray-100 dark:border-white/10 flex justify-between items-center">
-                <a href="{{ route('playlists.index') }}" class="text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center space-x-1">
+                <button @click="showCreate = !showCreate" class="text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center space-x-1 focus:outline-none">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                    <span>Create New Playlist</span>
-                </a>
+                    <span x-text="showCreate ? 'Show Playlists' : 'Create New Playlist'"></span>
+                </button>
                 <button @click="open = false" class="px-4 py-2 rounded-full text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">Cancel</button>
             </div>
         </div>
