@@ -199,6 +199,8 @@ class SocialAuthController extends Controller
             'avatar' => $socialUser->getAvatar(),
         ]);
 
+        $newUser->notify(new \App\Notifications\WelcomeNotification());
+
         if ($provider === 'spotify') {
             $newUser->update([
                 'spotify_token' => $socialUser->token,

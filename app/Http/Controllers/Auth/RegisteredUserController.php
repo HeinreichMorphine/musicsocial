@@ -52,6 +52,8 @@ class RegisteredUserController extends Controller
             'profile_picture' => $profilePicturePath,
         ]);
 
+        $user->notify(new \App\Notifications\WelcomeNotification());
+
         event(new Registered($user));
 
         Auth::login($user);
