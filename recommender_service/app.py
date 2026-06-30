@@ -107,6 +107,7 @@ def init_db_connection():
     if engine is not None:
         return
     try:
+        print(f"Initializing DB connection to mysql://{DB_USERNAME}:***@{DB_HOST}/{DB_DATABASE}...")
         db_uri = f"mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}"
         # Add connection pooling for better performance
         # pool_size: Number of connections to maintain in the pool

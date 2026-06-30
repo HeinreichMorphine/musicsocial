@@ -732,7 +732,7 @@
                                             fetch('{{ route('spotify.search') }}?query=' + encodeURIComponent(commentSearch))
                                             .then(r => r.json()).then(d => commentResults = d)
                                         }"
-                                        class="flex-1 text-sm rounded-lg border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white" placeholder="Search track to recommend...">
+                                        class="flex-1 text-sm rounded-lg border-gray-200 dark:border-gray-600 bg-white text-gray-900 dark:bg-gray-900 dark:text-white" placeholder="Search track to recommend...">
                                     <button type="button" @click="isSearching = false; commentSearch = ''; commentResults = []" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 uppercase text-[10px] font-bold">Close</button>
                                 </div>
                                 <div class="max-h-40 overflow-y-auto space-y-1">
