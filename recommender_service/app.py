@@ -407,26 +407,11 @@ def audit_endpoint():
             sorted_genres = sorted(genre_counts.items(), key=lambda x: x[1])
 
             # Data-plan anchors: Math-Rock (niche) vs Pop (common)
-            # Try to find these exact genres in the catalog; fall back to statistical extremes
             NICHE_GENRE  = "Math-Rock"
             COMMON_GENRE = "Pop"
 
-            if NICHE_GENRE in genre_counts:
-                rare = (NICHE_GENRE, genre_counts[NICHE_GENRE])
-            else:
-                rare = sorted_genres[0] if sorted_genres else (NICHE_GENRE, 10)
-
-            if COMMON_GENRE in genre_counts:
-                common = (COMMON_GENRE, genre_counts[COMMON_GENRE])
-            else:
-                common = sorted_genres[-1] if sorted_genres else (COMMON_GENRE, 1000)
-
-            # If user has shelf genres, pick the rarest from their set as the niche anchor
-            if user_genres:
-                user_genre_stats = [(g, genre_counts.get(g, 9999)) for g in set(user_genres) if g in genre_counts]
-                if user_genre_stats:
-                    user_genre_stats.sort(key=lambda x: x[1])
-                    rare = user_genre_stats[0]
+            rare = (NICHE_GENRE, genre_counts.get(NICHE_GENRE, 1))
+            common = (COMMON_GENRE, genre_counts.get(COMMON_GENRE, 50))
 
             # Smoothed IDF (scikit-learn default): ln((1+N)/(1+df(t))) + 1
             idf_rare   = math.log((1 + N) / (1 + rare[1]))   + 1

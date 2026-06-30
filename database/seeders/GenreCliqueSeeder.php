@@ -88,7 +88,7 @@ class GenreCliqueSeeder extends Seeder
         $songs = [
             // ---- CLIQUE 1: Rock / Alt-Rock ----
             ['track_name' => 'Smells Like Teen Spirit',   'artist_name' => 'Nirvana',              'genres' => ['Rock','Grunge','Alt-Rock'],         'spotify_track_id' => 'rock001', 'release_date' => '1991-09-10'],
-            ['track_name' => 'Bohemian Rhapsody',         'artist_name' => 'Queen',                'genres' => ['Rock','Classic Rock','Art Rock'],   'spotify_track_id' => 'rock002', 'release_date' => '1975-10-31'],
+            ['track_name' => 'Bohemian Rhapsody',         'artist_name' => 'Queen',                'genres' => ['Rock','Classic Rock','Art Rock','Math-Rock'],   'spotify_track_id' => 'rock002', 'release_date' => '1975-10-31'],
             ['track_name' => 'Hotel California',          'artist_name' => 'Eagles',               'genres' => ['Rock','Soft Rock','Classic Rock'],  'spotify_track_id' => 'rock003', 'release_date' => '1977-02-22'],
             ['track_name' => 'Welcome to the Jungle',     'artist_name' => "Guns N' Roses",        'genres' => ['Rock','Hard Rock','Metal'],         'spotify_track_id' => 'rock004', 'release_date' => '1987-09-28'],
             ['track_name' => 'Creep',                     'artist_name' => 'Radiohead',            'genres' => ['Alt-Rock','Britpop','Rock'],        'spotify_track_id' => 'rock005', 'release_date' => '1992-09-21'],

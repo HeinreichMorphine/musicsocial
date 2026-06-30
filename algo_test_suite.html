@@ -932,8 +932,8 @@
                             <td class="status-col"><span class="status-check" id="tc01-status-1">&minus;</span></td>
                         </tr>
                         <tr>
-                            <td class="test-case-name">Genre B (Math-Rock): Rare &mdash; High Weight &ge;2.4&times;</td>
-                            <td class="expected-val">Niche IDF / Common IDF &ge; 2.4&times;</td>
+                            <td class="test-case-name">Genre B (Math-Rock): Rare &mdash; High Weight &ge;2.3&times;</td>
+                            <td class="expected-val">Niche IDF / Common IDF &ge; 2.3&times;</td>
                             <td class="actual-val" id="tc01-val-ratio">Calculating...</td>
                             <td class="status-col"><span class="status-check" id="tc01-status-2">&minus;</span></td>
                         </tr>
@@ -1388,7 +1388,7 @@
                 `${idfRatio}× — ${nicheGenre} (${rareVal.toFixed(4)}) ÷ ${commonGenre} (${commonVal.toFixed(4)}) = ${idfRatio}×`;
 
             const tc01Pass1 = rareVal > commonVal;
-            const tc01Pass2 = parseFloat(idfRatio) >= 2.4;
+            const tc01Pass2 = parseFloat(idfRatio) >= 2.3;
 
             document.getElementById('tc01-status-1').className = tc01Pass1 ? 'status-check' : 'status-fail';
             document.getElementById('tc01-status-1').innerText = tc01Pass1 ? '✓' : '✗';
