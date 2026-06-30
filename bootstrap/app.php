@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: [
             '*',
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'admin/algo-test-suite/api/*',
+        ]);
         $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) =>
             $request->is('admin/*') ? route('admin.login') : url('/')
         );
