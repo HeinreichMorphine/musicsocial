@@ -294,6 +294,14 @@ function createForm() {
             '3. Click "Force Retrain Model".\n' +
             '4. Select a user from the dropdown to preview their recommendation feed.\n\n' +
             'Expected UI: Status shows active. Model retrains successfully. Recommendation preview table displays recommended tracks showing Rank, Song title, and Reasoning.'
+        },
+        {
+          id: 'TC-27: Recommendation Model Validation',
+          desc:
+            'Steps:\n' +
+            '1. Go to /admin/algo-test-suite.\n' +
+            '2. Verify the model accuracy metrics (error margins and precision scores).\n\n' +
+            'Expected UI: Accuracy scorecards load and display the validation quality status against expected standards.'
         }
       ]
     },
@@ -301,7 +309,7 @@ function createForm() {
       section: 'PHASE 5: Destructive Actions',
       tests: [
         {
-          id: 'TC-27: Permanent Account Deletion',
+          id: 'TC-28: Permanent Account Deletion',
           desc:
             'Steps:\n' +
             '1. Log out from the Admin session.\n' +
