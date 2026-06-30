@@ -26,7 +26,7 @@ function createForm() {
 
   var modules = [
     {
-      section: 'PHASE 1 (UNLINKED): General User Auth & Verification',
+      section: 'PHASE 1 (UNLINKED): General User Auth & Onboarding',
       tests: [
         {
           id: 'TC-01: Standard User Registration',
@@ -47,14 +47,7 @@ function createForm() {
             'Expected UI: Redirects directly to the onboarding page ("Let\'s build your taste profile") displaying the genre and song curation shelf.'
         },
         {
-          id: 'TC-03: Resend Verification Email',
-          desc:
-            'Steps:\n' +
-            '1. On the "Verify your email" screen (or in Settings later), click "Resend Email".\n\n' +
-            'Expected UI: Displays a green banner notification: "New verification link sent!"'
-        },
-        {
-          id: 'TC-04: Taste Profile Onboarding',
+          id: 'TC-03: Taste Profile Onboarding',
           desc:
             'Steps:\n' +
             '1. On the onboarding page, select favorite tracks using the search bar or genre pills.\n' +
@@ -62,40 +55,25 @@ function createForm() {
             '3. Try to complete onboarding with fewer than 5 songs.\n' +
             '4. Select between 5 and 10 tracks, and click "Complete Onboarding".\n\n' +
             'Expected UI: Selected tracks populate dashed slots with album art. The counter badge shifts dynamically from X/5 to X/10. The "Complete Onboarding" button is disabled until the 5-track minimum is met. Clicking it redirects to the feed.'
-        },
-        {
-          id: 'TC-05: Password Recovery',
-          desc:
-            'Steps:\n' +
-            '1. Log out. On /login click "Forgot password?".\n' +
-            '2. Enter your registered email. Open the reset email and click the link.\n' +
-            '3. Set a new password, submit, and log back in.\n\n' +
-            'Expected UI: Password updates successfully. Login with the new password succeeds.'
         }
       ]
     },
     {
-      section: 'PHASE 1 (UNLINKED): Home Feed & General Interactions',
+      section: 'PHASE 1 (UNLINKED): Home Feed & Core Social Interactions',
       tests: [
         {
-          id: 'TC-06: Sidebar Navigation',
-          desc:
-            'Steps:\n' +
-            '1. Click Home, Profile, Discover, Playlists, and Settings in the left sidebar.\n\n' +
-            'Expected UI: Each page loads correctly and highlights active tab styling in the sidebar.'
-        },
-        {
-          id: 'TC-07: Search & Share a Song',
+          id: 'TC-04: Search & Share a Song',
           desc:
             'Steps:\n' +
             '1. Go back to the Home feed (click "Home" in the sidebar).\n' +
-            '2. Click the central input in the "Drop a track" module.\n' +
+            '2. Click the central input in the "Drop a track" composer.\n' +
             '3. Type a song name, select a track from the AJAX search overlay, and add a caption.\n' +
-            '4. Toggle the mode to "Just Sharing" and click Post.\n\n' +
-            'Expected UI: Selecting a song generates a preview card. The published card containing album art, song title, and caption appears at the top of the feed immediately.'
+            '4. Toggle the mode to "Just Sharing" and click Post.\n' +
+            '5. Verify sidebar page links, follow button in "Who to Follow" sidebar, and "Explore" vs "Following" feed tabs.\n\n' +
+            'Expected UI: Published post appears at top of feed immediately. Left sidebar links highlight active states. Taste Neighbors (Who to Follow) follows instantly. Explore vs Following tabs toggle correctly.'
         },
         {
-          id: 'TC-08: Seeking Recommendations (Ask & Suggest)',
+          id: 'TC-05: Seeking Recommendations (Ask & Suggest)',
           desc:
             'Steps:\n' +
             '1. Open the post composer, select a track, add a caption, toggle to "Asking for Recommendations", and click Post.\n' +
@@ -104,7 +82,7 @@ function createForm() {
             'Expected UI: The composer prompt shifts to "What track should I hear next?". The card displays a blue "SEEKING RECOMMENDATIONS" badge. Suggesting a track via the search widget embeds an inline playable track card tag [SONG:spotify_id] in the comment thread.'
         },
         {
-          id: 'TC-09: Song Card Actions (Unlinked)',
+          id: 'TC-06: Song Card Actions (Unlinked)',
           desc:
             'Pre-condition: Spotify is NOT connected.\n\n' +
             'Steps:\n' +
@@ -118,22 +96,7 @@ function createForm() {
             '- Selecting "Spotify Playlist" triggers a warning modal. Selecting "Reso Playlist" adds the track.'
         },
         {
-          id: 'TC-10: Right Sidebar Widgets',
-          desc:
-            'Steps:\n' +
-            '1. In the right sidebar: click "Follow" next to a user in the "Who to Follow" list.\n' +
-            '2. Click a song card in the "Suggested for you" list.\n\n' +
-            'Expected UI: "Who to Follow" (taste neighbors) follows instantly. "Suggested for you" (recommendations with trending indicators) opens player options.'
-        },
-        {
-          id: 'TC-11: Feed Tabs',
-          desc:
-            'Steps:\n' +
-            '1. Toggle between the "Explore" and "Following" tabs.\n\n' +
-            'Expected UI: Explore shows general community shares. Following shows only posts from followed users.'
-        },
-        {
-          id: 'TC-12: Like & Bookmark Posts',
+          id: 'TC-07: Like & Bookmark Posts',
           desc:
             'Steps:\n' +
             '1. Click the Like icon on a post.\n' +
@@ -141,7 +104,7 @@ function createForm() {
             'Expected UI: Like count increments instantly and highlights. Bookmarked post is saved to your profile.'
         },
         {
-          id: 'TC-13: Not for Me (Dislike)',
+          id: 'TC-08: Not for Me (Dislike)',
           desc:
             'Steps:\n' +
             '1. Click the three-dot dropdown on a feed card and select "Not for me".\n' +
@@ -149,7 +112,7 @@ function createForm() {
             'Expected UI: Dislike registers (resets active like count if set). Dropdown option text shifts to "Undo Not For Me" with active styling.'
         },
         {
-          id: 'TC-14: Commenting & Nested Replies',
+          id: 'TC-09: Commenting & Nested Replies',
           desc:
             'Steps:\n' +
             '1. Open comments on a post. Type a comment and submit.\n' +
@@ -157,7 +120,7 @@ function createForm() {
             'Expected UI: Comment count increments instantly. Upvotes update asynchronously. Reply field supports nesting. Deleting parent comments soft-redacts text to "[deleted]" to preserve replies.'
         },
         {
-          id: 'TC-15: Global Search & Filtering',
+          id: 'TC-10: Global Search & Filtering',
           desc:
             'Steps:\n' +
             '1. Type a keyword in the global search bar in the top navbar and press Enter.\n' +
@@ -167,10 +130,10 @@ function createForm() {
       ]
     },
     {
-      section: 'PHASE 1 (UNLINKED): Personal Profile Hub',
+      section: 'PHASE 1 (UNLINKED): Profile, Playlists & Settings',
       tests: [
         {
-          id: 'TC-16: Profile Tabs & Brand Identity',
+          id: 'TC-11: Profile Tabs & Brand Identity',
           desc:
             'Steps:\n' +
             '1. Go to your Profile. Check customized branding, username, and habit-based badges.\n' +
@@ -178,7 +141,7 @@ function createForm() {
             'Expected UI: Posts shows chronological shared songs. Taste DNA displays the Genre DNA progress bars. Saved tab displays bookmarked posts.'
         },
         {
-          id: 'TC-17: Editing Music Identity (Song Shelf)',
+          id: 'TC-12: Editing Music Identity (Song Shelf)',
           desc:
             'Steps:\n' +
             '1. Under the "Song Shelf" tab, click "Edit Shelf".\n' +
@@ -186,14 +149,9 @@ function createForm() {
             '3. Try saving with fewer than 5 songs or more than 10.\n' +
             '4. Click "Done Editing".\n\n' +
             'Expected UI: Opens search panel to manage shelf. System enforces 5–10 track limit. Clicking "Done Editing" updates the profile grid.'
-        }
-      ]
-    },
-    {
-      section: 'PHASE 1 (UNLINKED): Discovery & Playlists',
-      tests: [
+        },
         {
-          id: 'TC-18: Personalized Recommendations & Sync Warning (Unlinked)',
+          id: 'TC-13: Personalized Recommendations & Sync Warning (Unlinked)',
           desc:
             'Pre-condition: User is NOT connected to Spotify.\n\n' +
             'Steps:\n' +
@@ -204,7 +162,7 @@ function createForm() {
             'Expected UI: Grid of personalized recommendations loads. "LIKE" reinforces taste profile, "PASS" excludes the track. "Sync to Spotify" is visible and clicking it triggers a warning prompt.'
         },
         {
-          id: 'TC-19: Playlist Creation & Invites',
+          id: 'TC-14: Playlist Creation & Invites',
           desc:
             'Steps:\n' +
             '1. Go to /playlists, click "New Playlist", enter name and description, and click Create.\n' +
@@ -214,23 +172,7 @@ function createForm() {
             'Expected UI: Playlist is created showing contributor list with your avatar. Invite modal displays mutual followers (placeholder if none). Cover photo updates instantly. Adding and removing songs is immediate.'
         },
         {
-          id: 'TC-20: Spotify Playlist Import by URL (Unlinked)',
-          desc:
-            'Pre-condition: Spotify is NOT connected.\n\n' +
-            'Steps:\n' +
-            '1. Under /playlists click "Import Spotify".\n' +
-            '2. Verify that the "Spotify Not Connected" warning banner is displayed.\n' +
-            '3. Paste a public Spotify playlist URL and click fetch.\n' +
-            '4. Use the search bar to filter and select up to 15 songs, then click Import.\n\n' +
-            'Expected UI: The "Spotify Not Connected" banner displays a "Connect Spotify Library" button. Pasting the public URL correctly fetches the tracks, enforces the 15-track limit, and imports them into a new Reso playlist.'
-        }
-      ]
-    },
-    {
-      section: 'PHASE 1 (UNLINKED): Account Settings & Profile Branding',
-      tests: [
-        {
-          id: 'TC-21: Profile Branding Customization',
+          id: 'TC-15: Profile Branding Customization',
           desc:
             'Steps:\n' +
             '1. Go to Settings.\n' +
@@ -238,13 +180,6 @@ function createForm() {
             '3. Upload a profile banner (<4MB) and click Save.\n' +
             '4. Change display name and primary email and click Save.\n\n' +
             'Expected UI: Avatar and banner update instantly across the site. Changing email resets verification status to unverified.'
-        },
-        {
-          id: 'TC-22: Security Password Update',
-          desc:
-            'Steps:\n' +
-            '1. Under Update Password, enter current password, set new password, and click Save.\n\n' +
-            'Expected UI: Requiring current password secures changes. Subsequent logins require the new password.'
         }
       ]
     },
@@ -252,7 +187,7 @@ function createForm() {
       section: 'PHASE 2: Social Account Connections',
       tests: [
         {
-          id: 'TC-23: Spotify & Google Connections',
+          id: 'TC-16: Spotify & Google Connections',
           desc:
             'Steps:\n' +
             '1. Under Connected Accounts, click "Link Spotify Account". Authorise on Spotify pop-up screen (Important: You must log into Spotify using the specific email address you sent to the developer to be whitelisted).\n' +
@@ -266,7 +201,7 @@ function createForm() {
       section: 'PHASE 3 (LINKED): Spotify-Specific Features & Integration',
       tests: [
         {
-          id: 'TC-24: Song Card Actions - Add to Spotify Playlist (Linked)',
+          id: 'TC-17: Song Card Actions - Add to Spotify Playlist (Linked)',
           desc:
             'Pre-condition: Spotify is connected.\n\n' +
             'Steps:\n' +
@@ -275,7 +210,7 @@ function createForm() {
             'Expected UI: Opens the "Add to Spotify Playlist" modal, allowing you to select an existing Spotify playlist or create a new one to add the track to.'
         },
         {
-          id: 'TC-25: Profile Bookmarks - Spotify Sync (Linked)',
+          id: 'TC-18: Profile Bookmarks - Spotify Sync (Linked)',
           desc:
             'Pre-condition: Spotify is connected and you have saved/bookmarked posts.\n\n' +
             'Steps:\n' +
@@ -285,7 +220,7 @@ function createForm() {
             'Expected UI: Sync to Spotify creates a private playlist titled "Reso Bookmarks" (with "Created via Reso" description) in your Spotify account.'
         },
         {
-          id: 'TC-26: Discovery Spotify Sync (Linked)',
+          id: 'TC-19: Discovery Spotify Sync (Linked)',
           desc:
             'Pre-condition: Spotify is connected.\n\n' +
             'Steps:\n' +
@@ -294,27 +229,20 @@ function createForm() {
             'Expected UI: Sync to Spotify creates a private playlist titled "Reso Discoveries" (with "Created via Reso" description) in your Spotify account.'
         },
         {
-          id: 'TC-27: Spotify Playlist Library Import (Linked)',
+          id: 'TC-20: Spotify Playlist Library Import (Linked)',
           desc:
             'Pre-condition: Spotify is connected.\n\n' +
             'Steps:\n' +
             '1. Under /playlists click "Import Spotify".\n\n' +
             'Expected UI: The page automatically pulls and lists your Spotify playlists from your connected Spotify library under "Your Spotify Playlists". Clicking one fills in the Spotify URL input and submits automatically.'
-        },
-        {
-          id: 'TC-28: Unlinking Social Accounts',
-          desc:
-            'Steps:\n' +
-            '1. Under Connected Accounts in Settings, click "Disconnect" (or "Unlink") next to Spotify or Google.\n\n' +
-            'Expected UI: The provider is unlinked immediately. Status changes to disconnected, and a success banner displays. No password is required.'
         }
       ]
     },
     {
-      section: 'PHASE 4: Notifications & Admin Portal',
+      section: 'PHASE 4: Notifications & Admin Operations',
       tests: [
         {
-          id: 'TC-29: Welcome & Interaction Notifications',
+          id: 'TC-21: Welcome & Interaction Notifications',
           desc:
             'Steps:\n' +
             '1. Check the notification bell immediately after onboarding.\n' +
@@ -323,24 +251,16 @@ function createForm() {
             'Expected UI: Welcome notification displays. Follow notification shows up with red badge count. Mark read clears the badge.'
         },
         {
-          id: 'TC-30: Admin Login & Profile',
+          id: 'TC-22: Admin Login & Dashboard Overview',
           desc:
             'Steps:\n' +
             '1. Log out. Go to /login/admin.\n' +
             '2. Log in using admin1@musicsocial.com and AdminPassword123!.\n' +
-            '3. Go to Admin -> Profile. Update name and change password.\n\n' +
-            'Expected UI: Redirects to /admin dashboard. Sidebar loads. Profile edits succeed.'
+            '3. Verify dashboard statistics and 7-day Shares Activity Posting trends chart fit laptop monitors cleanly without overlapping.\n\n' +
+            'Expected UI: Redirects to /admin dashboard. Left sidebar and right content blocks scale cleanly. KPI cards format matches monitor resolution.'
         },
         {
-          id: 'TC-31: Admin Dashboard Metrics',
-          desc:
-            'Steps:\n' +
-            '1. Open /admin.\n' +
-            '2. Verify top-level aggregate cards, the "Shares Activity" bar chart (7 days), and summary feeds (top genres, new registrations, recent shares).\n\n' +
-            'Expected UI: All metrics load correctly and reflect real-time counts.'
-        },
-        {
-          id: 'TC-32: User Management',
+          id: 'TC-23: User Management',
           desc:
             'Steps:\n' +
             '1. Go to Admin -> Users.\n' +
@@ -351,7 +271,7 @@ function createForm() {
             'Expected UI: Displays user details (ID, handle, email, share count, status, join date). Search works. Banned status blocks logins. Deleting permanently purges the user.'
         },
         {
-          id: 'TC-33: Song Catalog Management',
+          id: 'TC-24: Song Catalog Management',
           desc:
             'Steps:\n' +
             '1. Go to Admin -> Songs.\n' +
@@ -363,7 +283,7 @@ function createForm() {
             'Expected UI: Catalog contains track IDs, artists, genres, shares. Search/edit/delete/refetch actions update DB instantly.'
         },
         {
-          id: 'TC-34: Moderation Streams',
+          id: 'TC-25: Moderation Streams',
           desc:
             'Steps:\n' +
             '1. Go to Admin -> Moderation.\n' +
@@ -373,16 +293,7 @@ function createForm() {
             'Expected UI: Searching works. Delete actions immediately purge violating records.'
         },
         {
-          id: 'TC-35: Admin Management',
-          desc:
-            'Steps:\n' +
-            '1. Go to Admin -> Admins.\n' +
-            '2. Click "Add New Administrator", fill in details (>=8 char password) and submit.\n' +
-            '3. Verify current session is highlighted in list. <br>4. Click "Remove" next to an admin account.\n\n' +
-            'Expected UI: Admin is added. Current admin has special highlight badge. Deletion revokes access.'
-        },
-        {
-          id: 'TC-36: Algo Recs Preview & Retraining',
+          id: 'TC-26: Algo Recs Preview & Retraining',
           desc:
             'Steps:\n' +
             '1. Go to Admin -> Retrain.\n' +
@@ -390,14 +301,6 @@ function createForm() {
             '3. Click "Force Retrain Model".\n' +
             '4. Select a user from the dropdown to preview their recommendation feed.\n\n' +
             'Expected UI: Status shows active. Force retrain model triggers successfully. Feed preview table displays recommended tracks showing Rank, Song title, and Reasoning (No Score or Score Breakdown columns).'
-        },
-        {
-          id: 'TC-37: Recommendation Model Validation',
-          desc:
-            'Steps:\n' +
-            '1. Go to /admin/algo-test-suite (Accuracy Result).\n' +
-            '2. Verify the model validation standards (RMSE, MAE, Precision@12, NDCG@12).\n\n' +
-            'Expected UI: Diagnostic metrics load and show validation status against academic/industry standard baselines.'
         }
       ]
     },
@@ -405,7 +308,7 @@ function createForm() {
       section: 'PHASE 5: Destructive Actions',
       tests: [
         {
-          id: 'TC-38: Permanent Account Deletion',
+          id: 'TC-27: Permanent Account Deletion',
           desc:
             'Steps:\n' +
             '1. Log out from the Admin session.\n' +
