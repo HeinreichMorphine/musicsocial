@@ -35,6 +35,7 @@ surprise_model.pkl
 
 # Documentation and Assets (Excluded from GitHub)
 *.md
+!README.md
 *.drawio
 *.tex
 *.txt
