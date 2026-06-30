@@ -65,7 +65,7 @@
 <div class="row">
 
     {{-- ── Shares Panel ─────────────────────────────────────── --}}
-    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+    <div class="col-md-12 col-sm-12" style="margin-bottom: 1.5rem;">
         <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-share-alt" style="color:#16a34a;margin-right:5px;"></i> Shares
@@ -132,7 +132,7 @@
     </div>
 
     {{-- ── Comments Panel ───────────────────────────────────── --}}
-    <div class="col-md-6 col-sm-12" style="margin-bottom: 1.5rem;">
+    <div class="col-md-12 col-sm-12" style="margin-bottom: 1.5rem;">
         <div class="panel-card">
         <div class="panel-head">
             <h4><i class="fa fa-comments" style="color:#7c3aed;margin-right:5px;"></i> Comments

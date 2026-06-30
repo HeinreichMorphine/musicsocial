@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Reso RecSys Test Suite')
+@section('title', 'Accuracy Result')
 
 @section('content')
 <div class="row">

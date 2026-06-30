@@ -154,7 +154,7 @@
             <div class="audit-cards">
                 <a href="{{ route('admin.algo-test-suite') }}" class="audit-card">
                     <div class="audit-card-icon">🧪</div>
-                    <div class="audit-card-title">Reso RecSys Test Suite</div>
+                    <div class="audit-card-title">Accuracy Result</div>
                     <div class="audit-card-desc">Global RMSE, NDCG@12, Precision@12 benchmarks</div>
                 </a>
             </div>
@@ -198,9 +198,7 @@
                         <tr>
                             <th>#</th>
                             <th>Song</th>
-                            <th>Score</th>
                             <th>Reasoning</th>
-                            <th>Score Breakdown</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,25 +210,8 @@
                                 </span>
                             </td>
                             <td style="font-weight:600;color:#0f172a;">{{ $rec['song_name'] }}</td>
-                            <td>
-                                @php $scorePercent = min(100, round($rec['score'] * 20)); @endphp
-                                <div class="score-bar-wrap">
-                                    <div class="score-bar-track">
-                                        <div class="score-bar-fill" style="width:{{ $scorePercent }}%;"></div>
-                                    </div>
-                                    <span class="score-val">{{ number_format($rec['score'], 3) }}</span>
-                                </div>
-                            </td>
                             <td style="max-width:200px;color:#64748b;font-size:.77rem;">
                                 {{ $rec['reason'] }}
-                            </td>
-                            <td>
-                                <div class="debug-breakdown">
-                                    SVD: <strong>{{ number_format($rec['debug']['svd'], 3) }}</strong>
-                                    + Context: <strong>+{{ number_format($rec['debug']['context'], 2) }}</strong><br>
-                                    Weighted (×0.7): <strong>{{ number_format($rec['debug']['weighted_base'], 3) }}</strong><br>
-                                    Social (×0.3): <strong>{{ number_format($rec['debug']['weighted_social'], 3) }}</strong>
-                                </div>
                             </td>
                         </tr>
                         @endforeach

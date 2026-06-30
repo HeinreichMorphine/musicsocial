@@ -354,7 +354,7 @@
                     </li>
                     <li class="{{ request()->routeIs('admin.retrain.page') ? 'active' : '' }}">
                         <a href="{{ route('admin.retrain.page') }}">
-                            <i class="fa fa-eye"></i> AI Recs Preview
+                            <i class="fa fa-eye"></i> Algo Rec Preview
                         </a>
                     </li>
                     <li class="{{ request()->routeIs('admin.profile') ? 'active' : '' }}">
@@ -369,7 +369,7 @@
                 <ul class="nav side-menu">
                     <li class="{{ request()->routeIs('admin.algo-test-suite') ? 'active' : '' }}">
                         <a href="{{ route('admin.algo-test-suite') }}">
-                            <i class="fa fa-flask"></i> Reso RecSys Test Suite
+                            <i class="fa fa-flask"></i> Accuracy Result
                         </a>
                     </li>
                 </ul>
