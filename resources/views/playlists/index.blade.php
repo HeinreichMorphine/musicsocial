@@ -167,7 +167,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                         </svg>
                     </div>
-                    <h3 class="mt-4 text-xl font-medium text-gray-600 dark:text-gray-200">No collaborative playlists yet</h3>
+                    <h3 class="mt-4 text-xl font-medium text-gray-600 dark:text-gray-200">No playlists yet</h3>
                     <p class="mt-2 text-gray-500 dark:text-gray-400 max-w-md mx-auto">Create a playlist, invite your peers, and let the algorithm map your musical tastes together automatically.</p>
                 </div>
                 @else
@@ -250,7 +250,7 @@
         <form method="post" action="{{ route('playlists.store') }}" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl">
             @csrf
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold">New Collaborative Playlist</h2>
+                <h2 class="text-2xl font-bold">New Playlist</h2>
                 <button type="button" x-on:click="$dispatch('close')" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
