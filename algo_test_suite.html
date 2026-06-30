@@ -1693,8 +1693,15 @@
             log('API', 'Sending retraining signal to Flask server...', 'info');
             try {
                 const response = await fetch(`${FLASK_URL}/retrain`, { method: 'POST' });
-                if (!response.ok) throw new Error('Model retraining failed');
-                const data = await response.json();
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {}
+                
+                if (!response.ok) {
+                    const errMsg = (data && data.message) ? data.message : ((data && data.error) ? data.error : 'Model retraining failed');
+                    throw new Error(errMsg);
+                }
                 
                 log('API', 'Model retrained successfully!', 'success');
                 // Refresh benchmarks

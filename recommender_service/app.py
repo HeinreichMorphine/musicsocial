@@ -253,49 +253,76 @@ def fetch_data_from_db():
             return interactions_df
     except Exception as e:
         print(f"An exception occurred during data fetching: {e}")
+        tb = traceback.format_exc()
+        log_to_file(f"Exception in fetch_data_from_db: {e}\nTraceback:\n{tb}")
         return pd.DataFrame()
 
 MODEL_PATH = 'surprise_model.pkl'
 
+def log_to_file(message):
+    try:
+        log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommender_error.log')
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"[{timestamp}] {message}\n")
+    except Exception as ex:
+        print(f"Failed to write to log file: {ex}")
+
 def train_and_save_model():
     global algo
+    log_to_file("Starting SVD model training and serialization sequence.")
     if os.path.exists(MODEL_PATH):
-        os.remove(MODEL_PATH)
-        print(f"Deleted existing model file: {MODEL_PATH}")
+        try:
+            os.remove(MODEL_PATH)
+            print(f"Deleted existing model file: {MODEL_PATH}")
+            log_to_file("Successfully purged old model file before retraining.")
+        except Exception as e:
+            print(f"Failed to delete existing model file: {e}. Overwriting directly instead.")
+            log_to_file(f"Failed to delete existing model file: {e}. Will overwrite model file directly.")
     print("Fetching data for model training...")
     interactions_df = fetch_data_from_db()
 
     if interactions_df.empty:
         print("No data to train the model. Skipping training.")
+        log_to_file("Warning: interactions_df is empty. Skipping model training process.")
         return
 
-    # Adjusted scale for new Weighted Formula
-    # 1 + log(1 + ~20) is around 4.0. Max theoretical could be higher but 1-5 is standard.
-    # We set scale (0, 6) to be safe.
-    reader = Reader(rating_scale=(0, 6)) 
-    data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
+    try:
+        # Adjusted scale for new Weighted Formula
+        # 1 + log(1 + ~20) is around 4.0. Max theoretical could be higher but 1-5 is standard.
+        # We set scale (0, 6) to be safe.
+        reader = Reader(rating_scale=(0, 6)) 
+        data = Dataset.load_from_df(interactions_df[['user_id', 'item_id', 'interaction']], reader)
 
-    trainset = data.build_full_trainset()
+        trainset = data.build_full_trainset()
 
-    print("Training SVD model...")
-    algo = SVD(n_epochs=20, lr_all=0.005, reg_all=0.02, random_state=42)
-    algo.fit(trainset)
-    print("Model training complete.")
+        print("Training SVD model...")
+        log_to_file(f"Initiated SVD model fit with {trainset.n_users} users, {trainset.n_items} items, {trainset.n_ratings} ratings.")
+        algo = SVD(n_epochs=20, lr_all=0.005, reg_all=0.02, random_state=42)
+        algo.fit(trainset)
+        print("Model training complete.")
+        log_to_file("SVD model fit successfully completed.")
 
-    joblib.dump(algo, MODEL_PATH)
-    print(f"Model saved to {MODEL_PATH}")
-    
-    # Update Stats
-    global last_train_time, train_user_count, train_item_count, train_record_count
-    last_train_time = get_malaysia_now_str()
-    train_user_count = trainset.n_users
-    train_item_count = trainset.n_items
-    train_record_count = trainset.n_ratings
-    
-    # Invalidate song cache to ensure next request fetches fresh metadata
-    global song_cache
-    song_cache['df'] = None
-    print("Song cache invalidated after retraining.")
+        joblib.dump(algo, MODEL_PATH)
+        print(f"Model saved to {MODEL_PATH}")
+        log_to_file(f"SVD model successfully dumped to file: {MODEL_PATH}")
+        
+        # Update Stats
+        global last_train_time, train_user_count, train_item_count, train_record_count
+        last_train_time = get_malaysia_now_str()
+        train_user_count = trainset.n_users
+        train_item_count = trainset.n_items
+        train_record_count = trainset.n_ratings
+        
+        # Invalidate song cache to ensure next request fetches fresh metadata
+        global song_cache
+        song_cache['df'] = None
+        print("Song cache invalidated after retraining.")
+        log_to_file("Song cache invalidated successfully.")
+    except Exception as e:
+        tb = traceback.format_exc()
+        log_to_file(f"Error during training or saving sequence: {e}\nTraceback:\n{tb}")
+        raise e
 
 
 def load_model():
@@ -336,9 +363,13 @@ def home():
 @app.route('/retrain', methods=['POST'])
 def retrain_model_endpoint():
     try:
+        log_to_file("POST /retrain endpoint called.")
         train_and_save_model()
+        log_to_file("POST /retrain completed successfully.")
         return jsonify({"status": "success", "message": "Model retraining initiated and completed.", "stats": get_stats_dict()}), 200
     except Exception as e:
+        tb = traceback.format_exc()
+        log_to_file(f"Exception in /retrain endpoint: {e}\nTraceback:\n{tb}")
         return jsonify({"status": "error", "message": str(e)}) , 500
 
 @app.route('/stats', methods=['GET'])
