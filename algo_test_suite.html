@@ -1266,7 +1266,7 @@
 
         async function checkConnection() {
             try {
-                const response = await fetch(`${FLASK_URL}/`);
+                const response = await fetch(`${FLASK_URL}/?_=${Date.now()}`);
                 if (response.ok) {
                     isConnected = true;
                     document.getElementById('status-indicator').className = 'header-status-indicator connected';
@@ -1294,7 +1294,7 @@
         async function fetchUsers() {
             try {
                 log('API', 'Fetching active users list for personalized audit...', 'info');
-                const response = await fetch(`${FLASK_URL}/users`);
+                const response = await fetch(`${FLASK_URL}/users?_=${Date.now()}`);
                 if (!response.ok) throw new Error('Failed to fetch users');
                 const users = await response.json();
                 
@@ -1330,7 +1330,7 @@
                 log('API', `Initiating accuracy diagnostic audit for User ID ${userId}...`, 'info');
                 document.getElementById('target-user-span').innerText = `Target: USER ${userId}`;
                 
-                const response = await fetch(`${FLASK_URL}/audit?user_id=${userId}`);
+                const response = await fetch(`${FLASK_URL}/audit?user_id=${userId}&_=${Date.now()}`);
                 if (!response.ok) throw new Error('Audit calculation failed');
                 const data = await response.json();
                 
@@ -1588,7 +1588,7 @@
             try {
                 log('API', 'Fetching global model cross-validation benchmarks (RMSE/MAE/Precision/NDCG)...', 'info');
                 
-                const response = await fetch(`${FLASK_URL}/benchmark`);
+                const response = await fetch(`${FLASK_URL}/benchmark?_=${Date.now()}`);
                 if (!response.ok) throw new Error('Benchmark validation retrieval failed');
                 const data = await response.json();
                 
@@ -1665,7 +1665,7 @@
 
         async function fetchStatsTimestamp() {
             try {
-                const response = await fetch(`${FLASK_URL}/stats`);
+                const response = await fetch(`${FLASK_URL}/stats?_=${Date.now()}`);
                 if (response.ok) {
                     const stats = await response.json();
                     document.getElementById('stat-retrained').innerText = stats.last_train_time || 'Never';
