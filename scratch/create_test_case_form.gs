@@ -8,8 +8,13 @@
 function createForm() {
   var form = FormApp.create('RESO - System Functionality Test Form');
   form.setDescription(
-    'This form is used to log the manual testing results of the RESO platform.\n' +
-    'Please proceed sequentially page-by-page. For each test, mark Pass or Fail, and add observations if needed.'
+    'This form is used to log the manual testing results of the RESO platform.\n\n' +
+    'INSTRUCTIONS:\n' +
+    '1. Test each module in the order presented (following the page-by-page website navigation).\n' +
+    '2. Follow the step-by-step instructions precisely.\n' +
+    '3. Compare actual results with the "Expected UI" description.\n' +
+    '4. Mark Pass or Fail for each test case.\n' +
+    '5. Test on Chrome/Chromium browser.'
   );
 
   // General Metadata
@@ -294,14 +299,6 @@ function createForm() {
             '3. Click "Force Retrain Model".\n' +
             '4. Select a user from the dropdown to preview their recommendation feed.\n\n' +
             'Expected UI: Status shows active. Model retrains successfully. Recommendation preview table displays recommended tracks showing Rank, Song title, and Reasoning.'
-        },
-        {
-          id: 'TC-27: Recommendation Model Validation',
-          desc:
-            'Steps:\n' +
-            '1. Go to /admin/algo-test-suite.\n' +
-            '2. Verify the model accuracy metrics (error margins and precision scores).\n\n' +
-            'Expected UI: Accuracy scorecards load and display the validation quality status against expected standards.'
         }
       ]
     },
@@ -309,7 +306,7 @@ function createForm() {
       section: 'PHASE 5: Destructive Actions',
       tests: [
         {
-          id: 'TC-28: Permanent Account Deletion',
+          id: 'TC-27: Permanent Account Deletion',
           desc:
             'Steps:\n' +
             '1. Log out from the Admin session.\n' +

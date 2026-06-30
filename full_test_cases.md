@@ -2,6 +2,13 @@
 
 This table maps out all the manual test cases for functionality testing, aligned chronologically with the user workflow: registration, basic interactions, profile, settings, third-party connections, connected features, admin operations, and account deletion.
 
+### INSTRUCTIONS:
+1. Test each module in the order presented (following the page-by-page website navigation).
+2. Follow the step-by-step instructions precisely.
+3. Compare actual results with the "Expected UI" description.
+4. Mark Pass or Fail for each test case.
+5. Test on Chrome/Chromium browser.
+
 | Test ID | Title | Pre-condition | Steps | Expected UI |
 |---|---|---|---|---|
 | **TC-01** | Standard User Registration | None | 1. Navigate to `/register`. <br>2. Fill in the manual registration form requiring Username, Email, Profile Picture upload, and Password confirmation. <br>3. Click Register. | Form validation prompts for required inputs. Redirects to "Verify your email" page showing an envelope icon, a primary "Resend Email" button, and secondary "Skip for now" / "Log Out" options. |
@@ -30,5 +37,4 @@ This table maps out all the manual test cases for functionality testing, aligned
 | **TC-24** | Song Catalog Management | Logged in as Admin | 1. Go to Admin -> Songs. <br>2. Search and sort songs. <br>3. Click "Add New Song", enter metadata/Spotify ID, and submit. <br>4. Click "Edit" next to a song, edit metadata, and save. <br>5. Click "Refetch Genres" on a song. <br>6. Click "Delete" on a song. | Catalog lists tracks, artists, and genres. Search, edit, delete, and refetch actions update the database instantly. |
 | **TC-25** | Moderation Streams | Logged in as Admin | 1. Go to Admin -> Moderation. <br>2. Verify the 3 rows: Shares, Comments, and Playlists (decluttered layout). <br>3. Filter shares and comments by user/keyword using the search bar. <br>4. Click "Delete" next to a Share, Comment, or Playlist. | Searching works. Delete actions immediately purge violating records. |
 | **TC-26** | Algo Recs Preview & Retraining | Logged in as Admin | 1. Go to Admin -> Retrain. <br>2. Check the Recommender Service status badge. <br>3. Click "Force Retrain Model". <br>4. Select a user from the dropdown to preview their recommendation feed. | Status shows active. Model retrains successfully. Recommendation preview table displays recommended tracks showing Rank, Song title, and Reasoning. |
-| **TC-27** | Recommendation Model Validation | Logged in as Admin | 1. Go to `/admin/algo-test-suite`. <br>2. Verify the model accuracy metrics (error margins and precision scores). | Accuracy scorecards load and display the validation quality status against expected standards. |
-| **TC-28** | Permanent Account Deletion | Admin logout complete | 1. Log out from the Admin session. <br>2. Login back to the test user account. <br>3. Under Account Security in Settings, click "Delete Account". <br>4. Enter your current password and click confirm. | Warning prompt displays. All user data, resources, and links are permanently deleted. Session terminates. |
+| **TC-27** | Permanent Account Deletion | Admin logout complete | 1. Log out from the Admin session. <br>2. Login back to the test user account. <br>3. Under Account Security in Settings, click "Delete Account". <br>4. Enter your current password and click confirm. | Warning prompt displays. All user data, resources, and links are permanently deleted. Session terminates. |
