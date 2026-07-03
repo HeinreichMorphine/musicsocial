@@ -3,6 +3,7 @@
         $isHome = Route::is('dashboard');
         $isProfile = Route::is('profile.show') || Route::is('profile.edit') || Route::is('profile.*');
         $isDiscovery = Route::is('discovery');
+        $isPlaylists = Route::is('playlists.*');
         $isSettings = Route::is('settings.index');
         
         $baseClasses = 'flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-custom-mid-blue dark:text-gray-400 dark:hover:text-custom-mid-blue transition-colors px-1 group';
@@ -10,7 +11,7 @@
     @endphp
 
     <div class="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-white/90 dark:bg-black/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800">
-        <div class="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
+        <div class="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
             <a href="{{ route('dashboard') }}" wire:navigate class="{{ $baseClasses }} @if($isHome) {{ $activeClasses }} @endif">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1 group-hover:scale-110 transition-transform @if($isHome) text-custom-mid-blue @endif">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -22,6 +23,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
                 <span class="text-[10px] sm:text-xs">Discover</span>
+            </a>
+            <a href="{{ route('playlists.index') }}" wire:navigate class="{{ $baseClasses }} @if($isPlaylists) {{ $activeClasses }} @endif">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1 group-hover:scale-110 transition-transform @if($isPlaylists) text-custom-mid-blue @endif">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <span class="text-[10px] sm:text-xs">Playlists</span>
             </a>
             <a href="{{ route('profile.show', auth()->user()->name) }}" wire:navigate class="{{ $baseClasses }} @if($isProfile) {{ $activeClasses }} @endif">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1 group-hover:scale-110 transition-transform @if($isProfile) text-custom-mid-blue @endif"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.25a.75.75 0 0 1-.22-.515v-.315a6.666 6.666 0 0 1 2.78-4.757c.307-.22.682-.338 1.066-.338h6.148c.384 0 .759.118 1.066.338a6.666 6.666 0 0 1 2.78 4.757v.315c0 .325-.29.515-.514.515z" /></svg>

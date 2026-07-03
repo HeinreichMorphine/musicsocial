@@ -110,18 +110,18 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                                     href="{{ $notificationUrl }}" 
                                     wire:navigate
                                     onclick="fetch('{{ route('notifications.markAsRead', $notification->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                 >
-                                    <div class="text-sm">
+                                    <div class="text-sm dark:text-white">
                                         {{ $notification->data['message'] ?? 'New Notification' }}
                                     </div>
-                                    <div class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
                                 </a>
                             @endforeach
-                             <div class="border-t border-gray-100"></div>
+                             <div class="border-t border-gray-100 dark:border-gray-800"></div>
                              <form method="POST" action="{{ route('notifications.markRead') }}">
                                 @csrf
-                                <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 transition duration-150 ease-in-out">
                                     Mark all as read
                                 </button>
                              </form>
@@ -206,18 +206,18 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
                                     href="{{ $notificationUrl }}" 
                                     wire:navigate
                                     onclick="fetch('{{ route('notifications.markAsRead', $notification->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                 >
-                                    <div class="text-sm">
+                                    <div class="text-sm dark:text-white">
                                         {{ $notification->data['message'] ?? 'New Notification' }}
                                     </div>
-                                    <div class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
                                 </a>
                             @endforeach
-                            <div class="border-t border-gray-100"></div>
+                            <div class="border-t border-gray-100 dark:border-gray-800"></div>
                             <form method="POST" action="{{ route('notifications.markRead') }}">
                                 @csrf
-                                <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 transition duration-150 ease-in-out">
                                     Mark all as read
                                 </button>
                             </form>
@@ -240,6 +240,9 @@ $pageTitle = View::shared('pageTitle', __('Dashboard'));
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('playlists.index')" :active="request()->routeIs('playlists.*')" wire:navigate>
+                {{ __('Playlists') }}
             </x-responsive-nav-link>
         </div>
 

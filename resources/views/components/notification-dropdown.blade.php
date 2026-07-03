@@ -40,7 +40,7 @@
                     onclick="fetch('{{ route('notifications.markAsRead', $notification->id) }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })"
                     class="block px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                    <div class="text-sm font-medium">
+                    <div class="text-sm font-medium dark:text-white">
                         {{ $notification->data['message'] ?? 'New Notification' }}
                     </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</div>
