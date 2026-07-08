@@ -153,7 +153,7 @@
             </p>
             <div class="audit-cards">
                 <a href="{{ route('admin.algo-test-suite') }}" class="audit-card">
-                    <div class="audit-card-icon">🧪</div>
+                    <div class="audit-card-icon"><i class="fa fa-flask" style="color: #7c3aed;"></i></div>
                     <div class="audit-card-title">Accuracy Result</div>
                     <div class="audit-card-desc">Global RMSE, NDCG@12, Precision@12 benchmarks</div>
                 </a>

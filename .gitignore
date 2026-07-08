@@ -43,3 +43,6 @@ surprise_model.pkl
 /publicimages/
 /scratch/
 /test_admin_rendering.php
+find_emojis.py
+find_emoji.py
+
