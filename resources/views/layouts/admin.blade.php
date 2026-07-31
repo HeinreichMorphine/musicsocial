@@ -316,6 +316,24 @@
             }
         }
         @media (max-width: 768px) {
+            /* Hide sidebar completely on mobile */
+            .col-md-3.left_col {
+                display: none !important;
+            }
+            /* Remove desktop sidebar left-margin from content area */
+            .nav-md .container.body .right_col,
+            .nav-sm .container.body .right_col {
+                margin-left: 0 !important;
+            }
+            /* Remove desktop sidebar left-margin from top nav */
+            .nav-md .main_container .top_nav,
+            .nav-sm .main_container .top_nav {
+                margin-left: 0 !important;
+            }
+            /* Remove desktop sidebar left-margin from footer */
+            footer {
+                margin-left: 0 !important;
+            }
             .right_col {
                 padding: 16px 16px !important;
                 /* Extra bottom padding on mobile to clear the bottom nav */
