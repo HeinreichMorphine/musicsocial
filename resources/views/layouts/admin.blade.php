@@ -320,24 +320,125 @@
             .col-md-3.left_col {
                 display: none !important;
             }
-            /* Remove desktop sidebar left-margin from content area */
+            /* Remove desktop sidebar left-margin from content area, top nav & footer */
             .nav-md .container.body .right_col,
-            .nav-sm .container.body .right_col {
-                margin-left: 0 !important;
-            }
-            /* Remove desktop sidebar left-margin from top nav */
+            .nav-sm .container.body .right_col,
             .nav-md .main_container .top_nav,
-            .nav-sm .main_container .top_nav {
-                margin-left: 0 !important;
-            }
-            /* Remove desktop sidebar left-margin from footer */
+            .nav-sm .main_container .top_nav,
             footer {
                 margin-left: 0 !important;
             }
             .right_col {
-                padding: 16px 16px !important;
-                /* Extra bottom padding on mobile to clear the bottom nav */
-                padding-bottom: 88px !important;
+                padding: 14px 12px !important;
+                padding-bottom: 90px !important;
+                width: 100% !important;
+            }
+
+            /* Mobile Top Navigation styling */
+            .top_nav .nav_menu {
+                height: 56px !important;
+                padding: 0 12px !important;
+            }
+            .top_nav .toggle {
+                display: none !important;
+            }
+
+            /* Responsive tables: preserve layout, scroll horizontally cleanly */
+            div[style*="overflow-x:auto"], .table-responsive {
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 1rem;
+                border-radius: 8px;
+            }
+            .users-table, .songs-table, .admins-table, .mod-table, table {
+                min-width: 580px !important;
+            }
+            .users-table th, .users-table td,
+            .songs-table th, .songs-table td,
+            .admins-table th, .admins-table td,
+            .mod-table th, .mod-table td,
+            table th, table td {
+                padding: 0.75rem 0.6rem !important;
+                font-size: 0.85rem !important;
+            }
+        }
+
+        /* Responsive adjustments for screens <= 640px */
+        @media (max-width: 640px) {
+            /* Panel head layout on mobile */
+            .panel-head {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+                padding: 1rem !important;
+            }
+            .panel-head h4 {
+                font-size: 1.05rem !important;
+            }
+            .panel-head .btn-add,
+            .panel-head .search-mini {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Search bar rows & filters */
+            .search-bar-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.65rem !important;
+            }
+            .search-input-wrap,
+            .sort-select,
+            .btn-search,
+            .btn-clear {
+                width: 100% !important;
+                min-width: 0 !important;
+                flex: none !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
+
+            /* Form grids */
+            .add-form-card {
+                margin: 1rem 0.5rem !important;
+                padding: 1rem !important;
+            }
+            .add-form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+            .btn-add {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            /* Dashboard KPI cards */
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.65rem !important;
+                margin-bottom: 1rem !important;
+            }
+            .kpi-card {
+                padding: 0.85rem 0.75rem !important;
+                gap: 0.6rem !important;
+            }
+            .kpi-icon {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 1.1rem !important;
+                border-radius: 8px !important;
+            }
+            .kpi-val {
+                font-size: 1.4rem !important;
+            }
+            .kpi-label {
+                font-size: 0.7rem !important;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .kpi-row {
+                grid-template-columns: 1fr !important;
             }
         }
 
@@ -573,6 +674,11 @@
                 <div class="nav toggle">
                   <a id="menu_toggle"><i class="fa fa-bars"></i></a>
                 </div>
+                <!-- Mobile Brand Header -->
+                <a href="{{ route('admin.dashboard') }}" class="mobile-admin-brand hidden-md hidden-lg" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                  <img src="{{ asset('icons/reso.png') }}" alt="Reso" style="height: 28px; width: auto;">
+                  <span style="font-weight: 700; font-size: 15px; color: #0f172a;">Reso Admin</span>
+                </a>
                 <nav>
                 <ul class="nav navbar-nav navbar-right">
                   <li class="">
