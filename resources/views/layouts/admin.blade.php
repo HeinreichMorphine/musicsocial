@@ -318,8 +318,130 @@
         @media (max-width: 768px) {
             .right_col {
                 padding: 16px 16px !important;
+                /* Extra bottom padding on mobile to clear the bottom nav */
+                padding-bottom: 88px !important;
             }
         }
+
+        /* ── Mobile Admin Bottom Navigation ────────────────────────── */
+        .admin-mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            height: 64px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 20px rgba(15,23,42,0.08);
+            backdrop-filter: blur(12px);
+        }
+        @media (max-width: 991px) {
+            .admin-mobile-nav { display: flex; }
+        }
+        .admin-mob-nav-inner {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            width: 100%;
+            height: 100%;
+        }
+        .admin-mob-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #94a3b8;
+            transition: color 0.18s, transform 0.18s;
+            padding: 4px 2px;
+            position: relative;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+        }
+        .admin-mob-nav-item:hover,
+        .admin-mob-nav-item.active {
+            color: #3182ce;
+            text-decoration: none;
+        }
+        .admin-mob-nav-item.active {
+            font-weight: 700;
+        }
+        .admin-mob-nav-item i {
+            font-size: 18px;
+            margin-bottom: 3px;
+            transition: transform 0.2s;
+        }
+        .admin-mob-nav-item:hover i,
+        .admin-mob-nav-item.active i {
+            transform: scale(1.15);
+        }
+        .admin-mob-nav-item span {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            line-height: 1;
+            font-family: 'Inter', sans-serif;
+        }
+        .admin-mob-nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 2.5px;
+            background: #3182ce;
+            border-radius: 0 0 4px 4px;
+        }
+        /* More drawer overlay */
+        .admin-mob-more-drawer {
+            display: none;
+            position: fixed;
+            bottom: 64px;
+            left: 0;
+            right: 0;
+            z-index: 9998;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -8px 30px rgba(15,23,42,0.12);
+            padding: 16px 0 8px;
+        }
+        .admin-mob-more-drawer.open { display: block; }
+        .admin-mob-more-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 24px;
+            text-decoration: none;
+            color: #374151;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.15s, color 0.15s;
+        }
+        .admin-mob-more-item:hover { background: #f0f7ff; color: #3182ce; text-decoration: none; }
+        .admin-mob-more-item.active { color: #3182ce; }
+        .admin-mob-more-item i { font-size: 17px; width: 22px; text-align: center; color: #718096; }
+        .admin-mob-more-item:hover i,
+        .admin-mob-more-item.active i { color: #3182ce; }
+        .admin-mob-drawer-handle {
+            width: 36px; height: 4px;
+            background: #e2e8f0; border-radius: 4px;
+            margin: 0 auto 12px;
+        }
+        .admin-mob-more-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9997;
+            background: rgba(15,23,42,0.3);
+            backdrop-filter: blur(2px);
+        }
+        .admin-mob-more-backdrop.open { display: block; }
 
         /* Standardize Buttons globally */
         .btn {
@@ -526,6 +648,62 @@
       </div>
     </div>
 
+    <!-- ── Admin Mobile Bottom Navigation ──────────────────────── -->
+    <!-- Backdrop (closes More drawer) -->
+    <div class="admin-mob-more-backdrop" id="adminMobBackdrop" onclick="adminMobCloseMore()"></div>
+
+    <!-- More Drawer (slides up from above the bottom nav) -->
+    <div class="admin-mob-more-drawer" id="adminMobMoreDrawer">
+        <div class="admin-mob-drawer-handle"></div>
+        <a href="{{ route('admin.profile') }}" class="admin-mob-more-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
+            <i class="fa fa-user"></i> My Profile
+        </a>
+        <a href="{{ route('admin.retrain.page') }}" class="admin-mob-more-item {{ request()->routeIs('admin.retrain.page') ? 'active' : '' }}">
+            <i class="fa fa-eye"></i> Algo Rec Preview
+        </a>
+        <a href="{{ route('admin.algo-test-suite') }}" class="admin-mob-more-item {{ request()->routeIs('admin.algo-test-suite') ? 'active' : '' }}">
+            <i class="fa fa-flask"></i> Accuracy Result
+        </a>
+        <div style="height: 1px; background: #f1f5f9; margin: 6px 0;"></div>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();" class="admin-mob-more-item" style="color:#dc2626;">
+            <i class="fa fa-sign-out" style="color:#dc2626;"></i> Log Out
+        </a>
+        <form id="logout-form-mobile" action="{{ route('admin.logout') }}" method="POST" style="display:none;">
+            @csrf
+        </form>
+    </div>
+
+    <!-- Bottom Nav Bar -->
+    <nav class="admin-mobile-nav" aria-label="Admin mobile navigation">
+        <div class="admin-mob-nav-inner">
+            <a href="{{ route('admin.dashboard') }}" class="admin-mob-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <i class="fa fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ route('admin.users') }}" class="admin-mob-nav-item {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                <i class="fa fa-users"></i>
+                <span>Users</span>
+            </a>
+            <a href="{{ route('admin.songs') }}" class="admin-mob-nav-item {{ request()->routeIs('admin.songs') || request()->routeIs('admin.songs.*') ? 'active' : '' }}">
+                <i class="fa fa-music"></i>
+                <span>Songs</span>
+            </a>
+            <a href="{{ route('admin.moderation') }}" class="admin-mob-nav-item {{ request()->routeIs('admin.moderation') ? 'active' : '' }}">
+                <i class="fa fa-gavel"></i>
+                <span>Moderate</span>
+            </a>
+            <a href="{{ route('admin.admins.index') }}" class="admin-mob-nav-item {{ request()->routeIs('admin.admins.index') ? 'active' : '' }}">
+                <i class="fa fa-shield"></i>
+                <span>Admins</span>
+            </a>
+            <button type="button" class="admin-mob-nav-item {{ request()->routeIs('admin.profile') || request()->routeIs('admin.retrain.page') || request()->routeIs('admin.algo-test-suite') ? 'active' : '' }}" onclick="adminMobToggleMore()" aria-label="More options">
+                <i class="fa fa-ellipsis-h"></i>
+                <span>More</span>
+            </button>
+        </div>
+    </nav>
+    <!-- ── /Admin Mobile Bottom Navigation ──────────────────────── -->
+
     <!-- jQuery -->
     <script src="{{ asset('assets/admin/vendors/jquery/dist/jquery.min.js') }}"></script>
     <!-- Bootstrap -->
@@ -537,5 +715,31 @@
     <!-- Custom Theme Scripts -->
     <script src="{{ asset('assets/admin/build/js/custom.min.js') }}"></script>
     @stack('scripts')
+
+    <!-- Admin Mobile Bottom Nav: More Drawer JS -->
+    <script>
+        function adminMobToggleMore() {
+            var drawer   = document.getElementById('adminMobMoreDrawer');
+            var backdrop = document.getElementById('adminMobBackdrop');
+            var isOpen   = drawer.classList.contains('open');
+            if (isOpen) {
+                adminMobCloseMore();
+            } else {
+                drawer.classList.add('open');
+                backdrop.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        function adminMobCloseMore() {
+            var drawer   = document.getElementById('adminMobMoreDrawer');
+            var backdrop = document.getElementById('adminMobBackdrop');
+            drawer.classList.remove('open');
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { adminMobCloseMore(); }
+        });
+    </script>
   </body>
 </html>
