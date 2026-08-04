@@ -2,6 +2,18 @@
 
 @section('title', 'Accuracy Result')
 
+@push('styles')
+<style>
+    @media (max-width: 768px) {
+        #algo-frame {
+            height: calc(100vh - 130px) !important;
+            min-height: 520px !important;
+            border-radius: 8px !important;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="row">
     <div class="col-md-12">

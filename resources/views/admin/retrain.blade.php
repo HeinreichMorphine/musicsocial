@@ -108,10 +108,11 @@
     .rank-badge.silver { background: #f8fafc; color: #64748b; }
     .rank-badge.bronze { background: #fff7ed; color: #ea580c; }
 
-    @media (max-width: 640px) {
-        .panel-body { padding: 1rem; }
-        .selector-row { flex-direction: column; align-items: stretch; }
-        .user-select, .btn-primary-sm, .btn-warning-sm { width: 100%; text-align: center; }
+    @media (max-width: 768px) {
+        .panel-body { padding: 1rem !important; }
+        .selector-row { flex-direction: column !important; align-items: stretch !important; gap: 0.65rem !important; }
+        .user-select, .btn-primary-sm, .btn-warning-sm { width: 100% !important; text-align: center !important; justify-content: center !important; display: flex !important; }
+        form[action*="retrain.process"] { width: 100% !important; display: block !important; }
         .recs-table td { padding: 0.65rem 0.4rem !important; }
     }
 </style>

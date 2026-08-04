@@ -73,11 +73,20 @@
     }
     .btn-save-outline:hover { background: #eff6ff; }
 
-    @media (max-width: 640px) {
-        .panel-body { padding: 1rem; }
-        .profile-id-card { padding: 1.5rem 1rem; }
-        .profile-avatar { width: 80px; height: 80px; font-size: 1.6rem; }
-        .btn-save, .btn-save-outline { width: 100%; justify-content: center; text-align: center; }
+    .form-grid-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .panel-body { padding: 1rem !important; }
+        .profile-id-card { padding: 1.5rem 1rem !important; }
+        .profile-avatar { width: 72px !important; height: 72px !important; font-size: 1.5rem !important; margin-bottom: 0.85rem !important; }
+        .profile-name { font-size: 1.15rem !important; }
+        .profile-email { font-size: 0.82rem !important; }
+        .form-grid-2col { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+        .btn-save, .btn-save-outline { width: 100% !important; justify-content: center !important; text-align: center !important; }
     }
 </style>
 @endpush
@@ -125,7 +134,7 @@
                 <div class="form-section-title">Account Information</div>
                 <form action="{{ route('admin.profile.update') }}" method="POST">
                     @csrf
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-grid-2col">
                         <div class="field-group">
                             <label for="name">Full Name</label>
                             <input type="text" id="name" name="name"
@@ -153,7 +162,7 @@
                 <div class="form-section-title">Security</div>
                 <form action="{{ route('admin.profile.password') }}" method="POST">
                     @csrf
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-grid-2col">
                         <div class="field-group">
                             <label for="password">New Password</label>
                             <input type="password" id="password" name="password"
