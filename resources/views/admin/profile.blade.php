@@ -73,20 +73,32 @@
     }
     .btn-save-outline:hover { background: #eff6ff; }
 
-    .form-grid-2col {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+    .profile-forms-col {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
     }
 
     @media (max-width: 768px) {
         .panel-body { padding: 1rem !important; }
-        .profile-id-card { padding: 1.5rem 1rem !important; }
+        .profile-id-card { padding: 1.5rem 1rem !important; width: 100% !important; }
         .profile-avatar { width: 72px !important; height: 72px !important; font-size: 1.5rem !important; margin-bottom: 0.85rem !important; }
         .profile-name { font-size: 1.15rem !important; }
         .profile-email { font-size: 0.82rem !important; }
         .form-grid-2col { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
         .btn-save, .btn-save-outline { width: 100% !important; justify-content: center !important; text-align: center !important; }
+        
+        .profile-id-card-wrap, .profile-forms-col {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important;
+            margin: 0 0 1.25rem 0 !important;
+            padding: 0 !important;
+        }
+        .profile-forms-col .panel-card {
+            margin-bottom: 1.25rem !important;
+            width: 100% !important;
+        }
     }
 </style>
 @endpush
@@ -95,7 +107,7 @@
 <div class="row">
 
     {{-- Identity Card --}}
-    <div class="col-md-4 col-sm-12" style="margin-bottom: 1.5rem;">
+    <div class="col-md-4 col-sm-12 profile-id-card-wrap" style="margin-bottom: 1.5rem;">
         <div class="panel-card">
         <div class="profile-id-card">
             <div class="profile-avatar">
@@ -123,7 +135,7 @@
     </div>
 
     {{-- Edit Forms --}}
-    <div class="col-md-8 col-sm-12" style="display:flex;flex-direction:column;gap:1.25rem;">
+    <div class="col-md-8 col-sm-12 profile-forms-col">
 
         {{-- Update Profile Details --}}
         <div class="panel-card">
