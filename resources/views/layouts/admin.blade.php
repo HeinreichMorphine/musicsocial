@@ -320,18 +320,73 @@
         .desktop-only-table { display: block; }
 
         @media (max-width: 768px) {
+            /* 1. Reset Root & Viewport Constraints */
             html, body {
                 overflow-x: hidden !important;
                 width: 100% !important;
                 max-width: 100vw !important;
                 background: #f1f5f9 !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
-            /* Responsive visibility toggles */
+            /* 2. Container & Main Area Resets */
+            .container.body, .main_container, .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            body .container.body .right_col,
+            .nav-md .container.body .right_col,
+            .nav-sm .container.body .right_col,
+            .right_col {
+                float: none !important;
+                clear: both !important;
+                margin-left: 0 !important;
+                margin-top: 0 !important;
+                padding: 12px 12px 85px 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                box-sizing: border-box !important;
+            }
+
+            /* 3. Bootstrap Grid Row & Column 100% Full-Width Stacking */
+            .right_col .row, .main_container .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                width: 100% !important;
+                display: block !important;
+            }
+
+            .right_col [class*="col-"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+                float: none !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            /* 4. Panel & Card Edge-to-Edge Overrides */
+            .panel-card, .x_panel, .add-form-card, .mob-card, .profile-id-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* 5. Responsive Visibility Toggles */
             .mobile-only-card-list { display: flex !important; flex-direction: column; gap: 12px; }
             .desktop-only-table { display: none !important; }
 
-            /* Fix top_nav float & sticky conflicts from Gentelella framework */
+            /* 6. Fix top_nav float & sticky conflicts from Gentelella framework */
             .top_nav, .top_nav .nav_menu {
                 float: none !important;
                 position: relative !important;
@@ -353,22 +408,7 @@
                 display: none !important;
             }
 
-            /* Content container reset for mobile */
-            body .container.body .right_col,
-            .nav-md .container.body .right_col,
-            .nav-sm .container.body .right_col,
-            .right_col {
-                float: none !important;
-                clear: both !important;
-                margin-left: 0 !important;
-                margin-top: 0 !important;
-                padding: 12px 12px 85px 12px !important;
-                width: 100% !important;
-                min-height: auto !important;
-                box-sizing: border-box !important;
-            }
-
-            /* Hide desktop sidebar on mobile */
+            /* 7. Hide desktop sidebar on mobile */
             .col-md-3.left_col {
                 display: none !important;
             }
@@ -379,14 +419,14 @@
                 margin-left: 0 !important;
             }
 
-            /* Mobile Brand Header */
+            /* 8. Mobile Brand Header */
             .mobile-admin-brand {
                 display: flex !important;
                 align-items: center !important;
                 gap: 8px !important;
             }
 
-            /* Generic Mobile Card Styling */
+            /* 9. Generic Mobile Card Styling */
             .mob-card {
                 background: #ffffff;
                 border: 1px solid #e2e8f0;
@@ -441,6 +481,29 @@
                 text-align: center;
                 padding: 8px 12px !important;
                 font-size: 0.82rem !important;
+            }
+
+            /* 10. Forms, Inputs & Select Controls */
+            form {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .field-group input, .field-group select, .field-group textarea,
+            .user-select, .control-select, input[type="text"], input[type="email"], input[type="password"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* 11. Full Width Touch Buttons */
+            .btn-save, .btn-save-outline, .btn-primary-sm, .btn-warning-sm, .btn-search, .btn-add, .btn-submit {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
             }
         }
 

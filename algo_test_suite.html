@@ -728,66 +728,56 @@
         /* Responsive Mobile Styles */
         @media (max-width: 768px) {
             body {
-                padding: 0.5rem;
+                padding: 0.5rem !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
             }
             header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.75rem;
-                padding: 0.85rem 1rem;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+                padding: 0.85rem 1rem !important;
             }
             .header-title-container {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            header h1 {
-                font-size: 1rem;
-            }
-            .controls {
-                flex-direction: column;
-                width: 100%;
-                gap: 0.5rem;
-            }
-            .controls .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            .main-grid {
-                gap: 1rem;
-            }
-            .metrics-row {
-                grid-template-columns: repeat(2, 1fr) !important;
+                flex-wrap: wrap !important;
                 gap: 0.5rem !important;
             }
-            .metric-card {
-                padding: 0.75rem !important;
+            header h1 {
+                font-size: 1rem !important;
             }
-            .metric-value {
-                font-size: 1.25rem !important;
+            .controls {
+                flex-direction: column !important;
+                width: 100% !important;
+                gap: 0.5rem !important;
             }
-            .metric-label {
-                font-size: 0.65rem !important;
+            .controls .btn {
+                width: 100% !important;
+                justify-content: center !important;
             }
-            .chart-container {
-                height: 220px !important;
+            .main-grid {
+                width: 100% !important;
+                max-width: 100% !important;
+                gap: 1rem !important;
             }
-            .accuracy-table-wrap {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                width: 100%;
+            .stats-grid {
+                grid-template-columns: 1fr !important;
             }
             .accuracy-table {
-                min-width: 500px;
+                display: block !important;
+                width: 100% !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
             .accuracy-table th, .accuracy-table td {
-                padding: 0.5rem 0.6rem;
-                font-size: 0.78rem;
+                padding: 0.5rem 0.6rem !important;
+                font-size: 0.78rem !important;
             }
             .terminal-panel {
-                padding: 0.75rem;
+                padding: 0.75rem !important;
             }
             .terminal-body {
-                height: 160px;
+                height: 160px !important;
             }
         }
     </style>
