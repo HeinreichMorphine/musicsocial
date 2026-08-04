@@ -64,6 +64,14 @@
         cursor: pointer; transition: opacity .15s;
     }
     .btn-del-sm:hover { opacity: .8; }
+
+    @media (max-width: 640px) {
+        .add-form-card { margin: 0.85rem 0.5rem; padding: 0.85rem; }
+        .add-form-grid { grid-template-columns: 1fr !important; }
+        .btn-del-sm { padding: .35rem .65rem; font-size: 0.78rem; }
+        .admin-av { width: 34px; height: 34px; font-size: 0.75rem; margin-right: 0.5rem; }
+        .admins-table td { padding: 0.65rem 0.4rem !important; }
+    }
 </style>
 @endpush
 

@@ -85,6 +85,12 @@
     .btn-unban{ background: #f0fdf4; color: #16a34a; }
 
     .results-info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem; }
+
+    @media (max-width: 640px) {
+        .action-btn { padding: .35rem .65rem; font-size: 0.78rem; }
+        .av-wrap, .av-init { width: 34px; height: 34px; font-size: 0.8rem; }
+        .users-table td { padding: 0.65rem 0.4rem !important; }
+    }
 </style>
 @endpush
 

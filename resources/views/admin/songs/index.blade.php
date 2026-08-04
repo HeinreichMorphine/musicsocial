@@ -105,6 +105,12 @@
     .sync-btn:hover { background: #c7d2fe; }
     .sync-group:hover .sync-btn { opacity: 1; }
     .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 640px) {
+        .action-btn { padding: .35rem .65rem; font-size: 0.78rem; }
+        .av-img { width: 34px; height: 34px; }
+        .songs-table td { padding: 0.65rem 0.4rem !important; }
+    }
 </style>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush

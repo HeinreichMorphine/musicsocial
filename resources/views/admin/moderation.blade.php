@@ -58,6 +58,12 @@
     .btn-del-sm:hover { opacity: .8; }
 
     .pagination-wrap { padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9; }
+
+    @media (max-width: 640px) {
+        .btn-del-sm { padding: .35rem .65rem; font-size: 0.78rem; }
+        .mod-table td { padding: 0.65rem 0.4rem !important; }
+        .content-preview { max-width: 160px; font-size: 0.85rem; }
+    }
 </style>
 @endpush
 

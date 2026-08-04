@@ -78,6 +78,10 @@
         flex: 1; min-width: 120px; border: none; background: transparent; outline: none;
         padding: 4px; font-size: 0.95rem; color: #0f172a;
     }
+
+    @media (max-width: 640px) {
+        .btn-save, .btn-cancel { padding: 0.75rem 1rem; font-size: 0.95rem; }
+    }
 </style>
 <!-- Include Alpine.js if not already included in admin layout -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

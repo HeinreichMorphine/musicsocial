@@ -5,6 +5,7 @@
 @push('styles')
 <style>
     .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    .kpi-row > a { display: flex; text-decoration: none; width: 100%; height: 100%; }
     .kpi-card {
         background: #fff;
         border: 1px solid #e2e8f0;
@@ -13,6 +14,7 @@
         display: flex; align-items: center; gap: 1rem;
         box-shadow: 0 1px 4px rgba(15,23,42,.04);
         transition: box-shadow .2s;
+        width: 100%;
     }
     .kpi-card:hover { box-shadow: 0 4px 16px rgba(15,23,42,.08); }
     .kpi-icon {
@@ -90,7 +92,12 @@
 
     @media (max-width: 1440px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px)  { .panels-row { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px)  { .kpi-row { grid-template-columns: 1fr; } }
+    @media (max-width: 600px)  {
+        .kpi-row { grid-template-columns: repeat(2, 1fr); }
+        .chart-wrap { height: 210px; }
+        .panel-body { padding: 1rem; }
+        .user-row, .share-row { gap: 0.65rem; }
+    }
 </style>
 @endpush
 

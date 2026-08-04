@@ -107,6 +107,13 @@
     .rank-badge.gold   { background: #fefce8; color: #ca8a04; }
     .rank-badge.silver { background: #f8fafc; color: #64748b; }
     .rank-badge.bronze { background: #fff7ed; color: #ea580c; }
+
+    @media (max-width: 640px) {
+        .panel-body { padding: 1rem; }
+        .selector-row { flex-direction: column; align-items: stretch; }
+        .user-select, .btn-primary-sm, .btn-warning-sm { width: 100%; text-align: center; }
+        .recs-table td { padding: 0.65rem 0.4rem !important; }
+    }
 </style>
 @endpush
 

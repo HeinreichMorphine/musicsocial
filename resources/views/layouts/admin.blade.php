@@ -316,49 +316,97 @@
             }
         }
         @media (max-width: 768px) {
+            html, body {
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+
+            /* Prevent custom.js from setting huge inline min-height on content column */
+            body .container.body .right_col,
+            .nav-md .container.body .right_col,
+            .nav-sm .container.body .right_col,
+            .right_col {
+                min-height: calc(100vh - 56px - 64px) !important;
+                padding: 14px 12px 90px 12px !important;
+                margin-left: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
             /* Hide sidebar completely on mobile */
             .col-md-3.left_col {
                 display: none !important;
             }
-            /* Remove desktop sidebar left-margin from content area, top nav & footer */
-            .nav-md .container.body .right_col,
-            .nav-sm .container.body .right_col,
+
             .nav-md .main_container .top_nav,
             .nav-sm .main_container .top_nav,
             footer {
                 margin-left: 0 !important;
             }
-            .right_col {
-                padding: 14px 12px !important;
-                padding-bottom: 90px !important;
-                width: 100% !important;
-            }
 
             /* Mobile Top Navigation styling */
+            .top_nav {
+                width: 100% !important;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
             .top_nav .nav_menu {
                 height: 56px !important;
                 padding: 0 12px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
             }
             .top_nav .toggle {
                 display: none !important;
             }
+            
+            /* Mobile Brand Header */
+            .mobile-admin-brand {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
 
-            /* Responsive tables: preserve layout, scroll horizontally cleanly */
+            /* Responsive tables: preserve layout, touch scroll cleanly with visible bar */
             div[style*="overflow-x:auto"], .table-responsive {
                 -webkit-overflow-scrolling: touch;
                 margin-bottom: 1rem;
                 border-radius: 8px;
+                overflow-x: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                display: block;
             }
-            .users-table, .songs-table, .admins-table, .mod-table, table {
-                min-width: 580px !important;
+            div[style*="overflow-x:auto"]::-webkit-scrollbar,
+            .table-responsive::-webkit-scrollbar {
+                height: 5px;
+            }
+            div[style*="overflow-x:auto"]::-webkit-scrollbar-track,
+            .table-responsive::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            div[style*="overflow-x:auto"]::-webkit-scrollbar-thumb,
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+
+            .users-table, .songs-table, .admins-table, .mod-table, .recs-table, table {
+                min-width: 540px !important;
+                width: 100% !important;
             }
             .users-table th, .users-table td,
             .songs-table th, .songs-table td,
             .admins-table th, .admins-table td,
             .mod-table th, .mod-table td,
+            .recs-table th, .recs-table td,
             table th, table td {
-                padding: 0.75rem 0.6rem !important;
-                font-size: 0.85rem !important;
+                padding: 0.65rem 0.5rem !important;
+                font-size: 0.82rem !important;
             }
         }
 
@@ -368,11 +416,11 @@
             .panel-head {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                gap: 0.75rem !important;
-                padding: 1rem !important;
+                gap: 0.65rem !important;
+                padding: 0.85rem 1rem !important;
             }
             .panel-head h4 {
-                font-size: 1.05rem !important;
+                font-size: 1rem !important;
             }
             .panel-head .btn-add,
             .panel-head .search-mini {
@@ -400,8 +448,8 @@
 
             /* Form grids */
             .add-form-card {
-                margin: 1rem 0.5rem !important;
-                padding: 1rem !important;
+                margin: 0.85rem 0.5rem !important;
+                padding: 0.85rem !important;
             }
             .add-form-grid {
                 grid-template-columns: 1fr !important;
@@ -412,6 +460,12 @@
                 justify-content: center !important;
             }
 
+            /* 2-column form grids in profile, etc */
+            div[style*="grid-template-columns:1fr 1fr"],
+            div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
             /* Dashboard KPI cards */
             .kpi-row {
                 grid-template-columns: repeat(2, 1fr) !important;
@@ -419,26 +473,27 @@
                 margin-bottom: 1rem !important;
             }
             .kpi-card {
-                padding: 0.85rem 0.75rem !important;
-                gap: 0.6rem !important;
+                padding: 0.75rem 0.65rem !important;
+                gap: 0.5rem !important;
             }
             .kpi-icon {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 1.1rem !important;
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 1rem !important;
                 border-radius: 8px !important;
             }
             .kpi-val {
-                font-size: 1.4rem !important;
+                font-size: 1.25rem !important;
             }
             .kpi-label {
-                font-size: 0.7rem !important;
+                font-size: 0.65rem !important;
             }
         }
 
         @media (max-width: 420px) {
             .kpi-row {
-                grid-template-columns: 1fr !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
             }
         }
 

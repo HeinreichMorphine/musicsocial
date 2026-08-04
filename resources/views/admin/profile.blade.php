@@ -72,6 +72,13 @@
         font-weight: 700; cursor: pointer; transition: background .15s;
     }
     .btn-save-outline:hover { background: #eff6ff; }
+
+    @media (max-width: 640px) {
+        .panel-body { padding: 1rem; }
+        .profile-id-card { padding: 1.5rem 1rem; }
+        .profile-avatar { width: 80px; height: 80px; font-size: 1.6rem; }
+        .btn-save, .btn-save-outline { width: 100%; justify-content: center; text-align: center; }
+    }
 </style>
 @endpush
 
