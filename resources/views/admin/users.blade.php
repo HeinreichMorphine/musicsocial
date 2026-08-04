@@ -119,7 +119,8 @@
             <p class="results-info">Showing results for "<strong>{{ $search }}</strong>"</p>
         @endif
 
-        <div style="overflow-x:auto;">
+        {{-- Desktop Table View --}}
+        <div class="desktop-only-table" style="overflow-x:auto;">
             <table class="users-table">
                 <thead>
                     <tr>
@@ -186,6 +187,63 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Mobile Cards View --}}
+        <div class="mobile-only-card-list">
+            @forelse($users as $user)
+            <div class="mob-card">
+                <div class="mob-card-head">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                        @if($user->profile_picture || $user->avatar)
+                            <img style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;"
+                                 src="{{ $user->profile_picture ? Storage::url($user->profile_picture) : $user->avatar }}"
+                                 alt="{{ $user->name }}">
+                        @else
+                            <div class="av-init" style="width:40px;height:40px;border-radius:10px;font-size:0.95rem;flex-shrink:0;">
+                                {{ strtoupper(substr($user->name, 0, 2)) }}
+                            </div>
+                        @endif
+                        <div style="min-width:0;flex:1;">
+                            <div class="mob-card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $user->name }}</div>
+                            <div class="mob-card-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $user->email }}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                        <span style="font-size:0.72rem;color:#94a3b8;font-weight:700;">#{{ $user->id }}</span>
+                        @if($user->is_banned)
+                            <span class="badge-banned">Banned</span>
+                        @else
+                            <span class="badge-active">Active</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="mob-card-meta">
+                    <span><i class="fa fa-share-alt" style="color:#1d4ed8;margin-right:4px;"></i> {{ $user->shares_count ?? 0 }} shares</span>
+                    <span><i class="fa fa-calendar" style="color:#64748b;margin-right:4px;"></i> Joined {{ $user->created_at->format('d M Y') }}</span>
+                </div>
+                <div class="mob-card-actions">
+                    <form action="{{ route('admin.users.ban', $user->id) }}" method="POST">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="action-btn {{ $user->is_banned ? 'btn-unban' : 'btn-ban' }}">
+                            <i class="fa fa-{{ $user->is_banned ? 'check' : 'ban' }}"></i>
+                            {{ $user->is_banned ? 'Unban' : 'Ban' }}
+                        </button>
+                    </form>
+                    <form action="{{ route('admin.users.delete', $user->id) }}" method="POST"
+                          onsubmit="return confirm('Delete {{ addslashes($user->name) }}? This cannot be undone.');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="action-btn btn-del">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:2rem;color:#94a3b8;background:#fff;border-radius:12px;border:1px solid #e2e8f0;">
+                @if($search) No users match "{{ $search }}" @else No users found. @endif
+            </div>
+            @endforelse
         </div>
 
         <div style="margin-top:1rem;">

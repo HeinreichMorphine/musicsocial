@@ -199,7 +199,8 @@
             </h5>
 
             @if(count($recommendations) > 0)
-            <div style="overflow-x:auto;">
+            {{-- Desktop Recs Table --}}
+            <div class="desktop-only-table" style="overflow-x:auto;">
                 <table class="recs-table">
                     <thead>
                         <tr>
@@ -224,6 +225,25 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile Recs Cards --}}
+            <div class="mobile-only-card-list">
+                @foreach($recommendations as $i => $rec)
+                <div class="mob-card">
+                    <div class="mob-card-head">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="rank-badge {{ $i === 0 ? 'gold' : ($i === 1 ? 'silver' : ($i === 2 ? 'bronze' : '')) }}">
+                                {{ $i + 1 }}
+                            </span>
+                            <div class="mob-card-title">{{ $rec['song_name'] }}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:0.83rem;color:#64748b;background:#f8fafc;padding:10px;border-radius:8px;">
+                        <i class="fa fa-info-circle" style="color:#3182ce;margin-right:4px;"></i> {{ $rec['reason'] }}
+                    </div>
+                </div>
+                @endforeach
             </div>
             @else
                 <div style="padding:1.5rem;text-align:center;background:#f8fafc;border-radius:8px;color:#94a3b8;font-size:.83rem;">

@@ -113,7 +113,8 @@
 
     <div class="divider"></div>
 
-    <div style="overflow-x:auto;">
+    {{-- Desktop Admins Table --}}
+    <div class="desktop-only-table" style="overflow-x:auto;">
         <table class="admins-table">
             <thead>
                 <tr>
@@ -156,6 +157,40 @@
                 @endforeach
             </tbody>
         </table>
+    </div>
+
+    {{-- Mobile Admins Cards --}}
+    <div class="mobile-only-card-list" style="padding: 12px;">
+        @foreach($admins as $admin)
+        <div class="mob-card">
+            <div class="mob-card-head">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="admin-av" style="margin-right:0;">{{ strtoupper(substr($admin->name, 0, 2)) }}</div>
+                    <div>
+                        <div class="mob-card-title">{{ $admin->name }}</div>
+                        <div class="mob-card-sub">{{ $admin->email }}</div>
+                    </div>
+                </div>
+                <div>
+                    @if(Auth::guard('admin')->id() == $admin->id)
+                        <span class="badge-you">You</span>
+                    @else
+                        <span style="font-size:0.72rem;color:#94a3b8;font-weight:700;">#{{ $admin->id }}</span>
+                    @endif
+                </div>
+            </div>
+            <div class="mob-card-sub"><i class="fa fa-calendar"></i> Added {{ $admin->created_at->format('d M Y') }}</div>
+            @if(Auth::guard('admin')->id() != $admin->id)
+            <div class="mob-card-actions">
+                <form action="{{ route('admin.admins.destroy', $admin->id) }}" method="POST"
+                      onsubmit="return confirm('Remove admin access for {{ addslashes($admin->name) }}?');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn-del-sm"><i class="fa fa-trash"></i> Remove Admin</button>
+                </form>
+            </div>
+            @endif
+        </div>
+        @endforeach
     </div>
 </div>
 @endsection

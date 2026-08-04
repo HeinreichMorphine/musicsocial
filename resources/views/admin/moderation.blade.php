@@ -83,7 +83,8 @@
             </form>
         </div>
 
-        <div style="overflow-x:auto;">
+        {{-- Desktop Shares Table --}}
+        <div class="desktop-only-table" style="overflow-x:auto;">
             <table class="mod-table">
                 <thead>
                     <tr>
@@ -133,6 +134,38 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Mobile Shares Cards --}}
+        <div class="mobile-only-card-list" style="padding: 10px;">
+            @forelse($shares as $share)
+            <div class="mob-card">
+                <div class="mob-card-head">
+                    <div>
+                        <div class="mob-card-title">{{ $share->user?->name ?? 'Unknown' }}</div>
+                        <div class="mob-card-sub">{{ $share->created_at->diffForHumans() }}</div>
+                    </div>
+                    <span class="likes-pill"><i class="fa fa-heart"></i> {{ $share->likes_count }}</span>
+                </div>
+                <div style="font-size:0.9rem;color:#374151;background:#f8fafc;padding:10px;border-radius:8px;">
+                    @if($share->song)
+                        <strong style="color:#0f172a;"><i class="fa fa-music" style="color:#ea580c;margin-right:4px;"></i> {{ $share->song->track_name }}</strong>
+                        <div style="font-size:0.8rem;color:#64748b;">{{ $share->song->artist_name }}</div>
+                    @else
+                        {{ Str::limit($share->caption ?? '—', 80) }}
+                    @endif
+                </div>
+                <div class="mob-card-actions">
+                    <form action="{{ route('admin.shares.delete', $share->id) }}" method="POST"
+                          onsubmit="return confirm('Delete this share and all related data?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-del-sm"><i class="fa fa-trash"></i> Delete Share</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:#94a3b8;background:#fff;border-radius:12px;">No shares found.</div>
+            @endforelse
+        </div>
         <div class="pagination-wrap">{{ $shares->links() }}</div>
     </div>
     </div>
@@ -150,7 +183,8 @@
             </form>
         </div>
 
-        <div style="overflow-x:auto;">
+        {{-- Desktop Comments Table --}}
+        <div class="desktop-only-table" style="overflow-x:auto;">
             <table class="mod-table">
                 <thead>
                     <tr>
@@ -189,9 +223,34 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Mobile Comments Cards --}}
+        <div class="mobile-only-card-list" style="padding: 10px;">
+            @forelse($comments as $comment)
+            <div class="mob-card">
+                <div class="mob-card-head">
+                    <div class="mob-card-title">{{ $comment->user?->name ?? 'Unknown' }}</div>
+                    <div class="mob-card-sub">{{ $comment->created_at->diffForHumans() }}</div>
+                </div>
+                <div style="font-size:0.88rem;color:#374151;background:#f8fafc;padding:10px;border-radius:8px;font-style:italic;">
+                    "{{ Str::limit($comment->body ?? '—', 100) }}"
+                </div>
+                <div class="mob-card-actions">
+                    <form action="{{ route('admin.comments.delete', $comment->id) }}" method="POST"
+                          onsubmit="return confirm('Delete this comment?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-del-sm"><i class="fa fa-trash"></i> Delete Comment</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:#94a3b8;background:#fff;border-radius:12px;">No comments found.</div>
+            @endforelse
+        </div>
         <div class="pagination-wrap">{{ $comments->links() }}</div>
     </div>
     </div>
+
     {{-- ── Playlists Panel ───────────────────────────────────── --}}
     <div class="col-md-12 col-sm-12" style="margin-bottom: 1.5rem;">
         <div class="panel-card">
@@ -205,7 +264,8 @@
             </form>
         </div>
 
-        <div style="overflow-x:auto;">
+        {{-- Desktop Playlists Table --}}
+        <div class="desktop-only-table" style="overflow-x:auto;">
             <table class="mod-table">
                 <thead>
                     <tr>
@@ -247,6 +307,31 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Mobile Playlists Cards --}}
+        <div class="mobile-only-card-list" style="padding: 10px;">
+            @forelse($playlists as $playlist)
+            <div class="mob-card">
+                <div class="mob-card-head">
+                    <div>
+                        <div class="mob-card-title">{{ Str::limit($playlist->name ?? '—', 45) }}</div>
+                        <div class="mob-card-sub">by {{ $playlist->creator?->user?->name ?? 'Unknown' }}</div>
+                    </div>
+                    <span class="likes-pill" style="color:#2563eb; background:#eff6ff;"><i class="fa fa-music"></i> {{ $playlist->songs_count }}</span>
+                </div>
+                <div class="mob-card-sub"><i class="fa fa-calendar"></i> Created {{ $playlist->created_at->format('d M Y') }}</div>
+                <div class="mob-card-actions">
+                    <form action="{{ route('admin.playlists.delete', $playlist->id) }}" method="POST"
+                          onsubmit="return confirm('Delete this playlist and all related data?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-del-sm"><i class="fa fa-trash"></i> Delete Playlist</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:1.5rem;color:#94a3b8;background:#fff;border-radius:12px;">No playlists found.</div>
+            @endforelse
         </div>
         <div class="pagination-wrap">{{ $playlists->links() }}</div>
     </div>

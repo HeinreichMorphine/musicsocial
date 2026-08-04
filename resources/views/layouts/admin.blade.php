@@ -315,26 +315,60 @@
                 padding: 24px 24px !important;
             }
         }
+        /* ── Mobile Layout & UI Rework System (Screens <= 768px) ────────── */
+        .mobile-only-card-list { display: none !important; }
+        .desktop-only-table { display: block; }
+
         @media (max-width: 768px) {
             html, body {
                 overflow-x: hidden !important;
                 width: 100% !important;
                 max-width: 100vw !important;
+                background: #f1f5f9 !important;
             }
 
-            /* Prevent custom.js from setting huge inline min-height on content column */
+            /* Responsive visibility toggles */
+            .mobile-only-card-list { display: flex !important; flex-direction: column; gap: 12px; }
+            .desktop-only-table { display: none !important; }
+
+            /* Fix top_nav float & sticky conflicts from Gentelella framework */
+            .top_nav, .top_nav .nav_menu {
+                float: none !important;
+                position: relative !important;
+                top: auto !important;
+                clear: both !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .top_nav .nav_menu {
+                height: 56px !important;
+                padding: 0 12px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                background: #ffffff !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+            .top_nav .toggle {
+                display: none !important;
+            }
+
+            /* Content container reset for mobile */
             body .container.body .right_col,
             .nav-md .container.body .right_col,
             .nav-sm .container.body .right_col,
             .right_col {
-                min-height: calc(100vh - 56px - 64px) !important;
-                padding: 14px 12px 90px 12px !important;
+                float: none !important;
+                clear: both !important;
                 margin-left: 0 !important;
+                margin-top: 0 !important;
+                padding: 12px 12px 85px 12px !important;
                 width: 100% !important;
+                min-height: auto !important;
                 box-sizing: border-box !important;
             }
 
-            /* Hide sidebar completely on mobile */
+            /* Hide desktop sidebar on mobile */
             .col-md-3.left_col {
                 display: none !important;
             }
@@ -345,24 +379,6 @@
                 margin-left: 0 !important;
             }
 
-            /* Mobile Top Navigation styling */
-            .top_nav {
-                width: 100% !important;
-                position: sticky;
-                top: 0;
-                z-index: 1000;
-            }
-            .top_nav .nav_menu {
-                height: 56px !important;
-                padding: 0 12px !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-            }
-            .top_nav .toggle {
-                display: none !important;
-            }
-            
             /* Mobile Brand Header */
             .mobile-admin-brand {
                 display: flex !important;
@@ -370,49 +386,66 @@
                 gap: 8px !important;
             }
 
-            /* Responsive tables: preserve layout, touch scroll cleanly with visible bar */
-            div[style*="overflow-x:auto"], .table-responsive {
-                -webkit-overflow-scrolling: touch;
-                margin-bottom: 1rem;
-                border-radius: 8px;
-                overflow-x: auto !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                display: block;
+            /* Generic Mobile Card Styling */
+            .mob-card {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 14px;
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
-            div[style*="overflow-x:auto"]::-webkit-scrollbar,
-            .table-responsive::-webkit-scrollbar {
-                height: 5px;
+            .mob-card-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
             }
-            div[style*="overflow-x:auto"]::-webkit-scrollbar-track,
-            .table-responsive::-webkit-scrollbar-track {
-                background: #f1f5f9;
-                border-radius: 4px;
+            .mob-card-title {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #0f172a;
             }
-            div[style*="overflow-x:auto"]::-webkit-scrollbar-thumb,
-            .table-responsive::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 4px;
+            .mob-card-sub {
+                font-size: 0.82rem;
+                color: #64748b;
             }
-
-            .users-table, .songs-table, .admins-table, .mod-table, .recs-table, table {
-                min-width: 540px !important;
-                width: 100% !important;
+            .mob-card-meta {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 0.8rem;
+                color: #64748b;
+                padding: 8px 0;
+                border-top: 1px solid #f1f5f9;
+                border-bottom: 1px solid #f1f5f9;
+                flex-wrap: wrap;
             }
-            .users-table th, .users-table td,
-            .songs-table th, .songs-table td,
-            .admins-table th, .admins-table td,
-            .mod-table th, .mod-table td,
-            .recs-table th, .recs-table td,
-            table th, table td {
-                padding: 0.65rem 0.5rem !important;
+            .mob-card-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+            .mob-card-actions .action-btn,
+            .mob-card-actions .btn-del-sm,
+            .mob-card-actions form {
+                flex: 1;
+            }
+            .mob-card-actions button,
+            .mob-card-actions a {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+                padding: 8px 12px !important;
                 font-size: 0.82rem !important;
             }
         }
 
         /* Responsive adjustments for screens <= 640px */
         @media (max-width: 640px) {
-            /* Panel head layout on mobile */
             .panel-head {
                 flex-direction: column !important;
                 align-items: stretch !important;
@@ -428,7 +461,6 @@
                 max-width: 100% !important;
             }
 
-            /* Search bar rows & filters */
             .search-bar-row {
                 flex-direction: column !important;
                 align-items: stretch !important;
@@ -446,7 +478,6 @@
                 align-items: center !important;
             }
 
-            /* Form grids */
             .add-form-card {
                 margin: 0.85rem 0.5rem !important;
                 padding: 0.85rem !important;
@@ -460,13 +491,11 @@
                 justify-content: center !important;
             }
 
-            /* 2-column form grids in profile, etc */
             div[style*="grid-template-columns:1fr 1fr"],
             div[style*="grid-template-columns: 1fr 1fr"] {
                 grid-template-columns: 1fr !important;
             }
 
-            /* Dashboard KPI cards */
             .kpi-row {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 0.65rem !important;

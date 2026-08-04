@@ -148,7 +148,8 @@
 
         <p class="results-info">Showing {{ $songs->total() }} total {{ \Str::plural('song', $songs->total()) }}.</p>
 
-        <div style="overflow-x:auto;">
+        {{-- Desktop Table View --}}
+        <div class="desktop-only-table" style="overflow-x:auto;">
             <table class="songs-table">
                 <thead>
                     <tr>
@@ -225,6 +226,65 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Mobile Cards View --}}
+        <div class="mobile-only-card-list">
+            @forelse($songs as $song)
+            <div class="mob-card">
+                <div class="mob-card-head">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                        <img style="width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.1);"
+                             src="{{ $song->album_art_url }}" alt="Cover">
+                        <div style="min-width:0;flex:1;">
+                            <div class="mob-card-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $song->track_name }}</div>
+                            <div class="mob-card-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $song->artist_name }}</div>
+                        </div>
+                    </div>
+                    <span style="font-size:0.72rem;color:#94a3b8;font-weight:700;flex-shrink:0;">#{{ $song->id }}</span>
+                </div>
+
+                <div class="mob-card-meta">
+                    @php
+                        $mobGenres = $song->genres ? json_decode($song->genres, true) : [];
+                    @endphp
+                    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                        <div style="min-width:0;flex:1;">
+                            @if(!empty($mobGenres))
+                                <span class="genres-list"><i class="fa fa-tags" style="color:#7c3aed;margin-right:4px;"></i> {{ implode(', ', array_slice($mobGenres, 0, 3)) }}</span>
+                            @else
+                                <span style="color:#94a3b8;font-style:italic;font-size:0.8rem;"><i class="fa fa-tag" style="margin-right:4px;"></i> No genre tags</span>
+                            @endif
+                        </div>
+                        <span style="font-weight:700;color:#1d4ed8;font-size:0.8rem;white-space:nowrap;">
+                            <i class="fa fa-share-alt"></i> {{ ($song->shares_count ?? 0) + ($song->comments_count ?? 0) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mob-card-actions">
+                    <a href="{{ route('admin.songs.edit', $song->id) }}" class="action-btn btn-edit">
+                        <i class="fa fa-edit"></i> Edit
+                    </a>
+                    @if($song->spotify_track_id)
+                    <button onclick="handleRefetch({{ $song->id }}, this)" class="action-btn btn-refetch">
+                        <i class="fa fa-refresh"></i> Refetch
+                    </button>
+                    @endif
+                    <form action="{{ route('admin.songs.delete', $song->id) }}" method="POST"
+                          onsubmit="return confirm('Delete {{ addslashes($song->track_name) }}? This cannot be undone.');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="action-btn btn-del">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:2rem;color:#94a3b8;background:#fff;border-radius:12px;border:1px solid #e2e8f0;">
+                @if($search) No songs match "{{ $search }}" @else No songs found. @endif
+            </div>
+            @endforelse
         </div>
 
         <div style="margin-top:1rem;">
