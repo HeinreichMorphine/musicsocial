@@ -33,7 +33,7 @@ class DiscoveryController extends Controller
         $reasonLower = strtolower($reason ?? '');
         if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist') || str_contains($reasonLower, 'top pick for')) {
             return 'Artist Deep Cut';
-        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
+        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for') || str_contains($reasonLower, 'sound match')) {
             return 'Sound Profile';
         } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
             return 'Social Pick';
@@ -41,7 +41,7 @@ class DiscoveryController extends Controller
             return 'Genre Affinity';
         } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
             return 'Community Pick';
-        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste')) {
+        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste') || str_contains($reasonLower, 'musical taste')) {
             return 'Taste Match';
         }
         return 'Discovered';
@@ -151,9 +151,9 @@ class DiscoveryController extends Controller
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
-            // Extract distinct non-empty available chip labels for the pill filter bar
+            // Extract distinct non-empty available chip labels for the pill filter bar directly using static helper
             $availableChips = $recommendedSongs->map(function($song) {
-                return $song->chip_label ?? $song->getAttribute('chip_label') ?? 'Discovered';
+                return self::determineChipLabel($song->reason);
             })->filter(function($val) {
                 return !empty($val);
             })->unique()->values()->all();

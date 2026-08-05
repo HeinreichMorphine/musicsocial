@@ -186,7 +186,7 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                         @foreach ($recommendedSongs as $song)
-                                            <div x-show="isChipMatch('{{ addslashes($song->chip_label ?? 'Discovered') }}', {{ $loop->index }})" 
+                                            <div x-show="isChipMatch('{{ addslashes(\App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason)) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
