@@ -1,8 +1,9 @@
 *.log
 .DS_Store
-.env
-.env.backup
-.env.production
+.env*
+*.puml
+*.plantuml
+*.uml
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -26,9 +27,8 @@ Thumbs.db
 # Python Recommender Service
 recommender_service/venv/
 recommender_service/surprise_model.pkl
-recommender_service/.env
+recommender_service/.env*
 recommender_service/__pycache__/
-recommender_service/origin)
 
 surprise_model.pkl
 /storage/framework/views/
@@ -45,4 +45,3 @@ surprise_model.pkl
 /test_admin_rendering.php
 find_emojis.py
 find_emoji.py
-
