@@ -342,16 +342,135 @@ submitPost() {
 
 ---
 
-### 🔘 Share Card – 💬 Comments Button & Toggle
-- **File + Lines:** [`components/share-card.blade.php` L477–L484](file:///c:/laragon/www/musicsocial-main/resources/views/components/share-card.blade.php#L477-L484)
+### 🔘 Share Card – 💬 Comments Button & Section Toggle
+- **File + Lines:** [`components/share-card.blade.php` L477–L485](file:///c:/laragon/www/musicsocial-main/resources/views/components/share-card.blade.php#L477-L485)
+- **What it does:** Displays the comment bubble icon and live comment count (`$share->comments->count()`). Clicking toggles the Alpine state `commentsOpen = !commentsOpen` to show or hide the post's comment section.
 
 ```html
-<!-- share-card.blade.php L479–L484 — Comment toggle button -->
-<button @click="commentsOpen = !commentsOpen"
-        class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-blue-50 ...">
-    <!-- Comment bubble icon + comment count number -->
-    <span class="text-sm font-bold">{{ $share->comments->count() }}</span>
+<!-- share-card.blade.php L477–L485 — Comment toggle button -->
+<button @click="commentsOpen = !commentsOpen" class="flex items-center space-x-2 py-2 px-4 rounded-xl hover:bg-blue-50 ...">
+    <svg ...></svg>
+    <span class="text-sm font-bold text-gray-600">{{ $totalCount ?? $share->comments->count() }}</span>
 </button>
+```
+
+---
+
+### 🔘 Share Card – 📝 Comment Input & Submission Form
+- **Frontend File + Lines:** [`components/share-card.blade.php` L630–L670](file:///c:/laragon/www/musicsocial-main/resources/views/components/share-card.blade.php#L630-L670)
+- **Route:** `POST /shares/{share}/comments` → [`routes/web.php` L99](file:///c:/laragon/www/musicsocial-main/routes/web.php#L99)
+- **Controller:** [`CommentController@store` L45–L120](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php#L45-L120)
+- **What it does:** Allows users to write a comment on any post. Submitting sends an AJAX request (`fetch`) to `CommentController@store`. It automatically validates input, parses `@mentions`, checks for Spotify track URLs, creates a `Comment` record, sends notifications, and injects the new comment DOM element without reloading the page.
+
+```html
+<!-- share-card.blade.php L630–L665 — Comment Form -->
+<form @submit.prevent="
+    if(!newComment.trim() || submitting) return;
+    submitting = true;
+    fetch('{{ route('shares.comments.store', $share) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+        body: JSON.stringify({ body: newComment })
+    })
+    .then(res => res.text())
+    .then(html => {
+        $refs.commentsList.insertAdjacentHTML('beforeend', html);
+        newComment = '';
+        submitting = false;
+    });
+">
+    <input type="text" x-model="newComment" placeholder="Add a comment..." class="..." />
+    <button type="submit" :disabled="submitting">Post</button>
+</form>
+```
+
+```php
+// CommentController.php L45–L82 — Storing a new comment
+public function store(Request $request, Share $share)
+{
+    $validated = $request->validate([
+        'body' => 'required|string|max:1000',
+        'parent_id' => 'nullable|exists:comments,id',
+    ]);
+
+    // Auto-Detect Spotify Track in Comment Body
+    if (preg_match('/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/i', $validated['body'], $matches)) {
+        $trackData = $this->spotifyService->getTrack($matches[1]);
+        if (isset($trackData['song'])) {
+            $validated['body'] .= " [SONG:{$trackData['song']->spotify_track_id}]";
+        }
+    }
+
+    $comment = $share->comments()->create([
+        'user_id' => auth()->id(),
+        'body' => $validated['body'],
+    ]);
+
+    return view('components.comment', ['comment' => $comment])->render();
+}
+```
+
+---
+
+### 🔘 Comment Component – 💬 Nested Replies, Upvotes & Embedded Spotify Music
+- **Frontend File + Lines:** [`components/comment.blade.php` L1–L150](file:///c:/laragon/www/musicsocial-main/resources/views/components/comment.blade.php#L1-L150)
+- **Controller Methods:**
+  - Upvote: [`CommentController@toggleUpvote` L239–L266](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php#L239-L266)
+  - Edit: [`CommentController@update` L152–L176](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php#L152-L176)
+  - Delete: [`CommentController@destroy` L185–L214](file:///c:/laragon/www/musicsocial-main/app/Http/Controllers/CommentController.php#L185-L214)
+- **What it does:** Renders an individual comment with avatar, timestamp, upvote button, reply form, edit box, and auto-embedded Spotify music card.
+
+```javascript
+// components/comment.blade.php L1–L39 — Alpine component logic for comments
+x-data="{
+    openReply: false,
+    openEdit: false,
+    bodyText: @js($comment->getCleanBody()),
+    isDeleted: {{ $comment->body === '[deleted]' ? 'true' : 'false' }},
+    upvoted: {{ $comment->hasUpvoted(auth()->id()) ? 'true' : 'false' }},
+    upvoteCount: {{ $comment->getUpvoteCount() }},
+    songId: '{{ $comment->getEmbeddedSongId() }}',
+    
+    toggleUpvote() {
+        fetch('{{ route('shares.comments.upvote', ['share' => $comment->share, 'comment' => $comment]) }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            this.upvoted = data.upvoted;
+            this.upvoteCount = data.count;
+        });
+    }
+}"
+```
+
+```php
+// CommentController.php L239–L266 — Toggle comment upvotes
+public function toggleUpvote(Share $share, Comment $comment)
+{
+    $userId = auth()->id();
+    $body = $comment->body;
+
+    if (preg_match('/\[UPVOTES:([^\]]*)\]/', $body, $matches)) {
+        $ids = array_filter(explode(',', $matches[1]));
+        if (in_array((string)$userId, $ids)) {
+            $ids = array_diff($ids, [(string)$userId]); // Remove upvote
+        } else {
+            $ids[] = (string)$userId; // Add upvote
+        }
+        $body = preg_replace('/\[UPVOTES:[^\]]*\]/', "[UPVOTES:" . implode(',', $ids) . "]", $body);
+    } else {
+        $body .= " [UPVOTES:{$userId}]";
+    }
+
+    $comment->update(['body' => $body]);
+
+    return response()->json([
+        'upvoted' => $comment->fresh()->hasUpvoted($userId),
+        'count' => $comment->fresh()->getUpvoteCount(),
+    ]);
+}
 ```
 
 ---
