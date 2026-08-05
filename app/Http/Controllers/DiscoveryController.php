@@ -28,6 +28,25 @@ class DiscoveryController extends Controller
         $this->recommendationService = $recommendationService;
     }
 
+    protected function getChipLabel(?string $reason): string
+    {
+        $reasonLower = strtolower($reason ?? '');
+        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
+            return 'Artist Deep Cut';
+        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
+            return 'Sound Profile';
+        } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
+            return 'Social Pick';
+        } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe') || str_contains($reasonLower, 'fits your')) {
+            return 'Genre Affinity';
+        } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
+            return 'Community Pick';
+        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste')) {
+            return 'Taste Match';
+        }
+        return 'Discovered';
+    }
+
     /**
      * Display the discovery page with recommended songs and users.
      *
@@ -48,52 +67,52 @@ class DiscoveryController extends Controller
             $recommendedSongs = collect();
 
             if (!empty($rawRecommendations)) {
-                Log::error("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
+                Log::info("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
                 $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
-                Log::error("DiscoveryController: Raw IDs: " . json_encode($recommendedSongIds));
                 
-                // --- [NEW] Filter out songs user has interacted with (Listened/Liked/Disliked) ---
+                // --- Filter out songs user has interacted with (Listened/Liked/Disliked) ---
                 $interactedSongIds = \App\Models\SongInteraction::where('user_id', $user->id)
                                         ->pluck('song_id')
                                         ->toArray();
-                
-                Log::error("DiscoveryController: Interacted song IDs count: " . count($interactedSongIds));
-                // Log::error("DiscoveryController: Interacted IDs: " . json_encode($interactedSongIds));
 
                 // Exclude interacted IDs
                 $filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
-                Log::error("DiscoveryController: Filtered song IDs count: " . count($filteredSongIds));
-                Log::error("DiscoveryController: Filtered IDs: " . json_encode(array_values($filteredSongIds)));
                 
-                // Take top 30 from the filtered list (preserving order from recommender)
-                $top30Ids = array_slice($filteredSongIds, 0, 30);
+                // Fetch up to 60 songs for rich "Discover More" capability
+                $topIds = array_slice($filteredSongIds, 0, 60);
                 
                 $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
-                $recommendedSongs = Song::whereIn('id', $top30Ids)->get();
-                Log::info("DiscoveryController: Songs retrieved from DB: " . $recommendedSongs->count());
-                
-                // Check if we are missing any songs
-                if ($recommendedSongs->count() < count($top30Ids)) {
-                     Log::warning("DiscoveryController: Mismatch! Expected " . count($top30Ids) . " songs, but got " . $recommendedSongs->count() . " from DB. IDs missing potentially.");
-                     $retrievedIds = $recommendedSongs->pluck('id')->toArray();
-                     $missingIds = array_diff($top30Ids, $retrievedIds);
-                     Log::warning("DiscoveryController: Missing IDs: " . implode(',', $missingIds));
-                }
+                $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                // Sort the recommended songs by score (re-apply sorting since whereIn doesn't guarantee order)
-                $recommendedSongs = $recommendedSongs->sortByDesc(function ($song) use ($recommendationData) {
-                    return $recommendationData[$song->id]['score'] ?? 0;
-                });
-
-                $recommendedSongs = $recommendedSongs->values(); // Reset keys
-
-                $recommendedSongs = $recommendedSongs->map(function ($song) use ($recommendationData) {
+                $retrievedSongs = $retrievedSongs->map(function ($song) use ($recommendationData) {
                     $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $song->score = $recommendationData[$song->id]['score'] ?? null;
                     $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
+                    $song->chip_label = $this->getChipLabel($song->reason);
                     return $song;
                 });
+
+                // Group by chip_label and sort each group by score descending
+                $grouped = $retrievedSongs->groupBy('chip_label')->map(function ($group) {
+                    return $group->sortByDesc(function ($song) {
+                        return $song->score ?? 0;
+                    })->values();
+                });
+
+                // Interleave / Round-Robin across categories to ensure a balanced, non-repetitive feed
+                $diversified = collect();
+                $maxItemsInGroup = $grouped->map->count()->max() ?? 0;
+
+                for ($i = 0; $i < $maxItemsInGroup; $i++) {
+                    foreach ($grouped as $chipLabel => $songsInGroup) {
+                        if (isset($songsInGroup[$i])) {
+                            $diversified->push($songsInGroup[$i]);
+                        }
+                    }
+                }
+
+                $recommendedSongs = $diversified;
             } else {
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }

@@ -1,5 +1,4 @@
 @props(['song'])
-@props(['song'])
 @php
     $reason = $song->reason ?? 'Based on your taste';
     $genres = [];
@@ -8,39 +7,51 @@
     $isSharedByFriend = false;
 
     // Determine algorithm signal chip
+    $chipLabel = $song->chip_label ?? null;
     $reasonLower = strtolower($reason);
-    if (str_contains($reasonLower, 'deep cut from') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
-        $chipLabel = 'Artist Deep Cut';
+    if (!$chipLabel) {
+        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
+            $chipLabel = 'Artist Deep Cut';
+        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
+            $chipLabel = 'Sound Profile';
+        } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
+            $chipLabel = 'Social Pick';
+        } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe') || str_contains($reasonLower, 'fits your')) {
+            $chipLabel = 'Genre Affinity';
+        } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
+            $chipLabel = 'Community Pick';
+        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste')) {
+            $chipLabel = 'Taste Match';
+        } else {
+            $chipLabel = 'Discovered';
+        }
+    }
+
+    if ($chipLabel === 'Artist Deep Cut') {
         $chipColor = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40';
         $barColor  = 'from-amber-400 to-amber-600';
         $dotColor  = 'bg-amber-500';
-    } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
-        $chipLabel = 'Sound Profile';
+    } elseif ($chipLabel === 'Sound Profile') {
         $chipColor = 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/40';
         $barColor  = 'from-blue-400 to-indigo-500';
         $dotColor  = 'bg-blue-500';
-    } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
-        $chipLabel = 'Social Pick';
+    } elseif ($chipLabel === 'Social Pick') {
         $chipColor = 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/40';
         $barColor  = 'from-purple-400 to-violet-500';
         $dotColor  = 'bg-purple-500';
-    } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe')) {
-        $chipLabel = 'Genre Affinity';
+    } elseif ($chipLabel === 'Genre Affinity') {
         $chipColor = 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-700/40';
         $barColor  = 'from-teal-400 to-emerald-500';
         $dotColor  = 'bg-teal-500';
-    } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
-        $chipLabel = 'Community Pick';
+    } elseif ($chipLabel === 'Community Pick') {
         $chipColor = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700/40';
         $barColor  = 'from-orange-400 to-rose-500';
         $dotColor  = 'bg-orange-500';
-    } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste')) {
-        $chipLabel = 'Taste Match';
+    } elseif ($chipLabel === 'Taste Match') {
         $chipColor = 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-700/40';
         $barColor  = 'from-fuchsia-400 to-pink-500';
         $dotColor  = 'bg-fuchsia-500';
     } else {
-        $chipLabel = 'Discovered';
         $chipColor = 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700/40';
         $barColor  = 'from-violet-400 to-indigo-500';
         $dotColor  = 'bg-violet-500';

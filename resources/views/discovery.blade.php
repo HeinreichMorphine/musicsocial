@@ -159,19 +159,53 @@
                                 <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at the moment.</p>
                             @else
                                 <div x-data="{ 
-                                    activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
+                                    selectedChip: 'All',
                                     maxRendered: Math.min(12, {{ $recommendedSongs->count() }}),
+                                    activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
+                                    availableChips: ['Artist Deep Cut', 'Sound Profile', 'Genre Affinity', 'Taste Match', 'Social Pick', 'Community Pick'],
+                                    
                                     handleInteraction(index) {
                                         this.activeIndexes = this.activeIndexes.filter(i => i !== index);
                                         if (this.maxRendered < {{ $recommendedSongs->count() }}) {
                                             this.activeIndexes.push(this.maxRendered);
                                             this.maxRendered++;
                                         }
+                                    },
+
+                                    loadMore() {
+                                        const nextLimit = Math.min(this.maxRendered + 12, {{ $recommendedSongs->count() }});
+                                        this.maxRendered = nextLimit;
+                                        this.activeIndexes = Array.from({length: nextLimit}, (_, i) => i);
                                     }
                                 }">
+
+                                    <!-- Spotify-Style Pill Filter Bar -->
+                                    <div class="mb-5 overflow-x-auto no-scrollbar py-1">
+                                        <div class="flex items-center space-x-2 min-w-max">
+                                            <button @click="selectedChip = 'All'"
+                                                    :class="selectedChip === 'All' 
+                                                        ? 'bg-custom-mid-blue text-white shadow-md shadow-blue-500/20 font-bold scale-105' 
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium'"
+                                                    class="px-4 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer">
+                                                All
+                                            </button>
+
+                                            <template x-for="chip in availableChips" :key="chip">
+                                                <button @click="selectedChip = chip"
+                                                        :class="selectedChip === chip 
+                                                            ? 'bg-custom-mid-blue text-white shadow-md shadow-blue-500/20 font-bold scale-105' 
+                                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium'"
+                                                        class="px-4 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer">
+                                                    <span x-text="chip"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                         @foreach ($recommendedSongs as $song)
-                                            <div x-show="activeIndexes.includes({{ $loop->index }})" 
+                                            <div x-show="activeIndexes.includes({{ $loop->index }}) && (selectedChip === 'All' || '{{ addslashes($song->chip_label ?? 'Discovered') }}' === selectedChip)" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -181,6 +215,24 @@
                                                 <x-discovery-card :song="$song" />
                                             </div>
                                         @endforeach
+                                    </div>
+
+                                    <!-- Load More Songs Button -->
+                                    <div class="mt-8 text-center flex flex-col items-center justify-center space-y-3" x-show="maxRendered < {{ $recommendedSongs->count() }}">
+                                        <button @click="loadMore()" 
+                                                class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold px-8 py-3.5 rounded-full shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center space-x-2.5 text-sm cursor-pointer group">
+                                            <svg class="w-5 h-5 text-white/90 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                            </svg>
+                                            <span>Discover More Songs</span>
+                                        </button>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">Showing <span x-text="Math.min(maxRendered, {{ $recommendedSongs->count() }})"></span> of {{ $recommendedSongs->count() }} personalized recommendations</p>
+                                    </div>
+
+                                    <!-- End of recommendations message -->
+                                    <div class="mt-8 text-center py-6 bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800" 
+                                         x-show="maxRendered >= {{ $recommendedSongs->count() }} && {{ $recommendedSongs->count() }} > 0" x-cloak>
+                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">✨ You've explored all current recommendations! Like or share more tracks to discover new music.</p>
                                     </div>
                                 </div>
                             @endif
