@@ -186,8 +186,7 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                         @foreach ($recommendedSongs as $song)
-                                            <div data-chip="{{ $song->chip_label ?? 'Discovered' }}"
-                                                 x-show="(selectedChip === 'All' && activeIndexes.includes({{ $loop->index }})) || (selectedChip !== 'All' && $el.dataset.chip === selectedChip)" 
+                                            <div x-show="isChipMatch('{{ addslashes($song->chip_label ?? 'Discovered') }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -245,6 +244,13 @@
                 maxRendered: Math.min(12, totalCount),
                 activeIndexes: Array.from({length: Math.min(12, totalCount)}, (_, i) => i),
                 availableChips: chips || [],
+
+                isChipMatch(cardChip, index) {
+                    if (this.selectedChip === 'All') {
+                        return this.activeIndexes.includes(index);
+                    }
+                    return (this.selectedChip || '').toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
+                },
 
                 handleInteraction(index) {
                     this.activeIndexes = this.activeIndexes.filter(i => i !== index);
