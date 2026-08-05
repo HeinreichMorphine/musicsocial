@@ -90,30 +90,28 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $artistCounts = [];
-                $retrievedSongs = $retrievedSongs->map(function ($song) use ($recommendationData, &$artistCounts) {
+                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData) {
                     $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
 
                     $chipLabel = $this->getChipLabel($rawReason);
 
-                    // Diversify reason signals if dominated by "Top pick for X fans"
-                    if ($chipLabel === 'Artist Deep Cut') {
-                        $artistCounts[$artist] = ($artistCounts[$artist] ?? 0) + 1;
-                        $count = $artistCounts[$artist];
-
-                        if ($count == 2) {
+                    // Cycle reason signals across artist tracks so every pill category receives songs
+                    if ($chipLabel === 'Artist Deep Cut' || $chipLabel === 'Taste Match' || $chipLabel === 'Discovered') {
+                        $cycle = $index % 4;
+                        if ($cycle === 0) {
+                            $chipLabel = 'Artist Deep Cut';
+                            $reason = "Top pick for {$artist} fans";
+                        } elseif ($cycle === 1) {
                             $chipLabel = 'Genre Affinity';
                             $reason = "Fits your {$artist} genre & style vibe";
-                        } elseif ($count == 3) {
+                        } elseif ($cycle === 2) {
                             $chipLabel = 'Sound Profile';
                             $reason = "Personalized sound match for {$artist} listeners";
-                        } elseif ($count >= 4) {
+                        } else {
                             $chipLabel = 'Taste Match';
                             $reason = "Matches your overall musical taste profile";
-                        } else {
-                            $reason = $rawReason;
                         }
                     } else {
                         $reason = $rawReason;

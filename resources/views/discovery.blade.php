@@ -158,7 +158,10 @@
                             @if($recommendedSongs->isEmpty())
                                 <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at the moment.</p>
                             @else
-                                <div x-data="discoveryFeed(@js($availableChips), {{ $recommendedSongs->count() }})">
+                                @php
+                                    $allSongChips = $recommendedSongs->map(fn($s) => \App\Http\Controllers\DiscoveryController::determineChipLabel($s->reason))->values()->all();
+                                @endphp
+                                <div x-data="discoveryFeed(@js($availableChips), {{ $recommendedSongs->count() }}, @js($allSongChips))">
 
                                     <!-- Spotify-Style Pill Filter Bar -->
                                     <div class="mb-5 overflow-x-auto no-scrollbar py-1">
@@ -184,7 +187,7 @@
                                     </div>
 
                                     <!-- Grid of Recommended Cards -->
-                                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" x-show="hasMatchingSongs()">
                                         @foreach ($recommendedSongs as $song)
                                             <div x-show="isChipMatch('{{ addslashes(\App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason)) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
@@ -195,6 +198,20 @@
                                                 <x-discovery-card :song="$song" />
                                             </div>
                                         @endforeach
+                                    </div>
+
+                                    <!-- Empty State Placeholder for Pills with 0 Songs -->
+                                    <div x-show="!hasMatchingSongs()" x-cloak class="my-8 text-center py-12 px-4 bg-gray-50/50 dark:bg-gray-900/40 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center space-y-3">
+                                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-2xl">
+                                            🎵
+                                        </div>
+                                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">No songs for this section</h4>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">
+                                            No recommendations currently match "<span x-text="selectedChip" class="font-bold text-indigo-600 dark:text-indigo-400"></span>". Explore other filter pills or view all songs!
+                                        </p>
+                                        <button @click="selectedChip = 'All'" class="mt-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                                            ← Back to All Songs
+                                        </button>
                                     </div>
 
                                     <!-- Load More Songs Button -->
@@ -239,17 +256,26 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('discoveryFeed', (chips, totalCount) => ({
+            Alpine.data('discoveryFeed', (chips, totalCount, allSongChips) => ({
                 selectedChip: 'All',
                 maxRendered: Math.min(12, totalCount),
                 activeIndexes: Array.from({length: Math.min(12, totalCount)}, (_, i) => i),
                 availableChips: chips || [],
+                allSongChips: allSongChips || [],
 
                 isChipMatch(cardChip, index) {
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.includes(index);
                     }
                     return (this.selectedChip || '').toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
+                },
+
+                hasMatchingSongs() {
+                    if (this.selectedChip === 'All') {
+                        return this.activeIndexes.length > 0;
+                    }
+                    const current = (this.selectedChip || '').toLowerCase().trim();
+                    return (this.allSongChips || []).some(chip => (chip || '').toLowerCase().trim() === current);
                 },
 
                 handleInteraction(index) {
