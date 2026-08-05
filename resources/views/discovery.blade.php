@@ -158,26 +158,7 @@
                             @if($recommendedSongs->isEmpty())
                                 <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at the moment.</p>
                             @else
-                                <div x-data="{ 
-                                    selectedChip: 'All',
-                                    maxRendered: Math.min(12, {{ $recommendedSongs->count() }}),
-                                    activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
-                                    availableChips: @json($availableChips),
-                                    
-                                    handleInteraction(index) {
-                                        this.activeIndexes = this.activeIndexes.filter(i => i !== index);
-                                        if (this.maxRendered < {{ $recommendedSongs->count() }}) {
-                                            this.activeIndexes.push(this.maxRendered);
-                                            this.maxRendered++;
-                                        }
-                                    },
-
-                                    loadMore() {
-                                        const nextLimit = Math.min(this.maxRendered + 12, {{ $recommendedSongs->count() }});
-                                        this.maxRendered = nextLimit;
-                                        this.activeIndexes = Array.from({length: nextLimit}, (_, i) => i);
-                                    }
-                                }">
+                                <div x-data="discoveryFeed(@js($availableChips), {{ $recommendedSongs->count() }})">
 
                                     <!-- Spotify-Style Pill Filter Bar -->
                                     <div class="mb-5 overflow-x-auto no-scrollbar py-1">
@@ -255,4 +236,29 @@
             <x-music-share-modal />
         </div>
     </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('discoveryFeed', (chips, totalCount) => ({
+                selectedChip: 'All',
+                maxRendered: Math.min(12, totalCount),
+                activeIndexes: Array.from({length: Math.min(12, totalCount)}, (_, i) => i),
+                availableChips: chips || [],
+
+                handleInteraction(index) {
+                    this.activeIndexes = this.activeIndexes.filter(i => i !== index);
+                    if (this.maxRendered < totalCount) {
+                        this.activeIndexes.push(this.maxRendered);
+                        this.maxRendered++;
+                    }
+                },
+
+                loadMore() {
+                    const nextLimit = Math.min(this.maxRendered + 12, totalCount);
+                    this.maxRendered = nextLimit;
+                    this.activeIndexes = Array.from({length: nextLimit}, (_, i) => i);
+                }
+            }));
+        });
+    </script>
 </x-app-layout>
