@@ -1,8 +1,9 @@
 *.log
 .DS_Store
-.env
-.env.backup
-.env.production
+.env*
+*.puml
+*.plantuml
+*.uml
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -22,3 +23,25 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Python Recommender Service
+recommender_service/venv/
+recommender_service/surprise_model.pkl
+recommender_service/.env*
+recommender_service/__pycache__/
+
+surprise_model.pkl
+/storage/framework/views/
+
+# Documentation and Assets (Excluded from GitHub)
+*.md
+!README.md
+*.drawio
+*.tex
+*.txt
+!recommender_service/requirements.txt
+/publicimages/
+/scratch/
+/test_admin_rendering.php
+find_emojis.py
+find_emoji.py
