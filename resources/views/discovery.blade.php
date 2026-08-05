@@ -162,7 +162,7 @@
                                     selectedChip: 'All',
                                     maxRendered: Math.min(12, {{ $recommendedSongs->count() }}),
                                     activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
-                                    availableChips: @json($recommendedSongs->pluck('chip_label')->unique()->values()),
+                                    availableChips: @json($availableChips),
                                     
                                     handleInteraction(index) {
                                         this.activeIndexes = this.activeIndexes.filter(i => i !== index);

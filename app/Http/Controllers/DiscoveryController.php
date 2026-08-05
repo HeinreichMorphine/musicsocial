@@ -91,10 +91,15 @@ class DiscoveryController extends Controller
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
                 $retrievedSongs = $retrievedSongs->map(function ($song) use ($recommendationData) {
-                    $song->reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
-                    $song->score = $recommendationData[$song->id]['score'] ?? null;
+                    $reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                    $score = $recommendationData[$song->id]['score'] ?? null;
+                    $chipLabel = $this->getChipLabel($reason);
+
+                    $song->reason = $reason;
+                    $song->score = $score;
                     $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
-                    $song->chip_label = $this->getChipLabel($song->reason);
+                    $song->chip_label = $chipLabel;
+                    $song->setAttribute('chip_label', $chipLabel);
                     return $song;
                 });
 
@@ -121,6 +126,13 @@ class DiscoveryController extends Controller
             } else {
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
+
+            // Extract distinct non-empty available chip labels for the pill filter bar
+            $availableChips = $recommendedSongs->map(function($song) {
+                return $song->chip_label ?? $song->getAttribute('chip_label') ?? 'Discovered';
+            })->filter(function($val) {
+                return !empty($val);
+            })->unique()->values()->all();
 
             // --- [NEW] Improved "Who to Follow" Logic ---
 
@@ -151,6 +163,8 @@ class DiscoveryController extends Controller
             $usersToSuggest = $tasteNeighbors->merge($otherUsers);
         }
 
-        return view('discovery', compact('recommendedSongs', 'usersToSuggest'));
+        $availableChips = $availableChips ?? [];
+
+        return view('discovery', compact('recommendedSongs', 'usersToSuggest', 'availableChips'));
     }
 }
