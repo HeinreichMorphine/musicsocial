@@ -90,10 +90,34 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song) use ($recommendationData) {
-                    $reason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
+                $artistCounts = [];
+                $retrievedSongs = $retrievedSongs->map(function ($song) use ($recommendationData, &$artistCounts) {
+                    $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
-                    $chipLabel = $this->getChipLabel($reason);
+                    $artist = $song->artist_name ?? 'Artist';
+
+                    $chipLabel = $this->getChipLabel($rawReason);
+
+                    // Diversify reason signals if dominated by "Top pick for X fans"
+                    if ($chipLabel === 'Artist Deep Cut') {
+                        $artistCounts[$artist] = ($artistCounts[$artist] ?? 0) + 1;
+                        $count = $artistCounts[$artist];
+
+                        if ($count == 2) {
+                            $chipLabel = 'Genre Affinity';
+                            $reason = "Fits your {$artist} genre & style vibe";
+                        } elseif ($count == 3) {
+                            $chipLabel = 'Sound Profile';
+                            $reason = "Personalized sound match for {$artist} listeners";
+                        } elseif ($count >= 4) {
+                            $chipLabel = 'Taste Match';
+                            $reason = "Matches your overall musical taste profile";
+                        } else {
+                            $reason = $rawReason;
+                        }
+                    } else {
+                        $reason = $rawReason;
+                    }
 
                     $song->reason = $reason;
                     $song->score = $score;
