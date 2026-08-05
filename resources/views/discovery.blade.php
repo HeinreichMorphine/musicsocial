@@ -160,67 +160,29 @@
                             @else
                                 <div x-data="{ 
                                     selectedChip: 'All',
-                                    maxRendered: 12,
-                                    hiddenIndexes: [],
-
-                                    songs: [
-                                        @foreach ($recommendedSongs as $index => $song)
-                                            {
-                                                index: {{ $index }},
-                                                chip: '{{ addslashes($song->chip_label ?? 'Discovered') }}'
-                                            },
-                                        @endforeach
-                                    ],
-
-                                    get availableChips() {
-                                        const chips = [...new Set(this.songs.filter(s => !this.hiddenIndexes.includes(s.index)).map(s => s.chip))];
-                                        return chips;
-                                    },
-
-                                    get filteredSongs() {
-                                        const active = this.songs.filter(s => !this.hiddenIndexes.includes(s.index));
-                                        if (this.selectedChip === 'All') {
-                                            return active;
-                                        }
-                                        return active.filter(s => s.chip === this.selectedChip);
-                                    },
-
-                                    get visibleSongs() {
-                                        return this.filteredSongs.slice(0, this.maxRendered);
-                                    },
-
-                                    get totalMatchingCount() {
-                                        return this.filteredSongs.length;
-                                    },
-
-                                    get visibleCount() {
-                                        return this.visibleSongs.length;
-                                    },
-
-                                    get hasMore() {
-                                        return this.visibleCount < this.totalMatchingCount;
-                                    },
-
+                                    maxRendered: Math.min(12, {{ $recommendedSongs->count() }}),
+                                    activeIndexes: Array.from({length: Math.min(12, {{ $recommendedSongs->count() }})}, (_, i) => i),
+                                    availableChips: @json($recommendedSongs->pluck('chip_label')->unique()->values()),
+                                    
                                     handleInteraction(index) {
-                                        if (!this.hiddenIndexes.includes(index)) {
-                                            this.hiddenIndexes.push(index);
+                                        this.activeIndexes = this.activeIndexes.filter(i => i !== index);
+                                        if (this.maxRendered < {{ $recommendedSongs->count() }}) {
+                                            this.activeIndexes.push(this.maxRendered);
+                                            this.maxRendered++;
                                         }
                                     },
 
                                     loadMore() {
-                                        this.maxRendered += 12;
-                                    },
-
-                                    selectChip(chip) {
-                                        this.selectedChip = chip;
-                                        this.maxRendered = 12;
+                                        const nextLimit = Math.min(this.maxRendered + 12, {{ $recommendedSongs->count() }});
+                                        this.maxRendered = nextLimit;
+                                        this.activeIndexes = Array.from({length: nextLimit}, (_, i) => i);
                                     }
                                 }">
 
                                     <!-- Spotify-Style Pill Filter Bar -->
                                     <div class="mb-5 overflow-x-auto no-scrollbar py-1">
                                         <div class="flex items-center space-x-2 min-w-max">
-                                            <button @click="selectChip('All')"
+                                            <button @click="selectedChip = 'All'"
                                                     :class="selectedChip === 'All' 
                                                         ? 'bg-custom-mid-blue text-white shadow-md shadow-blue-500/20 font-bold scale-105' 
                                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium'"
@@ -229,7 +191,7 @@
                                             </button>
 
                                             <template x-for="chip in availableChips" :key="chip">
-                                                <button @click="selectChip(chip)"
+                                                <button @click="selectedChip = chip"
                                                         :class="selectedChip === chip 
                                                             ? 'bg-custom-mid-blue text-white shadow-md shadow-blue-500/20 font-bold scale-105' 
                                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium'"
@@ -243,7 +205,7 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                         @foreach ($recommendedSongs as $song)
-                                            <div x-show="visibleSongs.some(s => s.index === {{ $loop->index }})" 
+                                            <div x-show="(selectedChip === 'All' && activeIndexes.includes({{ $loop->index }})) || (selectedChip !== 'All' && '{{ addslashes($song->chip_label ?? 'Discovered') }}' === selectedChip)" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -255,7 +217,7 @@
                                     </div>
 
                                     <!-- Load More Songs Button -->
-                                    <div class="mt-8 text-center flex flex-col items-center justify-center space-y-3" x-show="hasMore">
+                                    <div class="mt-8 text-center flex flex-col items-center justify-center space-y-3" x-show="selectedChip === 'All' && maxRendered < {{ $recommendedSongs->count() }}">
                                         <button @click="loadMore()" 
                                                 class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold px-8 py-3.5 rounded-full shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center space-x-2.5 text-sm cursor-pointer group">
                                             <svg class="w-5 h-5 text-white/90 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -263,13 +225,13 @@
                                             </svg>
                                             <span>Discover More Songs</span>
                                         </button>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500">Showing <span x-text="visibleCount"></span> of <span x-text="totalMatchingCount"></span> recommendations</p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">Showing <span x-text="Math.min(maxRendered, {{ $recommendedSongs->count() }})"></span> of {{ $recommendedSongs->count() }} personalized recommendations</p>
                                     </div>
 
-                                    <!-- End of recommendations message -->
+                                    <!-- End of recommendations message (only shows when user has loaded through all 12+ songs in 'All' view) -->
                                     <div class="mt-8 text-center py-6 bg-gray-50/50 dark:bg-gray-900/40 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800" 
-                                         x-show="!hasMore && totalMatchingCount > 0" x-cloak>
-                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">✨ You've explored all current recommendations in this category! Like or share more tracks to discover new music.</p>
+                                         x-show="selectedChip === 'All' && maxRendered >= {{ $recommendedSongs->count() }} && {{ $recommendedSongs->count() }} > 12" x-cloak>
+                                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">✨ You've explored all current recommendations! Like or share more tracks to discover new music.</p>
                                     </div>
                                 </div>
                             @endif

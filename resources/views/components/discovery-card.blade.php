@@ -7,25 +7,7 @@
     $isSharedByFriend = false;
 
     // Determine algorithm signal chip
-    $chipLabel = $song->chip_label ?? null;
-    $reasonLower = strtolower($reason);
-    if (!$chipLabel) {
-        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
-            $chipLabel = 'Artist Deep Cut';
-        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
-            $chipLabel = 'Sound Profile';
-        } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
-            $chipLabel = 'Social Pick';
-        } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe') || str_contains($reasonLower, 'fits your')) {
-            $chipLabel = 'Genre Affinity';
-        } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
-            $chipLabel = 'Community Pick';
-        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste')) {
-            $chipLabel = 'Taste Match';
-        } else {
-            $chipLabel = 'Discovered';
-        }
-    }
+    $chipLabel = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($reason);
 
     if ($chipLabel === 'Artist Deep Cut') {
         $chipColor = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40';

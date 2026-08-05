@@ -28,10 +28,10 @@ class DiscoveryController extends Controller
         $this->recommendationService = $recommendationService;
     }
 
-    protected function getChipLabel(?string $reason): string
+    public static function determineChipLabel(?string $reason): string
     {
         $reasonLower = strtolower($reason ?? '');
-        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist')) {
+        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist') || str_contains($reasonLower, 'top pick for')) {
             return 'Artist Deep Cut';
         } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for')) {
             return 'Sound Profile';
@@ -45,6 +45,11 @@ class DiscoveryController extends Controller
             return 'Taste Match';
         }
         return 'Discovered';
+    }
+
+    protected function getChipLabel(?string $reason): string
+    {
+        return self::determineChipLabel($reason);
     }
 
     /**
