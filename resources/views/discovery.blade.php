@@ -265,6 +265,13 @@
                 availableChips: chips || [],
                 allSongChips: allSongChips || [],
 
+                init() {
+                    // Debug: log the chip data on init
+                    console.log('[Discovery] availableChips:', this.availableChips);
+                    console.log('[Discovery] allSongChips:', this.allSongChips);
+                    console.log('[Discovery] totalCount:', totalCount);
+                },
+
                 isChipMatch(cardChip, index) {
                     if (this.selectedChip === 'All') {
                         // In "All" view, only show cards within the paginated window
@@ -278,8 +285,13 @@
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.length > 0;
                     }
+                    // Query DOM directly — the most reliable source of truth
                     const current = (this.selectedChip || '').toLowerCase().trim();
-                    return (this.allSongChips || []).some(chip => (chip || '').toLowerCase().trim() === current);
+                    const cards = this.$el.querySelectorAll('[data-chip]');
+                    const match = Array.from(cards).some(card =>
+                        (card.dataset.chip || '').toLowerCase().trim() === current
+                    );
+                    return match;
                 },
 
                 handleInteraction(index) {
