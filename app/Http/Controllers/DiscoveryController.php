@@ -67,8 +67,24 @@ class DiscoveryController extends Controller
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
             $recommendedSongs = collect();
 
-            // Fetch names of users followed by the current user for personalized Collaborative Filtering reasons
-            $followingNames = $user->following()->pluck('name')->all();
+            // Fetch users followed by the current user and their shares for real collaborative recommendations
+            $following = $user->following()->get();
+            $followingNames = $following->pluck('name')->all();
+
+            // Extract real shares from users followed by the current user
+            $followedShares = \App\Models\Share::whereIn('user_id', $following->pluck('id'))
+                ->where('is_deleted', false)
+                ->with('user')
+                ->get()
+                ->keyBy('song_id');
+
+            // Extract community shares for real social proof fallback
+            $communityShares = \App\Models\Share::where('is_deleted', false)
+                ->where('user_id', '!=', $user->id)
+                ->with('user')
+                ->latest()
+                ->get()
+                ->groupBy('song_id');
 
             if (!empty($rawRecommendations)) {
                 Log::info("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
@@ -89,7 +105,7 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingNames) {
+                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingNames, $followedShares, $communityShares) {
                     $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
@@ -104,9 +120,15 @@ class DiscoveryController extends Controller
                         $reason = "Personalized sound profile match for {$artist} listeners";
                     } elseif ($cycle === 2) {
                         $chipLabel = 'Listeners Like You';
-                        if (!empty($followingNames)) {
+                        if (isset($followedShares[$song->id])) {
+                            $sharerName = $followedShares[$song->id]->user->name ?? 'followed user';
+                            $reason = "Shared by {$sharerName} (Following)";
+                        } elseif (!empty($followingNames)) {
                             $followedName = $followingNames[$index % count($followingNames)];
                             $reason = "Liked by users with similar taste to {$followedName}";
+                        } elseif (isset($communityShares[$song->id]) && $communityShares[$song->id]->isNotEmpty()) {
+                            $sharerName = $communityShares[$song->id]->first()->user->name ?? 'music lover';
+                            $reason = "Shared by {$sharerName} & listeners with similar taste";
                         } else {
                             $reason = "Liked by users with similar taste";
                         }
