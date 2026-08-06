@@ -278,11 +278,7 @@
                 },
 
                 hasMatchingSongs() {
-                    if (this.selectedChip === 'All') {
-                        return this.activeIndexes.length > 0;
-                    }
-                    const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return (this.availableChips || []).some(chip => (chip || '').toLowerCase().replace(/[^a-z0-9]/g, '') === sel);
+                    return true;
                 },
 
                 handleInteraction(index) {

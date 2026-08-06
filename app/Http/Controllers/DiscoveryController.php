@@ -67,7 +67,7 @@ class DiscoveryController extends Controller
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
             $recommendedSongs = collect();
 
-            // Fetch users followed by current user and all community users for social proof mapping
+            // Fetch followed users and community peers for social proof attribution
             $followingUsers = $user->following()->get();
             $followingUserIds = $followingUsers->pluck('id')->toArray();
             $communityUsers = \App\Models\User::where('id', '!=', $user->id)->get();
@@ -90,27 +90,29 @@ class DiscoveryController extends Controller
                 Log::info("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
                 $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
                 
-                // --- Filter out songs user has interacted with (Listened/Liked/Disliked) ---
+                // Exclude songs user has already interacted with
                 $interactedSongIds = \App\Models\SongInteraction::where('user_id', $user->id)
                                         ->pluck('song_id')
                                         ->toArray();
 
-                // Exclude interacted IDs
                 $filteredSongIds = array_diff($recommendedSongIds, $interactedSongIds);
-                
-                // Fetch up to 60 songs for rich "Discover More" capability
-                $topIds = array_slice($filteredSongIds, 0, 60);
+                $topIds = array_values(array_slice($filteredSongIds, 0, 60));
                 
                 $recommendationData = collect($rawRecommendations)->keyBy('song_id');
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
+                // Sort retrieved songs to match exact order of $topIds
+                $topIdsIndex = array_flip($topIds);
+                $retrievedSongs = $retrievedSongs->sortBy(function($song) use ($topIdsIndex) {
+                    return $topIdsIndex[$song->id] ?? 999;
+                })->values();
+
                 $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingUsers, $followedSongUserMap, $allSongUserMap, $communityNames) {
-                    $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
 
-                    // Guarantee 4-way balanced distribution including Collaborative Filtering (Listeners Like You)
+                    // 4-Way Balanced Interleaved Distribution
                     $cycle = $index % 4;
                     if ($cycle === 0) {
                         $chipLabel = 'Taste Match';
@@ -144,42 +146,18 @@ class DiscoveryController extends Controller
                     $song->score = $score;
                     $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
                     $song->chip_label = $chipLabel;
+                    $song->setAttribute('reason', $reason);
                     $song->setAttribute('chip_label', $chipLabel);
                     return $song;
                 });
 
-                // Group by chip_label directly
-                $grouped = $retrievedSongs->groupBy(function ($song) {
-                    return $song->chip_label;
-                })->map(function ($group) {
-                    return $group->sortByDesc(function ($song) {
-                        return $song->score ?? 0;
-                    })->values();
-                });
-
-                // Interleave / Round-Robin across categories to ensure a balanced, non-repetitive feed
-                $diversified = collect();
-                $maxItemsInGroup = $grouped->map->count()->max() ?? 0;
-
-                for ($i = 0; $i < $maxItemsInGroup; $i++) {
-                    foreach ($grouped as $chipLabel => $songsInGroup) {
-                        if (isset($songsInGroup[$i])) {
-                            $diversified->push($songsInGroup[$i]);
-                        }
-                    }
-                }
-
-                $recommendedSongs = $diversified;
+                $recommendedSongs = $retrievedSongs;
             } else {
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
-            // Extract distinct non-empty available chip labels directly from song chip_label
-            $availableChips = $recommendedSongs->map(function($song) {
-                return $song->chip_label;
-            })->filter(function($val) {
-                return !empty($val);
-            })->unique()->values()->all();
+            // Fixed set of available filter chips
+            $availableChips = ['Taste Match', 'Sound Profile', 'Listeners Like You', 'Artist Deep Cut'];
 
             // --- [NEW] Improved "Who to Follow" Logic ---
 
