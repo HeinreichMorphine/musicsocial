@@ -67,17 +67,20 @@ class DiscoveryController extends Controller
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
             $recommendedSongs = collect();
 
-            // Fetch users followed by the current user
+            // Fetch users followed by current user and all community users for social proof mapping
             $followingUsers = $user->following()->get();
             $followingUserIds = $followingUsers->pluck('id')->toArray();
-            $followingNames = $followingUsers->pluck('name')->all();
+            $communityUsers = \App\Models\User::where('id', '!=', $user->id)->get();
+            $communityNames = $communityUsers->pluck('name')->all();
 
-            // Map of song_id -> array of followed user names who shared/liked it
+            // Map of song_id -> array of user names who shared/posted it
             $followedSongUserMap = [];
-            if (!empty($followingUserIds)) {
-                $sharesFromFollowing = \App\Models\Share::whereIn('user_id', $followingUserIds)->with('user')->get();
-                foreach ($sharesFromFollowing as $share) {
-                    if ($share->song_id && $share->user) {
+            $allSongUserMap = [];
+            $shares = \App\Models\Share::with('user')->get();
+            foreach ($shares as $share) {
+                if ($share->song_id && $share->user) {
+                    $allSongUserMap[$share->song_id][] = $share->user->name;
+                    if (in_array($share->user_id, $followingUserIds)) {
                         $followedSongUserMap[$share->song_id][] = $share->user->name;
                     }
                 }
@@ -102,7 +105,7 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingUsers, $followedSongUserMap) {
+                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingUsers, $followedSongUserMap, $allSongUserMap, $communityNames) {
                     $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
@@ -120,11 +123,17 @@ class DiscoveryController extends Controller
                         if (isset($followedSongUserMap[$song->id]) && !empty($followedSongUserMap[$song->id])) {
                             $followedUserName = $followedSongUserMap[$song->id][0];
                             $reason = "Liked by {$followedUserName}, a user you follow";
+                        } elseif (isset($allSongUserMap[$song->id]) && !empty($allSongUserMap[$song->id])) {
+                            $sharerName = $allSongUserMap[$song->id][0];
+                            $reason = "Shared by {$sharerName}, a listener with similar taste";
                         } elseif ($followingUsers->count() > 0) {
                             $followedUserName = $followingUsers[$index % $followingUsers->count()]->name;
                             $reason = "Liked by users with similar taste to {$followedUserName}";
+                        } elseif (!empty($communityNames)) {
+                            $peerName = $communityNames[$index % count($communityNames)];
+                            $reason = "Liked by users with similar taste to {$peerName}";
                         } else {
-                            $reason = "Liked by users with similar taste";
+                            $reason = "Liked by listeners with similar musical taste";
                         }
                     } else {
                         $chipLabel = 'Artist Deep Cut';
