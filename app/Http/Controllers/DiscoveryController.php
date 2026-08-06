@@ -50,7 +50,7 @@ class DiscoveryController extends Controller
         } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
             return 'Community Pick';
         }
-        return 'Taste Match';
+        return 'Listeners Like You';
     }
 
     protected function getChipLabel(?string $reason): string

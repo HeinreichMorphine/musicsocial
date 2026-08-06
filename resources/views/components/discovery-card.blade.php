@@ -7,7 +7,7 @@
     $isSharedByFriend = false;
 
     // Determine algorithm signal chip
-    $chipLabel = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($reason);
+    $chipLabel = $song->chip_label ?? 'Listeners Like You';
 
     if ($chipLabel === 'Artist Deep Cut') {
         $chipColor = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40';

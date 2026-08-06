@@ -75,10 +75,7 @@ class Song extends Model
 
     public function getChipLabelAttribute()
     {
-        if (isset($this->attributes['chip_label']) && !empty($this->attributes['chip_label'])) {
-            return $this->attributes['chip_label'];
-        }
-        return \App\Http\Controllers\DiscoveryController::determineChipLabel($this->reason);
+        return $this->attributes['chip_label'] ?? 'Listeners Like You';
     }
 
     public function setChipLabelAttribute($value)

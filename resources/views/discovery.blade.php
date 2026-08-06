@@ -189,7 +189,7 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" x-show="hasMatchingSongs()">
                                         @foreach ($recommendedSongs as $song)
-                                            @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
+                                            @php $cardChip = $song->chip_label ?? 'Listeners Like You'; @endphp
                                             <div data-chip="{{ $cardChip }}"
                                                  x-show="isChipMatch('{{ addslashes($cardChip) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
