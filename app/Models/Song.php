@@ -83,6 +83,16 @@ class Song extends Model
         $this->attributes['chip_label'] = $value;
     }
 
+    public function getScoreAttribute()
+    {
+        return $this->attributes['score'] ?? null;
+    }
+
+    public function setScoreAttribute($value)
+    {
+        $this->attributes['score'] = $value;
+    }
+
     /**
      * Normalized 11-character YouTube video ID for embeds.
      */

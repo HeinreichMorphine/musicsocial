@@ -151,10 +151,10 @@ class DiscoveryController extends Controller
                         $reason = "Top pick for {$artist} fans";
                     }
 
-                    // Write directly to model attributes — bypasses any stale accessor cache
-                    $song->attributes['chip_label'] = $chipLabel;
-                    $song->attributes['reason']     = $reason;
-                    $song->attributes['score']      = $score;
+                    // Use public setAttribute() — $attributes is protected, cannot write directly from outside
+                    $song->setAttribute('chip_label', $chipLabel);
+                    $song->setAttribute('reason',     $reason);
+                    $song->setAttribute('score',      $score);
 
                     $counter++;
                 }
