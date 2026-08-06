@@ -191,7 +191,7 @@
                                         @foreach ($recommendedSongs as $song)
                                             @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
                                             <div data-chip="{{ $cardChip }}"
-                                                 x-show="isChipMatch($el.dataset.chip, {{ $loop->index }})" 
+                                                 x-show="isChipMatch('{{ $cardChip }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -275,10 +275,12 @@
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.includes(index);
                     }
-                    // Use allSongChips[index] as the definitive per-card chip label
-                    // Fall back to cardChip (data-chip attribute) if out of range
-                    const chipForCard = (this.allSongChips[index] || cardChip || '');
-                    return this.selectedChip.toLowerCase().trim() === chipForCard.toLowerCase().trim();
+                    // cardChip is the PHP-inlined literal chip label string (e.g. 'Taste Match')
+                    const match = this.selectedChip.toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
+                    if (index < 3) {
+                        console.log(`[isChipMatch] idx=${index} selected="${this.selectedChip}" card="${cardChip}" → ${match}`);
+                    }
+                    return match;
                 },
 
                 hasMatchingSongs() {
