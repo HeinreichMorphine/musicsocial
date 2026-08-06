@@ -163,11 +163,18 @@
                                     <!-- Grid of ALL Recommended Cards (no filtering) -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                                         @foreach ($recommendedSongs as $song)
+                                            @php
+                                                $cardChipData = $chipData[$song->id] ?? [
+                                                    'chip_label' => 'Taste Match',
+                                                    'reason'     => 'Matches your musical taste',
+                                                    'score'      => null,
+                                                ];
+                                            @endphp
                                             <div
                                                  x-show="{{ $loop->index }} < maxRendered"
                                                  @song-interacted.stop="if (maxRendered < totalCount) { maxRendered++ }"
                                                  class="h-full">
-                                                <x-discovery-card :song="$song" />
+                                                <x-discovery-card :song="$song" :cardChipData="$cardChipData" />
                                             </div>
                                         @endforeach
                                     </div>

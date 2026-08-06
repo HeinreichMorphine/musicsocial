@@ -118,32 +118,30 @@ class DiscoveryController extends Controller
                     return $topIdsIndex[$song->id] ?? 999;
                 })->values();
 
-                $counter = 0;
-                $chips = ['Taste Match', 'Sound Profile', 'Listeners Like You', 'Artist Deep Cut'];
+                // Plain array keyed by song ID — zero Eloquent interference
+                $chipData = [];
+                $counter  = 0;
+                $chips    = ['Taste Match', 'Sound Profile', 'Listeners Like You', 'Artist Deep Cut'];
 
                 foreach ($retrievedSongs as $song) {
-                    $cycle    = $counter % 4;
+                    $cycle     = $counter % 4;
                     $chipLabel = $chips[$cycle];
-                    $score    = $recommendationData[$song->id]['score'] ?? null;
-                    $artist   = $song->artist_name ?? 'Artist';
+                    $score     = $recommendationData[$song->id]['score'] ?? null;
+                    $artist    = $song->artist_name ?? 'Artist';
 
                     if ($cycle === 0) {
                         $reason = "Matches your overall musical taste profile";
                     } elseif ($cycle === 1) {
                         $reason = "Personalized sound profile match for {$artist} listeners";
                     } elseif ($cycle === 2) {
-                        if (isset($followedSongUserMap[$song->id]) && !empty($followedSongUserMap[$song->id])) {
-                            $followedUserName = $followedSongUserMap[$song->id][0];
-                            $reason = "Liked by {$followedUserName}, a user you follow";
-                        } elseif (isset($allSongUserMap[$song->id]) && !empty($allSongUserMap[$song->id])) {
-                            $sharerName = $allSongUserMap[$song->id][0];
-                            $reason = "Shared by {$sharerName}, a listener with similar taste";
+                        if (!empty($followedSongUserMap[$song->id])) {
+                            $reason = "Liked by {$followedSongUserMap[$song->id][0]}, a user you follow";
+                        } elseif (!empty($allSongUserMap[$song->id])) {
+                            $reason = "Shared by {$allSongUserMap[$song->id][0]}, a listener with similar taste";
                         } elseif ($followingUsers->count() > 0) {
-                            $followedUserName = $followingUsers[$counter % $followingUsers->count()]->name;
-                            $reason = "Liked by users with similar taste to {$followedUserName}";
+                            $reason = "Liked by users with similar taste to " . $followingUsers[$counter % $followingUsers->count()]->name;
                         } elseif (!empty($communityNames)) {
-                            $peerName = $communityNames[$counter % count($communityNames)];
-                            $reason = "Liked by users with similar taste to {$peerName}";
+                            $reason = "Liked by users with similar taste to " . $communityNames[$counter % count($communityNames)];
                         } else {
                             $reason = "Liked by listeners with similar musical taste";
                         }
@@ -151,15 +149,17 @@ class DiscoveryController extends Controller
                         $reason = "Top pick for {$artist} fans";
                     }
 
-                    // Use public setAttribute() — $attributes is protected, cannot write directly from outside
-                    $song->setAttribute('chip_label', $chipLabel);
-                    $song->setAttribute('reason',     $reason);
-                    $song->setAttribute('score',      $score);
+                    $chipData[$song->id] = [
+                        'chip_label' => $chipLabel,
+                        'reason'     => $reason,
+                        'score'      => $score,
+                    ];
 
                     $counter++;
                 }
 
                 $recommendedSongs = $retrievedSongs;
+
             } else {
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
@@ -196,8 +196,9 @@ class DiscoveryController extends Controller
             $usersToSuggest = $tasteNeighbors->merge($otherUsers);
         }
 
+        $chipData      = $chipData ?? [];
         $availableChips = $availableChips ?? [];
 
-        return view('discovery', compact('recommendedSongs', 'usersToSuggest', 'availableChips'));
+        return view('discovery', compact('recommendedSongs', 'usersToSuggest', 'availableChips', 'chipData'));
     }
 }

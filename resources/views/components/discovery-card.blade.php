@@ -1,97 +1,49 @@
-@props(['song'])
+@props(['song', 'cardChipData' => []])
 @php
-    $reason = $song->reason ?? 'Based on your taste';
-    $genres = [];
-    $isArtistMatch = false;
-    $artistMatchName = '';
-    $isSharedByFriend = false;
-
-    // Determine algorithm signal chip
-    $chipLabel = $song->chip_label ?? 'Listeners Like You';
+    // Read chip data from the plain array passed by the controller — zero Eloquent interference
+    $chipLabel = $cardChipData['chip_label'] ?? 'Taste Match';
+    $reason    = $cardChipData['reason']     ?? 'Based on your taste';
+    $score     = $cardChipData['score']      ?? null;
 
     if ($chipLabel === 'Artist Deep Cut') {
         $chipColor = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/40';
         $barColor  = 'from-amber-400 to-amber-600';
-        $dotColor  = 'bg-amber-500';
     } elseif ($chipLabel === 'Sound Profile') {
         $chipColor = 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/40';
         $barColor  = 'from-blue-400 to-indigo-500';
-        $dotColor  = 'bg-blue-500';
-    } elseif ($chipLabel === 'Social Pick') {
-        $chipColor = 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/40';
-        $barColor  = 'from-purple-400 to-violet-500';
-        $dotColor  = 'bg-purple-500';
-    } elseif ($chipLabel === 'Genre Affinity') {
-        $chipColor = 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-700/40';
-        $barColor  = 'from-teal-400 to-emerald-500';
-        $dotColor  = 'bg-teal-500';
-    } elseif ($chipLabel === 'Community Pick') {
-        $chipColor = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700/40';
-        $barColor  = 'from-orange-400 to-rose-500';
-        $dotColor  = 'bg-orange-500';
     } elseif ($chipLabel === 'Listeners Like You') {
         $chipColor = 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/40';
         $barColor  = 'from-indigo-400 to-blue-500';
-        $dotColor  = 'bg-indigo-500';
     } elseif ($chipLabel === 'Taste Match') {
         $chipColor = 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-700/40';
         $barColor  = 'from-fuchsia-400 to-pink-500';
-        $dotColor  = 'bg-fuchsia-500';
     } else {
         $chipColor = 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700/40';
         $barColor  = 'from-violet-400 to-indigo-500';
-        $dotColor  = 'bg-violet-500';
     }
-    
-    // Parse Reason
-    if (str_contains(strtolower($reason), 'matches your taste in')) {
-        preg_match('/matches your taste in (.*?)(?: •|$)/i', $reason, $matches);
-        if (isset($matches[1])) {
-            $rawGenres = explode(', ', $matches[1]);
-            foreach($rawGenres as $g) {
-                // Remove any text after dashes, middle dots, or the word "shared"
-                $cleanGenre = explode(' - ', $g)[0];
-                $cleanGenre = explode(' · ', $cleanGenre)[0];
-                if (stripos($cleanGenre, 'shared') !== false) {
-                    $cleanGenre = substr($cleanGenre, 0, stripos($cleanGenre, 'shared'));
-                }
-                // Strip trailing non-word chars just in case
-                $genres[] = trim($cleanGenre, " \t\n\r\0\x0B-·•");
-            }
+
+    // Detect social proof patterns for Listeners Like You
+    $isCollabFiltering = ($chipLabel === 'Listeners Like You');
+    $likedByUser       = null;
+    $sharedByUser      = null;
+    $similarTasteUser  = null;
+
+    if ($isCollabFiltering) {
+        if (preg_match('/Liked by ([^,]+), a user you follow/i', $reason, $m)) {
+            $likedByUser = trim($m[1]);
+        } elseif (preg_match('/Shared by ([^,]+), a listener with similar taste/i', $reason, $m)) {
+            $sharedByUser = trim($m[1]);
+        } elseif (preg_match('/similar taste to (.+)/i', $reason, $m)) {
+            $similarTasteUser = trim($m[1]);
         }
     }
-    
-    if (str_contains(strtolower($reason), "you've enjoyed")) {
-        $isArtistMatch = true;
-        preg_match("/you've enjoyed (.*?) before/i", $reason, $matches);
-        if (isset($matches[1])) {
-            $artistMatchName = $matches[1];
-        }
-    }
-    
-    if (str_contains(strtolower($reason), 'shared by a friend')) {
-        $isSharedByFriend = true;
-    }
-    
-    // Fetch friends who shared this (Face-piling)
-    $sharingFriends = collect();
-    if (auth()->check()) {
-        $sharingFriends = auth()->user()->following()
-            ->whereHas('shares', function($q) use ($song) {
-                $q->where('song_id', $song->id);
-            })
-            ->take(3)
-            ->get();
-    }
-    
-    // Compute real match percentage from score if available
-    if (isset($song->score) && $song->score !== null) {
-        // Map scores (typically 0.05 to ~6.0+) using an elegant exponential formula to fit 60% to 99% range
-        $matchScore = (int) round(60 + 39 * (1 - exp(-0.55 * $song->score)));
+
+    // Compute match score percentage
+    if ($score !== null) {
+        $matchScore = (int) round(60 + 39 * (1 - exp(-0.55 * $score)));
     } else {
-        // Fallback seeded match score if score is missing
         srand($song->id);
-        $matchScore = rand(88, 99);
+        $matchScore = rand(75, 95);
         srand();
     }
 @endphp
@@ -185,75 +137,53 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
             <p class="text-[13px] font-medium text-gray-400 dark:text-gray-500 truncate">{{ $song->artist_name }}</p>
         </div>
 
-        @php
-            // Detect social proof patterns in the reason for Listeners Like You
-            $isCollabFiltering = ($chipLabel === 'Listeners Like You');
-            $likedByUser = null;
-            $sharedByUser = null;
-            $similarTasteUser = null;
+        <!-- Reasoning Zone -->
+        <div class="mt-2 relative flex-1 flex flex-col gap-2">
 
-            if ($isCollabFiltering) {
-                if (preg_match('/Liked by ([^,]+), a user you follow/i', $reason, $m)) {
-                    $likedByUser = trim($m[1]);
-                } elseif (preg_match('/Shared by ([^,]+), a listener with similar taste/i', $reason, $m)) {
-                    $sharedByUser = trim($m[1]);
-                } elseif (preg_match('/(?:similar taste to|Liked by users with similar taste to) ([^"]+)/i', $reason, $m)) {
-                    $similarTasteUser = trim($m[1]);
-                }
-            }
-        @endphp
-
-        @if(isset($song->reason))
-            <!-- Reasoning Zone -->
-            <div class="mt-2 relative flex-1 flex flex-col gap-2">
-
-                <!-- Algorithm Signal Chip -->
-                <div class="inline-flex items-center gap-1.5 w-fit">
-                    <span class="text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full {{ $chipColor }}">
-                        {{ $chipLabel }}
-                    </span>
-                </div>
-
-                @if($isCollabFiltering && ($likedByUser || $sharedByUser || $similarTasteUser))
-                    <!-- Social Proof Collaborative Filtering Reason -->
-                    <div class="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40 rounded-xl px-2.5 py-2">
-                        <div class="shrink-0 w-6 h-6 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center mt-0.5">
-                            <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                            </svg>
-                        </div>
-                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300 leading-snug font-medium">
-                            @if($likedByUser)
-                                Liked by <span class="font-bold">{{ $likedByUser }}</span>, a user you follow
-                            @elseif($sharedByUser)
-                                Shared by <span class="font-bold">{{ $sharedByUser }}</span>, a listener with similar taste
-                            @elseif($similarTasteUser)
-                                Liked by listeners with similar taste to <span class="font-bold">{{ $similarTasteUser }}</span>
-                            @endif
-                        </p>
-                    </div>
-                @else
-                    <!-- Standard Reason Sub-text -->
-                    <p class="text-[11px] text-gray-400 dark:text-gray-500 leading-snug line-clamp-2">
-                        {{ $song->reason }}
-                    </p>
-                @endif
-
-                <!-- Match Score Bar -->
-                <div class="flex items-center gap-2 mt-0.5">
-                    <div class="flex-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div
-                            class="h-full rounded-full bg-gradient-to-r {{ $barColor }} transition-all duration-700 ease-out"
-                            style="width: {{ $matchScore }}%; animation: scoreReveal 0.9s ease-out forwards;"
-                            x-data
-                            x-init="$el.style.width = '0%'; setTimeout(() => $el.style.width = '{{ $matchScore }}%', 120)"
-                        ></div>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 tabular-nums w-8 text-right">{{ $matchScore }}%</span>
-                </div>
-
+            <!-- Algorithm Signal Chip -->
+            <div class="inline-flex items-center gap-1.5 w-fit">
+                <span class="text-[11px] font-bold tracking-wide px-2 py-0.5 rounded-full {{ $chipColor }}">
+                    {{ $chipLabel }}
+                </span>
             </div>
-        @endif
+
+            @if($isCollabFiltering && ($likedByUser || $sharedByUser || $similarTasteUser))
+                <!-- Social Proof Collaborative Filtering Reason -->
+                <div class="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40 rounded-xl px-2.5 py-2">
+                    <div class="shrink-0 w-6 h-6 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center mt-0.5">
+                        <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-[11px] text-indigo-700 dark:text-indigo-300 leading-snug font-medium">
+                        @if($likedByUser)
+                            Liked by <span class="font-bold">{{ $likedByUser }}</span>, a user you follow
+                        @elseif($sharedByUser)
+                            Shared by <span class="font-bold">{{ $sharedByUser }}</span>, a listener with similar taste
+                        @elseif($similarTasteUser)
+                            Liked by listeners with similar taste to <span class="font-bold">{{ $similarTasteUser }}</span>
+                        @endif
+                </div>
+            @else
+                <!-- Standard Reason Sub-text -->
+                <p class="text-[11px] text-gray-400 dark:text-gray-500 leading-snug line-clamp-2">
+                    {{ $reason }}
+                </p>
+            @endif
+
+            <!-- Match Score Bar -->
+            <div class="flex items-center gap-2 mt-0.5">
+                <div class="flex-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                        class="h-full rounded-full bg-gradient-to-r {{ $barColor }} transition-all duration-700 ease-out"
+                        x-data
+                        x-init="$el.style.width = '0%'; setTimeout(() => $el.style.width = '{{ $matchScore }}%', 120)"
+                    ></div>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 tabular-nums w-8 text-right">{{ $matchScore }}%</span>
+            </div>
+
+        </div>
 
         <!-- Interaction Zone (Fixed height bottom footprint) -->
         <div class="mt-auto pt-4 relative min-h-[44px]">
