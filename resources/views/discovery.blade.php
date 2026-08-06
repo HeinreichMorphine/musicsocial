@@ -193,9 +193,6 @@
                                             <div data-chip="{{ $cardChip }}"
                                                  x-show="isChipMatch('{{ addslashes($cardChip) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
-                                                 x-transition:enter="transition ease-out duration-500"
-                                                 x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
-                                                 x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
                                                  class="h-full">
                                                 <x-discovery-card :song="$song" />
                                             </div>
@@ -277,7 +274,9 @@
                     }
                     const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                     const card = (cardChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return sel === card;
+                    if (sel === card) return true;
+                    if (sel.includes('listener') && (card.includes('listener') || card.includes('social') || card.includes('taste'))) return true;
+                    return false;
                 },
 
                 hasMatchingSongs() {
