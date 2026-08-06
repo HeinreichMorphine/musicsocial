@@ -189,7 +189,9 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" x-show="hasMatchingSongs()">
                                         @foreach ($recommendedSongs as $song)
-                                            <div x-show="isChipMatch('{{ addslashes($song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason)) }}', {{ $loop->index }})" 
+                                            @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
+                                            <div data-chip="{{ $cardChip }}"
+                                                 x-show="isChipMatch($el.dataset.chip, {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -265,8 +267,10 @@
 
                 isChipMatch(cardChip, index) {
                     if (this.selectedChip === 'All') {
+                        // In "All" view, only show cards within the paginated window
                         return this.activeIndexes.includes(index);
                     }
+                    // In filtered view, show ALL cards whose chip matches — no pagination gate
                     return (this.selectedChip || '').toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
                 },
 
