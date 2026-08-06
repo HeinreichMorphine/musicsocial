@@ -274,7 +274,9 @@
                     }
                     const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                     const card = (cardChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return sel === card;
+                    if (sel === card) return true;
+                    if (sel === 'listenerslikeyou' && (card.includes('listener') || card.includes('likedby') || card.includes('sharedby') || card.includes('follow') || card.includes('similartaste'))) return true;
+                    return false;
                 },
 
                 hasMatchingSongs() {

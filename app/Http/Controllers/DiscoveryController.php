@@ -31,12 +31,22 @@ class DiscoveryController extends Controller
     public static function determineChipLabel(?string $reason): string
     {
         $reasonLower = strtolower($reason ?? '');
-        if (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist') || str_contains($reasonLower, 'top pick for')) {
-            return 'Artist Deep Cut';
-        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for') || str_contains($reasonLower, 'sound match')) {
-            return 'Sound Profile';
-        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'liked by') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste') || str_contains($reasonLower, 'you follow') || str_contains($reasonLower, 'followed') || str_contains($reasonLower, 'shared by') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
+        if (
+            str_contains($reasonLower, 'liked by') || 
+            str_contains($reasonLower, 'shared by') || 
+            str_contains($reasonLower, 'listeners like you') || 
+            str_contains($reasonLower, 'you follow') || 
+            str_contains($reasonLower, 'similar taste to') ||
+            str_contains($reasonLower, 'similar taste') ||
+            str_contains($reasonLower, 'listener') ||
+            str_contains($reasonLower, 'collaborative') ||
+            str_contains($reasonLower, 'friend')
+        ) {
             return 'Listeners Like You';
+        } elseif (str_contains($reasonLower, 'deep cut') || str_contains($reasonLower, 'fans') || str_contains($reasonLower, 'same artist') || str_contains($reasonLower, 'top pick for')) {
+            return 'Artist Deep Cut';
+        } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized sound') || str_contains($reasonLower, 'sound profile match')) {
+            return 'Sound Profile';
         } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
             return 'Community Pick';
         }
