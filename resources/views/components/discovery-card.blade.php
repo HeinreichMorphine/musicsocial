@@ -29,6 +29,10 @@
         $chipColor = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700/40';
         $barColor  = 'from-orange-400 to-rose-500';
         $dotColor  = 'bg-orange-500';
+    } elseif ($chipLabel === 'Listeners Like You') {
+        $chipColor = 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/40';
+        $barColor  = 'from-indigo-400 to-blue-500';
+        $dotColor  = 'bg-indigo-500';
     } elseif ($chipLabel === 'Taste Match') {
         $chipColor = 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-700/40';
         $barColor  = 'from-fuchsia-400 to-pink-500';
