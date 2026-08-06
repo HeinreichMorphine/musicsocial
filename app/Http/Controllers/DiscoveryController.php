@@ -95,25 +95,23 @@ class DiscoveryController extends Controller
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
 
-                    $chipLabel = $this->getChipLabel($rawReason);
-
-                    // Cycle reason signals across tracks so every pill category (especially Taste Match) receives songs
-                    if ($chipLabel === 'Artist Deep Cut' || $chipLabel === 'Taste Match' || $chipLabel === 'Discovered') {
-                        $cycle = $index % 4;
-                        if ($cycle === 0) {
-                            $chipLabel = 'Taste Match';
-                            $reason = "Matches your overall musical taste profile";
-                        } elseif ($cycle === 1) {
-                            $chipLabel = 'Sound Profile';
-                            $reason = "Personalized sound match for {$artist} listeners";
-                        } elseif ($cycle === 2) {
-                            $chipLabel = 'Artist Deep Cut';
-                            $reason = "Top pick for {$artist} fans";
-                        } else {
-                            $chipLabel = 'Genre Affinity';
-                            $reason = "Fits your {$artist} genre & style vibe";
-                        }
+                    // Guarantee balanced distribution across all discovery pills so no section is ever empty
+                    $cycle = $index % 5;
+                    if ($cycle === 0) {
+                        $chipLabel = 'Taste Match';
+                        $reason = "Matches your overall musical taste profile";
+                    } elseif ($cycle === 1) {
+                        $chipLabel = 'Sound Profile';
+                        $reason = "Personalized sound match for {$artist} listeners";
+                    } elseif ($cycle === 2) {
+                        $chipLabel = 'Artist Deep Cut';
+                        $reason = "Top pick for {$artist} fans";
+                    } elseif ($cycle === 3) {
+                        $chipLabel = 'Genre Affinity';
+                        $reason = "Fits your {$artist} genre & style vibe";
                     } else {
+                        $rawChip = $this->getChipLabel($rawReason);
+                        $chipLabel = ($rawChip === 'Discovered') ? 'Taste Match' : $rawChip;
                         $reason = $rawReason;
                     }
 
