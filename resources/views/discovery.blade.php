@@ -191,7 +191,7 @@
                                         @foreach ($recommendedSongs as $song)
                                             @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
                                             <div data-chip="{{ $cardChip }}"
-                                                 x-show="isChipMatch('{{ $cardChip }}', {{ $loop->index }})" 
+                                                 x-show="isChipMatch('{{ addslashes($cardChip) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -275,20 +275,17 @@
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.includes(index);
                     }
-                    // cardChip is the PHP-inlined literal chip label string (e.g. 'Taste Match')
-                    const match = this.selectedChip.toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
-                    if (index < 3) {
-                        console.log(`[isChipMatch] idx=${index} selected="${this.selectedChip}" card="${cardChip}" → ${match}`);
-                    }
-                    return match;
+                    const sel = (this.selectedChip || '').toLowerCase().trim();
+                    const card = (cardChip || '').toLowerCase().trim();
+                    return sel === card;
                 },
 
                 hasMatchingSongs() {
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.length > 0;
                     }
-                    const current = (this.selectedChip || '').toLowerCase().trim();
-                    return (this.allSongChips || []).some(chip => (chip || '').toLowerCase().trim() === current);
+                    const sel = (this.selectedChip || '').toLowerCase().trim();
+                    return (this.availableChips || []).some(chip => (chip || '').toLowerCase().trim() === sel);
                 },
 
                 handleInteraction(index) {
