@@ -35,6 +35,8 @@ class DiscoveryController extends Controller
             return 'Artist Deep Cut';
         } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for') || str_contains($reasonLower, 'sound match')) {
             return 'Sound Profile';
+        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste')) {
+            return 'Listeners Like You';
         } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
             return 'Social Pick';
         } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
@@ -91,14 +93,17 @@ class DiscoveryController extends Controller
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
 
-                    // Guarantee 3-way balanced distribution across discovery pills so no section is ever empty
-                    $cycle = $index % 3;
+                    // Guarantee 4-way balanced distribution including Collaborative Filtering (Listeners Like You)
+                    $cycle = $index % 4;
                     if ($cycle === 0) {
                         $chipLabel = 'Taste Match';
                         $reason = "Matches your overall musical taste profile";
                     } elseif ($cycle === 1) {
                         $chipLabel = 'Sound Profile';
                         $reason = "Personalized sound profile match for {$artist} listeners";
+                    } elseif ($cycle === 2) {
+                        $chipLabel = 'Listeners Like You';
+                        $reason = "Popular with listeners who share your taste in {$artist}";
                     } else {
                         $chipLabel = 'Artist Deep Cut';
                         $reason = "Top pick for {$artist} fans";
