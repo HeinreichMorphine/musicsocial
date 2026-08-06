@@ -287,11 +287,8 @@
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.length > 0;
                     }
-                    // availableChips is the ground truth — it's what builds the filter pills
-                    // If a pill exists, songs for it exist
-                    return this.availableChips.some(c =>
-                        c.toLowerCase().trim() === this.selectedChip.toLowerCase().trim()
-                    );
+                    const current = (this.selectedChip || '').toLowerCase().trim();
+                    return (this.allSongChips || []).some(chip => (chip || '').toLowerCase().trim() === current);
                 },
 
                 handleInteraction(index) {
