@@ -185,6 +185,24 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
             <p class="text-[13px] font-medium text-gray-400 dark:text-gray-500 truncate">{{ $song->artist_name }}</p>
         </div>
 
+        @php
+            // Detect social proof patterns in the reason for Listeners Like You
+            $isCollabFiltering = ($chipLabel === 'Listeners Like You');
+            $likedByUser = null;
+            $sharedByUser = null;
+            $similarTasteUser = null;
+
+            if ($isCollabFiltering) {
+                if (preg_match('/Liked by ([^,]+), a user you follow/i', $reason, $m)) {
+                    $likedByUser = trim($m[1]);
+                } elseif (preg_match('/Shared by ([^,]+), a listener with similar taste/i', $reason, $m)) {
+                    $sharedByUser = trim($m[1]);
+                } elseif (preg_match('/(?:similar taste to|Liked by users with similar taste to) ([^"]+)/i', $reason, $m)) {
+                    $similarTasteUser = trim($m[1]);
+                }
+            }
+        @endphp
+
         @if(isset($song->reason))
             <!-- Reasoning Zone -->
             <div class="mt-2 relative flex-1 flex flex-col gap-2">
@@ -196,10 +214,30 @@ class="group flex flex-col h-full relative overflow-hidden rounded-3xl bg-white/
                     </span>
                 </div>
 
-                <!-- Reason Sub-text -->
-                <p class="text-[11px] text-gray-400 dark:text-gray-500 leading-snug line-clamp-2">
-                    {{ $song->reason }}
-                </p>
+                @if($isCollabFiltering && ($likedByUser || $sharedByUser || $similarTasteUser))
+                    <!-- Social Proof Collaborative Filtering Reason -->
+                    <div class="flex items-start gap-2 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40 rounded-xl px-2.5 py-2">
+                        <div class="shrink-0 w-6 h-6 rounded-full bg-indigo-200 dark:bg-indigo-800 flex items-center justify-center mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                            </svg>
+                        </div>
+                        <p class="text-[11px] text-indigo-700 dark:text-indigo-300 leading-snug font-medium">
+                            @if($likedByUser)
+                                Liked by <span class="font-bold">{{ $likedByUser }}</span>, a user you follow
+                            @elseif($sharedByUser)
+                                Shared by <span class="font-bold">{{ $sharedByUser }}</span>, a listener with similar taste
+                            @elseif($similarTasteUser)
+                                Liked by listeners with similar taste to <span class="font-bold">{{ $similarTasteUser }}</span>
+                            @endif
+                        </p>
+                    </div>
+                @else
+                    <!-- Standard Reason Sub-text -->
+                    <p class="text-[11px] text-gray-400 dark:text-gray-500 leading-snug line-clamp-2">
+                        {{ $song->reason }}
+                    </p>
+                @endif
 
                 <!-- Match Score Bar -->
                 <div class="flex items-center gap-2 mt-0.5">

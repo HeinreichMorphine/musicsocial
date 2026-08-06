@@ -118,20 +118,20 @@ class DiscoveryController extends Controller
                     return $topIdsIndex[$song->id] ?? 999;
                 })->values();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingUsers, $followedSongUserMap, $allSongUserMap, $communityNames) {
-                    $score = $recommendationData[$song->id]['score'] ?? null;
-                    $artist = $song->artist_name ?? 'Artist';
+                $counter = 0;
+                $chips = ['Taste Match', 'Sound Profile', 'Listeners Like You', 'Artist Deep Cut'];
 
-                    // 4-Way Balanced Interleaved Distribution
-                    $cycle = $index % 4;
+                foreach ($retrievedSongs as $song) {
+                    $cycle    = $counter % 4;
+                    $chipLabel = $chips[$cycle];
+                    $score    = $recommendationData[$song->id]['score'] ?? null;
+                    $artist   = $song->artist_name ?? 'Artist';
+
                     if ($cycle === 0) {
-                        $chipLabel = 'Taste Match';
                         $reason = "Matches your overall musical taste profile";
                     } elseif ($cycle === 1) {
-                        $chipLabel = 'Sound Profile';
                         $reason = "Personalized sound profile match for {$artist} listeners";
                     } elseif ($cycle === 2) {
-                        $chipLabel = 'Listeners Like You';
                         if (isset($followedSongUserMap[$song->id]) && !empty($followedSongUserMap[$song->id])) {
                             $followedUserName = $followedSongUserMap[$song->id][0];
                             $reason = "Liked by {$followedUserName}, a user you follow";
@@ -139,27 +139,25 @@ class DiscoveryController extends Controller
                             $sharerName = $allSongUserMap[$song->id][0];
                             $reason = "Shared by {$sharerName}, a listener with similar taste";
                         } elseif ($followingUsers->count() > 0) {
-                            $followedUserName = $followingUsers[$index % $followingUsers->count()]->name;
+                            $followedUserName = $followingUsers[$counter % $followingUsers->count()]->name;
                             $reason = "Liked by users with similar taste to {$followedUserName}";
                         } elseif (!empty($communityNames)) {
-                            $peerName = $communityNames[$index % count($communityNames)];
+                            $peerName = $communityNames[$counter % count($communityNames)];
                             $reason = "Liked by users with similar taste to {$peerName}";
                         } else {
                             $reason = "Liked by listeners with similar musical taste";
                         }
                     } else {
-                        $chipLabel = 'Artist Deep Cut';
                         $reason = "Top pick for {$artist} fans";
                     }
 
-                    $song->reason = $reason;
-                    $song->score = $score;
-                    $song->algo_debug = $recommendationData[$song->id]['debug'] ?? null;
-                    $song->chip_label = $chipLabel;
-                    $song->setAttribute('reason', $reason);
-                    $song->setAttribute('chip_label', $chipLabel);
-                    return $song;
-                });
+                    // Write directly to model attributes — bypasses any stale accessor cache
+                    $song->attributes['chip_label'] = $chipLabel;
+                    $song->attributes['reason']     = $reason;
+                    $song->attributes['score']      = $score;
+
+                    $counter++;
+                }
 
                 $recommendedSongs = $retrievedSongs;
             } else {
