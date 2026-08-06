@@ -35,7 +35,7 @@ class DiscoveryController extends Controller
             return 'Artist Deep Cut';
         } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for') || str_contains($reasonLower, 'sound match')) {
             return 'Sound Profile';
-        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'listened by') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste') || str_contains($reasonLower, 'followed')) {
+        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'liked by users') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste') || str_contains($reasonLower, 'followed')) {
             return 'Listeners Like You';
         } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
             return 'Social Pick';
@@ -108,9 +108,9 @@ class DiscoveryController extends Controller
                         $chipLabel = 'Listeners Like You';
                         if (!empty($followingNames)) {
                             $followedName = $followingNames[$index % count($followingNames)];
-                            $reason = "Listened by {$followedName} & users with similar taste";
+                            $reason = "Liked by users with similar taste to {$followedName}";
                         } else {
-                            $reason = "Popular with listeners who share your taste in {$artist}";
+                            $reason = "Liked by users with similar taste";
                         }
                     } else {
                         $chipLabel = 'Artist Deep Cut';
