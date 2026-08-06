@@ -97,21 +97,21 @@ class DiscoveryController extends Controller
 
                     $chipLabel = $this->getChipLabel($rawReason);
 
-                    // Cycle reason signals across artist tracks so every pill category receives songs
+                    // Cycle reason signals across tracks so every pill category (especially Taste Match) receives songs
                     if ($chipLabel === 'Artist Deep Cut' || $chipLabel === 'Taste Match' || $chipLabel === 'Discovered') {
                         $cycle = $index % 4;
                         if ($cycle === 0) {
-                            $chipLabel = 'Artist Deep Cut';
-                            $reason = "Top pick for {$artist} fans";
-                        } elseif ($cycle === 1) {
-                            $chipLabel = 'Genre Affinity';
-                            $reason = "Fits your {$artist} genre & style vibe";
-                        } elseif ($cycle === 2) {
-                            $chipLabel = 'Sound Profile';
-                            $reason = "Personalized sound match for {$artist} listeners";
-                        } else {
                             $chipLabel = 'Taste Match';
                             $reason = "Matches your overall musical taste profile";
+                        } elseif ($cycle === 1) {
+                            $chipLabel = 'Sound Profile';
+                            $reason = "Personalized sound match for {$artist} listeners";
+                        } elseif ($cycle === 2) {
+                            $chipLabel = 'Artist Deep Cut';
+                            $reason = "Top pick for {$artist} fans";
+                        } else {
+                            $chipLabel = 'Genre Affinity';
+                            $reason = "Fits your {$artist} genre & style vibe";
                         }
                     } else {
                         $reason = $rawReason;
@@ -149,10 +149,8 @@ class DiscoveryController extends Controller
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
-            // Extract distinct non-empty available chip labels for the pill filter bar directly using static helper
-            $availableChips = $recommendedSongs->map(function($song) {
-                return self::determineChipLabel($song->reason);
-            })->filter(function($val) {
+            // Extract distinct non-empty available chip labels for the pill filter bar directly using song chip_label
+            $availableChips = $recommendedSongs->pluck('chip_label')->filter(function($val) {
                 return !empty($val);
             })->unique()->values()->all();
 
