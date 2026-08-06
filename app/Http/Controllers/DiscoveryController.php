@@ -37,14 +37,10 @@ class DiscoveryController extends Controller
             return 'Sound Profile';
         } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
             return 'Social Pick';
-        } elseif (str_contains($reasonLower, 'vibe match') || str_contains($reasonLower, 'similar genres') || str_contains($reasonLower, 'genre favorites') || str_contains($reasonLower, 'genre') || str_contains($reasonLower, 'vibe') || str_contains($reasonLower, 'fits your')) {
-            return 'Genre Affinity';
         } elseif (str_contains($reasonLower, 'trending') || str_contains($reasonLower, 'popular') || str_contains($reasonLower, 'community')) {
             return 'Community Pick';
-        } elseif (str_contains($reasonLower, 'taste in') || str_contains($reasonLower, 'taste') || str_contains($reasonLower, 'musical taste')) {
-            return 'Taste Match';
         }
-        return 'Discovered';
+        return 'Taste Match';
     }
 
     protected function getChipLabel(?string $reason): string
@@ -95,24 +91,17 @@ class DiscoveryController extends Controller
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
 
-                    // Guarantee balanced distribution across all discovery pills so no section is ever empty
-                    $cycle = $index % 5;
+                    // Guarantee 3-way balanced distribution across discovery pills so no section is ever empty
+                    $cycle = $index % 3;
                     if ($cycle === 0) {
                         $chipLabel = 'Taste Match';
                         $reason = "Matches your overall musical taste profile";
                     } elseif ($cycle === 1) {
                         $chipLabel = 'Sound Profile';
-                        $reason = "Personalized sound match for {$artist} listeners";
-                    } elseif ($cycle === 2) {
+                        $reason = "Personalized sound profile match for {$artist} listeners";
+                    } else {
                         $chipLabel = 'Artist Deep Cut';
                         $reason = "Top pick for {$artist} fans";
-                    } elseif ($cycle === 3) {
-                        $chipLabel = 'Genre Affinity';
-                        $reason = "Fits your {$artist} genre & style vibe";
-                    } else {
-                        $rawChip = $this->getChipLabel($rawReason);
-                        $chipLabel = ($rawChip === 'Discovered') ? 'Taste Match' : $rawChip;
-                        $reason = $rawReason;
                     }
 
                     $song->reason = $reason;
@@ -123,8 +112,10 @@ class DiscoveryController extends Controller
                     return $song;
                 });
 
-                // Group by chip_label and sort each group by score descending
-                $grouped = $retrievedSongs->groupBy(function ($song) { return $song->chip_label; })->map(function ($group) {
+                // Group by determineChipLabel($song->reason) so grouping is 100% deterministic based on reason attribute
+                $grouped = $retrievedSongs->groupBy(function ($song) {
+                    return self::determineChipLabel($song->reason);
+                })->map(function ($group) {
                     return $group->sortByDesc(function ($song) {
                         return $song->score ?? 0;
                     })->values();
@@ -147,8 +138,10 @@ class DiscoveryController extends Controller
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
-            // Extract distinct non-empty available chip labels for the pill filter bar directly using song chip_label
-            $availableChips = $recommendedSongs->pluck('chip_label')->filter(function($val) {
+            // Extract distinct non-empty available chip labels directly from song reason
+            $availableChips = $recommendedSongs->map(function($song) {
+                return self::determineChipLabel($song->reason);
+            })->filter(function($val) {
                 return !empty($val);
             })->unique()->values()->all();
 

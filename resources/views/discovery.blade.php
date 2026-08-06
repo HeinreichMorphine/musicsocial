@@ -159,7 +159,7 @@
                                 <p class="text-center text-gray-500 dark:text-gray-400">No recommendations available at the moment.</p>
                             @else
                                 @php
-                                    $allSongChips = $recommendedSongs->map(fn($s) => $s->chip_label)->values()->all();
+                                    $allSongChips = $recommendedSongs->map(fn($s) => $s->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($s->reason))->values()->all();
                                 @endphp
                                 <div x-data="discoveryFeed(@js($availableChips), {{ $recommendedSongs->count() }}, @js($allSongChips))">
 
@@ -189,7 +189,7 @@
                                     <!-- Grid of Recommended Cards -->
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4" x-show="hasMatchingSongs()">
                                         @foreach ($recommendedSongs as $song)
-                                            @php $cardChip = $song->chip_label; @endphp
+                                            @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
                                             <div data-chip="{{ $cardChip }}"
                                                  x-show="isChipMatch('{{ $cardChip }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
