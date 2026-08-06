@@ -191,7 +191,7 @@
                                         @foreach ($recommendedSongs as $song)
                                             @php $cardChip = $song->chip_label ?? \App\Http\Controllers\DiscoveryController::determineChipLabel($song->reason); @endphp
                                             <div data-chip="{{ $cardChip }}"
-                                                 x-show="isChipMatch($el, {{ $loop->index }})" 
+                                                 x-show="isChipMatch('{{ addslashes($cardChip) }}', {{ $loop->index }})" 
                                                  @song-interacted.stop="handleInteraction({{ $loop->index }})"
                                                  x-transition:enter="transition ease-out duration-500"
                                                  x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
@@ -271,14 +271,12 @@
                     console.log('[Discovery] totalCount:', totalCount);
                 },
 
-                isChipMatch(el, index) {
+                isChipMatch(cardChip, index) {
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.includes(index);
                     }
-                    if (!el) return false;
-                    const cardChip = el.getAttribute('data-chip') || (el.dataset ? el.dataset.chip : '') || '';
                     const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const card = cardChip.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const card = (cardChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                     return sel === card;
                 },
 
