@@ -124,7 +124,7 @@ class DiscoveryController extends Controller
                 });
 
                 // Group by chip_label and sort each group by score descending
-                $grouped = $retrievedSongs->groupBy('chip_label')->map(function ($group) {
+                $grouped = $retrievedSongs->groupBy(function ($song) { return $song->chip_label; })->map(function ($group) {
                     return $group->sortByDesc(function ($song) {
                         return $song->score ?? 0;
                     })->values();
