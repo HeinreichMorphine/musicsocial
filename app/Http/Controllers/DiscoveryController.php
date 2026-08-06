@@ -139,9 +139,9 @@ class DiscoveryController extends Controller
                     return $song;
                 });
 
-                // Group by determineChipLabel($song->reason) so grouping is 100% deterministic based on reason attribute
+                // Group by chip_label directly
                 $grouped = $retrievedSongs->groupBy(function ($song) {
-                    return self::determineChipLabel($song->reason);
+                    return $song->chip_label;
                 })->map(function ($group) {
                     return $group->sortByDesc(function ($song) {
                         return $song->score ?? 0;
@@ -165,9 +165,9 @@ class DiscoveryController extends Controller
                 Log::info("DiscoveryController: No raw recommendations returned from service.");
             }
 
-            // Extract distinct non-empty available chip labels directly from song reason
+            // Extract distinct non-empty available chip labels directly from song chip_label
             $availableChips = $recommendedSongs->map(function($song) {
-                return self::determineChipLabel($song->reason);
+                return $song->chip_label;
             })->filter(function($val) {
                 return !empty($val);
             })->unique()->values()->all();
