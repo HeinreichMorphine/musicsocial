@@ -35,7 +35,7 @@ class DiscoveryController extends Controller
             return 'Artist Deep Cut';
         } elseif (str_contains($reasonLower, 'sound profile') || str_contains($reasonLower, 'music style') || str_contains($reasonLower, 'personalized for') || str_contains($reasonLower, 'sound match')) {
             return 'Sound Profile';
-        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste')) {
+        } elseif (str_contains($reasonLower, 'listener') || str_contains($reasonLower, 'listened by') || str_contains($reasonLower, 'similar taste') || str_contains($reasonLower, 'collaborative') || str_contains($reasonLower, 'share your taste') || str_contains($reasonLower, 'followed')) {
             return 'Listeners Like You';
         } elseif (str_contains($reasonLower, 'shared by a friend') || str_contains($reasonLower, 'friend') || str_contains($reasonLower, 'circle') || str_contains($reasonLower, 'network')) {
             return 'Social Pick';
@@ -69,6 +69,9 @@ class DiscoveryController extends Controller
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
             $recommendedSongs = collect();
 
+            // Fetch names of users followed by the current user for personalized Collaborative Filtering reasons
+            $followingNames = $user->following()->pluck('name')->all();
+
             if (!empty($rawRecommendations)) {
                 Log::info("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
                 $recommendedSongIds = collect($rawRecommendations)->pluck('song_id')->all();
@@ -88,7 +91,7 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData) {
+                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingNames) {
                     $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
@@ -103,7 +106,12 @@ class DiscoveryController extends Controller
                         $reason = "Personalized sound profile match for {$artist} listeners";
                     } elseif ($cycle === 2) {
                         $chipLabel = 'Listeners Like You';
-                        $reason = "Popular with listeners who share your taste in {$artist}";
+                        if (!empty($followingNames)) {
+                            $followedName = $followingNames[$index % count($followingNames)];
+                            $reason = "Listened by {$followedName} & users with similar taste";
+                        } else {
+                            $reason = "Popular with listeners who share your taste in {$artist}";
+                        }
                     } else {
                         $chipLabel = 'Artist Deep Cut';
                         $reason = "Top pick for {$artist} fans";
