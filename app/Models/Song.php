@@ -63,6 +63,26 @@ class Song extends Model
         return $value;
     }
 
+    public function getReasonAttribute()
+    {
+        return $this->attributes['reason'] ?? 'Based on your taste';
+    }
+
+    public function setReasonAttribute($value)
+    {
+        $this->attributes['reason'] = $value;
+    }
+
+    public function getChipLabelAttribute()
+    {
+        return $this->attributes['chip_label'] ?? null;
+    }
+
+    public function setChipLabelAttribute($value)
+    {
+        $this->attributes['chip_label'] = $value;
+    }
+
     /**
      * Normalized 11-character YouTube video ID for embeds.
      */
