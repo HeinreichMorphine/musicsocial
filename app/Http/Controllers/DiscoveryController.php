@@ -67,24 +67,21 @@ class DiscoveryController extends Controller
             $rawRecommendations = $this->recommendationService->getRecommendations($user->id);
             $recommendedSongs = collect();
 
-            // Fetch users followed by the current user and their shares for real collaborative recommendations
-            $following = $user->following()->get();
-            $followingNames = $following->pluck('name')->all();
+            // Fetch users followed by the current user
+            $followingUsers = $user->following()->get();
+            $followingUserIds = $followingUsers->pluck('id')->toArray();
+            $followingNames = $followingUsers->pluck('name')->all();
 
-            // Extract real shares from users followed by the current user
-            $followedShares = \App\Models\Share::whereIn('user_id', $following->pluck('id'))
-                ->where('is_deleted', false)
-                ->with('user')
-                ->get()
-                ->keyBy('song_id');
-
-            // Extract community shares for real social proof fallback
-            $communityShares = \App\Models\Share::where('is_deleted', false)
-                ->where('user_id', '!=', $user->id)
-                ->with('user')
-                ->latest()
-                ->get()
-                ->groupBy('song_id');
+            // Map of song_id -> array of followed user names who shared/liked it
+            $followedSongUserMap = [];
+            if (!empty($followingUserIds)) {
+                $sharesFromFollowing = \App\Models\Share::whereIn('user_id', $followingUserIds)->with('user')->get();
+                foreach ($sharesFromFollowing as $share) {
+                    if ($share->song_id && $share->user) {
+                        $followedSongUserMap[$share->song_id][] = $share->user->name;
+                    }
+                }
+            }
 
             if (!empty($rawRecommendations)) {
                 Log::info("DiscoveryController: Raw recommendations count: " . count($rawRecommendations));
@@ -105,7 +102,7 @@ class DiscoveryController extends Controller
 
                 $retrievedSongs = Song::whereIn('id', $topIds)->get();
 
-                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingNames, $followedShares, $communityShares) {
+                $retrievedSongs = $retrievedSongs->map(function ($song, $index) use ($recommendationData, $followingUsers, $followedSongUserMap) {
                     $rawReason = $recommendationData[$song->id]['reason'] ?? 'Based on your taste';
                     $score = $recommendationData[$song->id]['score'] ?? null;
                     $artist = $song->artist_name ?? 'Artist';
@@ -120,15 +117,12 @@ class DiscoveryController extends Controller
                         $reason = "Personalized sound profile match for {$artist} listeners";
                     } elseif ($cycle === 2) {
                         $chipLabel = 'Listeners Like You';
-                        if (isset($followedShares[$song->id])) {
-                            $sharerName = $followedShares[$song->id]->user->name ?? 'followed user';
-                            $reason = "Shared by {$sharerName} (Following)";
-                        } elseif (!empty($followingNames)) {
-                            $followedName = $followingNames[$index % count($followingNames)];
-                            $reason = "Liked by users with similar taste to {$followedName}";
-                        } elseif (isset($communityShares[$song->id]) && $communityShares[$song->id]->isNotEmpty()) {
-                            $sharerName = $communityShares[$song->id]->first()->user->name ?? 'music lover';
-                            $reason = "Shared by {$sharerName} & listeners with similar taste";
+                        if (isset($followedSongUserMap[$song->id]) && !empty($followedSongUserMap[$song->id])) {
+                            $followedUserName = $followedSongUserMap[$song->id][0];
+                            $reason = "Liked by {$followedUserName}, a user you follow";
+                        } elseif ($followingUsers->count() > 0) {
+                            $followedUserName = $followingUsers[$index % $followingUsers->count()]->name;
+                            $reason = "Liked by users with similar taste to {$followedUserName}";
                         } else {
                             $reason = "Liked by users with similar taste";
                         }
