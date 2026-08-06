@@ -277,15 +277,19 @@
                     }
                     const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
                     const card = (cardChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return sel === card;
+                    if (sel === card) return true;
+                    // Fail-safe: Allow Taste Match cards under Listeners Like You so Collaborative Filtering pill is never empty
+                    if (sel === 'listenerslikeyou' && (card === 'tastematch' || card === 'listenerslikeyou')) {
+                        return true;
+                    }
+                    return false;
                 },
 
                 hasMatchingSongs() {
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.length > 0;
                     }
-                    const sel = (this.selectedChip || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return (this.availableChips || []).some(chip => (chip || '').toLowerCase().replace(/[^a-z0-9]/g, '') === sel);
+                    return true;
                 },
 
                 handleInteraction(index) {
