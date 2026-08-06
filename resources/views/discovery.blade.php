@@ -266,32 +266,30 @@
                 allSongChips: allSongChips || [],
 
                 init() {
-                    // Debug: log the chip data on init
-                    console.log('[Discovery] availableChips:', this.availableChips);
-                    console.log('[Discovery] allSongChips:', this.allSongChips);
+                    console.log('[Discovery] availableChips:', JSON.parse(JSON.stringify(this.availableChips)));
+                    console.log('[Discovery] allSongChips sample (first 10):', JSON.parse(JSON.stringify(this.allSongChips)).slice(0, 10));
                     console.log('[Discovery] totalCount:', totalCount);
                 },
 
                 isChipMatch(cardChip, index) {
                     if (this.selectedChip === 'All') {
-                        // In "All" view, only show cards within the paginated window
                         return this.activeIndexes.includes(index);
                     }
-                    // In filtered view, show ALL cards whose chip matches — no pagination gate
-                    return (this.selectedChip || '').toLowerCase().trim() === (cardChip || '').toLowerCase().trim();
+                    // Use allSongChips[index] as the definitive per-card chip label
+                    // Fall back to cardChip (data-chip attribute) if out of range
+                    const chipForCard = (this.allSongChips[index] || cardChip || '');
+                    return this.selectedChip.toLowerCase().trim() === chipForCard.toLowerCase().trim();
                 },
 
                 hasMatchingSongs() {
                     if (this.selectedChip === 'All') {
                         return this.activeIndexes.length > 0;
                     }
-                    // Query DOM directly — the most reliable source of truth
-                    const current = (this.selectedChip || '').toLowerCase().trim();
-                    const cards = this.$el.querySelectorAll('[data-chip]');
-                    const match = Array.from(cards).some(card =>
-                        (card.dataset.chip || '').toLowerCase().trim() === current
+                    // availableChips is the ground truth — it's what builds the filter pills
+                    // If a pill exists, songs for it exist
+                    return this.availableChips.some(c =>
+                        c.toLowerCase().trim() === this.selectedChip.toLowerCase().trim()
                     );
-                    return match;
                 },
 
                 handleInteraction(index) {
@@ -311,3 +309,4 @@
         });
     </script>
 </x-app-layout>
+
